@@ -1,0 +1,38 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:mall_system}
+    username: ${DB_USERNAME:mall_user}
+    password: ${DB_PASSWORD:mall_pass}
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: UTC
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRE_SECONDS:86400000}
+
+knife4j:
+  enable: ${SWAGGER_ENABLED:false}
+
+springdoc:
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost}
+
+upload:
+  dir: ${UPLOAD_DIR:uploads}
+
+logging:
+  level:
+    root: INFO
+    com.mall.api: ${LOG_LEVEL:INFO}

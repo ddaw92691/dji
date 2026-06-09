@@ -1,0 +1,25 @@
+
+> mall-merchant-web@0.0.0 dev C:\Users\Administrator\Videos\mall-system\apps\merchant-web
+> vite
+
+
+  [32m[1mVITE[22m v7.2.2[39m  [2mready in [0m[1m4741[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5174[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://45.32.120.199:[1m5174[22m/[39m
+  ➜  Vue DevTools: Open http://localhost:5174/__devtools__/ as a separate window
+  ➜  Vue DevTools: Press Alt(⌥)+Shift(⇧)+D in App to toggle the Vue DevTools
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32m.env.development changed, restarting server...[39m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32m.env.development changed, restarting server...[39m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32m.env.development changed, restarting server...[39m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/index.css[22m
+[2m14:42:28[22m [36m[1m[vite][22m[39m server restarted.
+[2m14:42:52[22m [36m[1m[vite][22m[39m [32mvite.config.ts changed, restarting server...[39m
+[2m14:42:52[22m [36m[1m[vite][22m[39m [32mvite.config.ts changed, restarting server...[39m
+[2m14:42:54[22m [36m[1m[vite][22m[39m server restarted.

@@ -1,0 +1,68 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-mall_system}
+      POSTGRES_USER: ${DB_USERNAME:-mall_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./apps/api/src/main/resources/sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-mall_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./apps/api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-mall_system}
+      DB_USERNAME: ${DB_USERNAME:-mall_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE_SECONDS: ${JWT_EXPIRE_SECONDS:-86400000}
+      UPLOAD_DIR: /app/uploads
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  customer-web:
+    build: ./apps/customer-web
+    restart: unless-stopped
+    ports:
+      - "4173:80"
+    depends_on:
+      - api
+
+  admin-web:
+    build: ./apps/admin-web
+    restart: unless-stopped
+    ports:
+      - "5175:80"
+    depends_on:
+      - api
+
+  merchant-web:
+    build: ./apps/merchant-web
+    restart: unless-stopped
+    ports:
+      - "5174:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  uploads:

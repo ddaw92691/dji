@@ -1,0 +1,20 @@
+{
+  "name": "mall-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mall System - Multi-country multi-language e-commerce platform",
+  "scripts": {
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "dev:api": "cd apps/api && mvn spring-boot:run",
+    "dev:customer": "cd apps/customer-web && npm run dev",
+    "dev:merchant": "cd apps/merchant-web && pnpm run dev",
+    "dev:admin": "cd apps/admin-web && pnpm run dev",
+    "install:customer": "cd apps/customer-web && npm install",
+    "install:merchant": "cd apps/merchant-web && pnpm install",
+    "install:admin": "cd apps/admin-web && pnpm install"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

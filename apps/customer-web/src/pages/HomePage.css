@@ -1,0 +1,631 @@
+.dji-home {
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+  background: #fff;
+  color: #1f1f1f;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.dji-home a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.dji-header {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 50;
+  height: 64px;
+  color: #fff;
+  background: transparent;
+  transition: background-color 220ms ease, color 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  border-bottom: 1px solid transparent;
+}
+
+.dji-header.is-scrolled,
+.dji-header.is-menu-open {
+  color: #111;
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(16px);
+}
+
+.dji-header-inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 38px;
+  padding: 0 43px;
+}
+
+.dji-logo {
+  flex: 0 0 auto;
+  font-size: 29px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -1.6px;
+  font-style: italic;
+}
+
+.dji-desktop-nav {
+  display: flex;
+  align-items: center;
+  gap: 38px;
+  font-size: 14px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.dji-desktop-nav a,
+.dji-desktop-actions a,
+.dji-country {
+  opacity: 0.92;
+  transition: opacity 160ms ease, color 160ms ease, background-color 160ms ease;
+}
+
+.dji-desktop-nav a:hover,
+.dji-desktop-actions a:hover,
+.dji-country:hover {
+  opacity: 1;
+}
+
+.dji-desktop-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dji-desktop-actions svg,
+.dji-mobile-actions svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.dji-country {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 999px;
+  padding: 9px 14px;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.12);
+  font: inherit;
+  font-size: 13px;
+}
+
+.dji-header.is-scrolled .dji-country,
+.dji-header.is-menu-open .dji-country {
+  background: #f4f5f7;
+}
+
+.dji-store-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 87px;
+  height: 38px;
+  justify-content: center;
+  border-radius: 999px;
+  color: #fff;
+  background: #0a84ff;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.dji-store-button span {
+  position: absolute;
+  top: -6px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ff3b30;
+  color: #fff;
+  font-size: 11px;
+  line-height: 18px;
+}
+
+.dji-mobile-icon,
+.dji-mobile-actions,
+.dji-mobile-panel {
+  display: none;
+}
+
+.dji-stage {
+  position: relative;
+  width: 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-position: center top;
+  border-bottom: 12px solid #fff;
+}
+
+.dji-stage-hero {
+  height: clamp(620px, 58.9vw, 805px);
+}
+
+.dji-stage-store {
+  height: clamp(620px, 59.6vw, 815px);
+}
+
+.dji-stage-mic {
+  height: clamp(600px, 58.1vw, 794px);
+}
+
+.dji-stage-hotspots {
+  position: absolute;
+  left: 50%;
+  display: flex;
+  transform: translateX(-50%);
+}
+
+.dji-stage-hotspots a {
+  display: block;
+  border-radius: 999px;
+}
+
+.dji-stage-hotspots-hero {
+  top: 30.1%;
+  gap: 18px;
+}
+
+.dji-stage-hotspots-hero a {
+  width: 132px;
+  height: 36px;
+}
+
+.dji-stage-hotspots-store {
+  top: 21.8%;
+}
+
+.dji-stage-hotspots-store a {
+  width: 92px;
+  height: 29px;
+}
+
+.dji-stage-hotspots-mic {
+  top: 24.1%;
+}
+
+.dji-stage-hotspots-mic a {
+  width: 109px;
+  height: 28px;
+}
+
+.dji-product-grid {
+  width: min(100%, 1367px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 0 12px 12px;
+  background: #fff;
+}
+
+.dji-product-tile {
+  display: block;
+  aspect-ratio: 665 / 715;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center top;
+}
+
+.dji-shot-section {
+  overflow: hidden;
+  background: #fff;
+  padding: 56px 0 96px;
+}
+
+.dji-shot-card {
+  display: block;
+  width: min(100%, 1367px);
+  height: clamp(420px, 50.5vw, 690px);
+  margin: 0 auto;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-position: center top;
+}
+
+.dji-editorial,
+.dji-fields {
+  background: #fff;
+  padding: 0 24px 88px;
+}
+
+.dji-section-heading {
+  max-width: 760px;
+  margin: 0 auto 36px;
+  text-align: center;
+}
+
+.dji-section-heading h2 {
+  margin: 0;
+  font-size: clamp(26px, 2.5vw, 34px);
+  line-height: 1.12;
+  font-weight: 700;
+  color: #333;
+}
+
+.dji-section-heading p {
+  margin: 18px 0 0;
+  color: #777;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.dji-news-grid {
+  width: min(100%, 1050px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.dji-news-card {
+  display: block;
+  aspect-ratio: 612 / 632;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center top;
+}
+
+.dji-fields {
+  padding-top: 0;
+}
+
+.dji-field-grid {
+  width: min(100%, 1050px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.dji-field-card {
+  display: block;
+  aspect-ratio: 390 / 620;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center top;
+}
+
+.dji-service-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  background: #f6f7f8;
+  padding: 78px max(32px, calc((100vw - 1050px) / 2)) 72px;
+}
+
+.dji-service-strip a {
+  display: flex;
+  min-height: 112px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  text-align: center;
+}
+
+.dji-service-strip svg {
+  width: 44px;
+  height: 44px;
+  margin-bottom: 14px;
+  fill: #a5aab0;
+}
+
+.dji-service-strip strong {
+  display: block;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.dji-service-strip span {
+  display: block;
+  margin-top: 8px;
+  color: #8b8f95;
+  font-size: 12px;
+}
+
+.dji-footer {
+  background: #252525;
+  color: #a4a4a4;
+  padding: 28px max(28px, calc((100vw - 1080px) / 2)) 34px;
+}
+
+.dji-app-callout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+.dji-app-callout strong {
+  color: #fff;
+  font-size: 14px;
+}
+
+.dji-app-callout span {
+  font-size: 12px;
+}
+
+.dji-app-callout button {
+  height: 28px;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  color: #fff;
+  background: transparent;
+  font-size: 12px;
+}
+
+.dji-footer-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 48px;
+  padding: 34px 0 44px;
+}
+
+.dji-footer-column h3 {
+  margin: 0 0 18px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dji-footer-column a {
+  display: block;
+  margin: 0 0 12px;
+  color: #a4a4a4;
+  font-size: 12px;
+}
+
+.dji-footer-bottom {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 22px;
+  font-size: 12px;
+}
+
+.dji-footer-bottom .dji-logo {
+  color: #fff;
+  font-size: 24px;
+}
+
+@media (max-width: 1020px) {
+  .dji-header-inner {
+    gap: 26px;
+    padding: 0 28px;
+  }
+
+  .dji-desktop-nav {
+    gap: 24px;
+    font-size: 14px;
+  }
+
+  .dji-country {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .dji-header {
+    height: 58px;
+  }
+
+  .dji-header-inner {
+    justify-content: space-between;
+    gap: 0;
+    padding: 0 16px;
+  }
+
+  .dji-logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 31px;
+    letter-spacing: -1.6px;
+  }
+
+  .dji-desktop-nav,
+  .dji-desktop-actions {
+    display: none;
+  }
+
+  .dji-mobile-icon {
+    display: inline-flex;
+    width: 36px;
+    height: 36px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    border: 0;
+    color: inherit;
+    background: transparent;
+    padding: 0;
+  }
+
+  .dji-mobile-icon span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: currentColor;
+  }
+
+  .dji-mobile-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .dji-mobile-actions svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .dji-mobile-panel {
+    position: absolute;
+    top: 58px;
+    left: 0;
+    right: 0;
+    display: none;
+    flex-direction: column;
+    padding: 8px 22px 22px;
+    background: #fff;
+    color: #111;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+  }
+
+  .dji-header.is-menu-open .dji-mobile-panel {
+    display: flex;
+  }
+
+  .dji-mobile-panel a {
+    padding: 15px 0;
+    border-bottom: 1px solid #f1f1f1;
+    font-size: 16px;
+  }
+
+  .dji-stage {
+    border-bottom-width: 4px;
+  }
+
+  .dji-stage-hero {
+    height: 618px;
+    background-image: url("/dji-home/hero-mobile.jpg") !important;
+    background-position: center top;
+  }
+
+  .dji-stage-store,
+  .dji-stage-mic {
+    height: 545px;
+    background-position: center top;
+  }
+
+  .dji-stage-hotspots-hero {
+    top: 22.7%;
+    gap: 13px;
+  }
+
+  .dji-stage-hotspots-hero a {
+    width: 112px;
+    height: 32px;
+  }
+
+  .dji-stage-hotspots-store {
+    top: 20.5%;
+  }
+
+  .dji-stage-hotspots-store a {
+    width: 75px;
+    height: 25px;
+  }
+
+  .dji-stage-hotspots-mic {
+    top: 22.5%;
+  }
+
+  .dji-stage-hotspots-mic a {
+    width: 86px;
+    height: 25px;
+  }
+
+  .dji-product-grid {
+    width: 100%;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 0 0 4px;
+  }
+
+  .dji-product-tile {
+    aspect-ratio: 665 / 715;
+  }
+
+  .dji-shot-section {
+    padding: 4px 0 54px;
+  }
+
+  .dji-shot-card {
+    height: 334px;
+    background-position: center top;
+  }
+
+  .dji-editorial,
+  .dji-fields {
+    padding: 0 16px 54px;
+  }
+
+  .dji-section-heading {
+    margin-bottom: 22px;
+  }
+
+  .dji-section-heading h2 {
+    font-size: 24px;
+  }
+
+  .dji-section-heading p {
+    font-size: 12px;
+  }
+
+  .dji-news-grid,
+  .dji-field-grid {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .dji-field-card {
+    aspect-ratio: 390 / 620;
+  }
+
+  .dji-service-strip {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 36px 16px;
+  }
+
+  .dji-service-strip a {
+    min-height: 92px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .dji-footer {
+    padding: 24px 18px 34px;
+  }
+
+  .dji-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 24px 0 28px;
+  }
+
+  .dji-footer-column {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 12px 0;
+  }
+
+  .dji-footer-column h3 {
+    margin-bottom: 10px;
+  }
+
+  .dji-footer-column a {
+    margin-bottom: 8px;
+  }
+
+  .dji-footer-bottom {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}

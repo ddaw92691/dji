@@ -1,0 +1,182 @@
+
+> mall-customer-web@1.0.0 dev
+> vite --port 4173
+
+
+  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m1794[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m4173[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://45.32.120.199:[1m4173[22m/[39m
+[2m23:53:41[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/HomePage.tsx, /src/index.css[22m
+[2m23:53:53[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css[22m
+[2m23:53:53[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/App.tsx[22m Could not Fast Refresh ("wsEventBus" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m23:53:53[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/App.tsx[22m
+[2m23:56:49[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m23:58:31[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css[22m
+[2m23:58:32[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/App.tsx[22m Could not Fast Refresh ("wsEventBus" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m23:58:32[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/App.tsx[22m
+[2m23:58:32[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/App.tsx[22m Could not Fast Refresh ("wsEventBus" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m23:58:32[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/App.tsx[22m
+[2m23:58:57[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css[22m
+[2m23:58:58[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/App.tsx[22m Could not Fast Refresh ("wsEventBus" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m23:58:58[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/App.tsx[22m
+[2m02:29:17[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m02:29:54[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m02:32:23[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m02:36:15[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m02:36:31[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m02:36:51[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m02:37:06[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m02:38:49[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m02:39:35[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m02:40:46[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m02:48:04[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m02:48:55[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m02:51:06[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m02:52:09[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m03:03:38[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m03:03:58[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m03:04:23[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m03:04:41[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m03:05:18[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m03:05:43[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m03:06:19[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m03:06:45[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m03:07:55[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m03:08:23[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m03:08:54[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m03:09:29[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m03:10:00[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m03:10:27[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m03:11:08[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m03:11:30[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m03:11:52[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m03:12:19[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m03:12:39[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m14:00:53[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m14:01:20[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m14:01:50[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m14:02:15[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m14:03:00[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m14:04:04[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m14:06:59[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m14:08:31[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m14:10:50[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m14:42:22[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mindex.html[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/AddressPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/main.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CartPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CategoryPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CheckoutPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CouponPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/HomePage.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/HomePage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/LoginPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/NotificationPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/OrderDetailPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/OrdersPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/PaymentPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/PaymentResultPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ProductDetailPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ProductListPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/RegisterPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ReviewCreatePage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/AddressPage.tsx, /src/pages/CheckoutPage.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css, /src/pages/ReviewCreatePage.tsx, /src/pages/AddressPage.tsx, /src/pages/SupportSessionsPage.tsx, /src/pages/CheckoutPage.tsx, /src/pages/CartPage.tsx, /src/pages/RegisterPage.tsx, /src/pages/PaymentPage.tsx, /src/pages/ProductDetailPage.tsx, /src/pages/OrdersPage.tsx, /src/pages/LoginPage.tsx, /src/pages/CouponPage.tsx, /src/pages/SupportChatPage.tsx, /src/pages/NotificationPage.tsx, /src/pages/OrderDetailPage.tsx, /src/pages/StorePages.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mvite.config.ts changed, restarting server...[39m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mtailwind.config.js[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m changed tsconfig file detected: C:\Users\Administrator\Videos\mall-system\apps\customer-web\tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/vite-env.d.ts[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/AddressPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/SupportChatPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/SupportSessionsPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/App.tsx, /src/pages/ReviewCreatePage.tsx, /src/pages/AddressPage.tsx, /src/pages/SupportSessionsPage.tsx, /src/pages/CheckoutPage.tsx, /src/pages/CartPage.tsx, /src/pages/RegisterPage.tsx, /src/pages/PaymentPage.tsx, /src/pages/ProductDetailPage.tsx, /src/pages/OrdersPage.tsx, /src/pages/LoginPage.tsx, /src/pages/CouponPage.tsx, /src/pages/SupportChatPage.tsx, /src/pages/NotificationPage.tsx, /src/pages/OrderDetailPage.tsx, /src/pages/StorePages.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/CheckoutPage.tsx, /src/pages/CartPage.tsx, /src/pages/ProductDetailPage.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/CheckoutPage.tsx, /src/pages/CouponPage.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/NotificationPage.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/CheckoutPage.tsx, /src/pages/PaymentPage.tsx, /src/pages/OrdersPage.tsx, /src/pages/OrderDetailPage.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/ReviewCreatePage.tsx, /src/pages/CategoryPage.tsx, /src/pages/CheckoutPage.tsx, /src/pages/ProductDetailPage.tsx, /src/pages/ProductListPage.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/App.tsx, /src/pages/AddressPage.tsx, /src/pages/SupportSessionsPage.tsx, /src/pages/CategoryPage.tsx, /src/pages/CheckoutPage.tsx, /src/pages/CartPage.tsx, /src/pages/PaymentPage.tsx, /src/pages/ProductDetailPage.tsx, /src/pages/ProductListPage.tsx, /src/pages/OrdersPage.tsx, /src/pages/CouponPage.tsx, /src/pages/SupportChatPage.tsx, /src/pages/OrderDetailPage.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/OrdersPage.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/App.tsx, /src/pages/ReviewCreatePage.tsx, /src/pages/AddressPage.tsx, /src/pages/SupportSessionsPage.tsx, /src/pages/CheckoutPage.tsx, /src/pages/CartPage.tsx, /src/pages/RegisterPage.tsx, /src/pages/PaymentPage.tsx, /src/pages/ProductDetailPage.tsx, /src/pages/OrdersPage.tsx, /src/pages/LoginPage.tsx, /src/pages/CouponPage.tsx, /src/pages/SupportChatPage.tsx, /src/pages/NotificationPage.tsx, /src/pages/OrderDetailPage.tsx, /src/pages/StorePages.tsx, /src/pages/CategoryPage.tsx, /src/pages/ProductListPage.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/ReviewCreatePage.tsx, /src/pages/ProductDetailPage.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/SupportSessionsPage.tsx, /src/pages/ProductDetailPage.tsx, /src/pages/SupportChatPage.tsx, /src/pages/OrderDetailPage.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/ReviewCreatePage.tsx, /src/pages/SupportChatPage.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/AddressPage.tsx, /src/pages/CheckoutPage.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css, /src/pages/AddressPage.tsx, /src/pages/SupportSessionsPage.tsx, /src/pages/CategoryPage.tsx, /src/pages/CheckoutPage.tsx, /src/pages/CartPage.tsx, /src/pages/PaymentPage.tsx, /src/pages/ProductDetailPage.tsx, /src/pages/ProductListPage.tsx, /src/pages/OrdersPage.tsx, /src/pages/CouponPage.tsx, /src/pages/SupportChatPage.tsx, /src/pages/OrderDetailPage.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mvite.config.ts changed, restarting server...[39m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mtailwind.config.js[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m changed tsconfig file detected: C:\Users\Administrator\Videos\mall-system\apps\customer-web\tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/vite-env.d.ts[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/main.tsx[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/AddressPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CartPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CategoryPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CheckoutPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CouponPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/HomePage.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/HomePage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/LoginPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/NotificationPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/OrderDetailPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/OrdersPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/PaymentPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/PaymentResultPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ProductDetailPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ProductListPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/RegisterPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/ReviewCreatePage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/SupportChatPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/SupportSessionsPage.tsx, /src/index.css[22m
+[2m14:42:26[22m [36m[1m[vite][22m[39m server restarted.
+[2m14:45:59[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m14:47:07[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m14:53:01[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m14:53:36[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m14:56:15[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m14:56:56[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m14:58:14[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m14:58:49[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m14:59:00[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m14:59:59[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m15:00:21[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:02:00[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:02:15[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:02:30[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:04:53[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:05:16[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m15:14:09[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:16:16[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m15:16:40[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m15:17:40[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:19:20[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:19:58[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:22:25[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
+[2m15:26:59[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:27:39[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:28:23[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:29:11[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:32:18[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:33:56[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:36:27[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:36:57[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:38:53[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:39:42[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m15:39:42[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/pages/StorePages.tsx[22m Could not Fast Refresh (new export)
+[2m15:39:42[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/App.tsx, /src/pages/HomePage.tsx[22m
+[2m15:39:42[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/App.tsx[22m Could not Fast Refresh ("wsEventBus" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m15:39:42[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/App.tsx[22m
+[2m15:39:42[22m [36m[1m[vite][22m[39m [33mhmr invalidate [39m[2m/src/App.tsx[22m Could not Fast Refresh ("wsEventBus" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m15:39:42[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/App.tsx[22m
+[2m17:21:06[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.tsx, /src/index.css[22m
+[2m17:22:19[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/StorePages.css[22m
