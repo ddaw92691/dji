@@ -3,11 +3,23 @@ import { Client } from '@stomp/stompjs'
 
 let stompClient: Client | null = null
 
+function resolveSockJsEndpoint() {
+  const configuredUrl = import.meta.env.VITE_WS_URL?.trim()
+  if (configuredUrl) {
+    return configuredUrl.replace(/^ws:/, 'http:').replace(/^wss:/, 'https:')
+  }
+
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL || '').trim()
+  if (!baseUrl) {
+    return '/ws'
+  }
+
+  return `${baseUrl.replace(/\/api\/?$/, '').replace(/\/$/, '')}/ws`
+}
+
 export function connectWebSocket(token: string, onEvent: (event: any) => void) {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
-  const wsEndpoint = baseUrl ? baseUrl + '/ws' : '/ws'
   const client = new Client({
-    webSocketFactory: () => new SockJS(wsEndpoint),
+    webSocketFactory: () => new SockJS(resolveSockJsEndpoint()),
     connectHeaders: { Authorization: 'Bearer ' + token },
     debug: () => {},
     reconnectDelay: 5000,

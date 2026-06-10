@@ -22,8 +22,10 @@ export default defineConfig(({ mode }) => {
         imports: ['vue', 'vue-router', 'pinia'],
         dirs: ['src/stores'],
         resolvers: [ElementPlusResolver()],
+        dts: 'auto-imports.d.ts',
       }),
       Components({
+        dts: 'components.d.ts',
         resolvers: [ElementPlusResolver()],
         dirs: ['src/components'], // 指定组件目录,注册为全局组件
       }),
