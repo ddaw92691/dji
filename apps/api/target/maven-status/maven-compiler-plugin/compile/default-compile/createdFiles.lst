@@ -25,6 +25,7 @@ com\mall\api\modules\customer\controller\CustomerCouponController.class
 com\mall\api\modules\system\PermissionService.class
 com\mall\api\modules\customer\controller\AddressController.class
 com\mall\api\modules\commission\mapper\CommissionMapper.class
+com\mall\api\config\RailwayDatabaseEnvironmentPostProcessor.class
 com\mall\api\modules\export\ExportService.class
 com\mall\api\modules\customer\controller\OrderController.class
 com\mall\api\modules\product\mapper\ProductMapper.class

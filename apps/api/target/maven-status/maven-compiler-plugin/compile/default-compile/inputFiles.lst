@@ -8,6 +8,7 @@ C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\co
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\common\response\ApiResponse.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\config\CorsConfig.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\config\MybatisPlusConfig.java
+C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\config\RailwayDatabaseEnvironmentPostProcessor.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\config\RateLimitInterceptor.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\config\SwaggerConfig.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\config\WebMvcConfig.java
