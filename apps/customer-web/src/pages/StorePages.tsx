@@ -10,6 +10,7 @@ type NavKey = Exclude<StoreSection, 'store-day'>
 type Product = {
   name: string
   image: string
+  gallery?: string[]
   bgImage?: string
   bgColor?: string
   price?: string
@@ -38,6 +39,13 @@ type HomeBannerItem = {
   cta?: string
   light?: boolean
   baked?: boolean
+}
+
+type StoreBenefit = {
+  title: string
+  image: string
+  imageClass?: string
+  detail: string
 }
 
 const asset = {
@@ -410,46 +418,50 @@ function topNavKeys(isHome: boolean): NavKey[] {
 }
 
 export function StoreHomePage() {
+  const cameraRail = [
+    { ...p('DJI Lito X1', homeAsset.rail.camera[0], '399', 'Beginner-Friendly Camera Drone', 'New'), gallery: [homeAsset.rail.camera[0], homeAsset.rail.camera[1], homeAsset.rail.camera[2]] },
+    { ...p('DJI Avata 360', homeAsset.rail.camera[1], '739', 'DJI Avata 360'), gallery: [homeAsset.rail.camera[1], homeAsset.rail.camera[2], homeAsset.rail.camera[3]] },
+    { ...p('DJI Neo 2', homeAsset.rail.camera[2], '209', 'Follow-Me Camera Drone'), gallery: [homeAsset.rail.camera[2], homeAsset.rail.camera[0], homeAsset.rail.camera[3]] },
+    { ...p('DJI Mini 5 Pro', homeAsset.rail.camera[3], '739', 'Advanced Mini Camera Drone'), gallery: [homeAsset.rail.camera[3], homeAsset.rail.camera[0], homeAsset.rail.camera[1]] },
+  ]
+  const dailyRail = [
+    { ...p('Osmo Mobile 8P', homeAsset.rail.daily[0], '129', 'Pro Framing and Tracking'), gallery: [homeAsset.rail.daily[0], homeAsset.rail.daily[1], homeAsset.rail.daily[2]] },
+    { ...p('Osmo Action 6', homeAsset.rail.daily[1], '369', 'All-in-One Flagship Action Camera'), gallery: [homeAsset.rail.daily[1], homeAsset.rail.daily[2], homeAsset.rail.daily[3]] },
+    { ...p('Osmo Mobile 8', homeAsset.rail.daily[2], '83', '360 Tracking Phone Gimbal'), gallery: [homeAsset.rail.daily[2], homeAsset.rail.daily[0], homeAsset.rail.daily[3]] },
+    { ...p('Osmo Nano', homeAsset.rail.daily[3], '199', 'Wearable Camera for Vlog'), gallery: [homeAsset.rail.daily[3], homeAsset.rail.daily[0], homeAsset.rail.daily[1]] },
+  ]
+  const proRail = [
+    { ...p('DJI RS 4 Mini', homeAsset.rail.pro[0], '268', 'Compact and Lightweight Gimbal'), gallery: [homeAsset.rail.pro[0], homeAsset.rail.pro[1], homeAsset.rail.pro[2]] },
+    { ...p('DJI RS 4 Pro', homeAsset.rail.pro[1], '689', 'Flagship Camera Stabilizer'), gallery: [homeAsset.rail.pro[1], homeAsset.rail.pro[2], homeAsset.rail.pro[3]] },
+    { ...p('DJI Ronin 4D-8K', homeAsset.rail.pro[2], '6,299', 'Cinema Camera'), gallery: [homeAsset.rail.pro[2], homeAsset.rail.pro[3], homeAsset.rail.pro[0]] },
+    { ...p('DJI SDR Transmission', homeAsset.rail.pro[3], '309', 'Robust Full-HD Video Solution'), gallery: [homeAsset.rail.pro[3], homeAsset.rail.pro[0], homeAsset.rail.pro[1]] },
+  ]
+
   return (
     <StoreShell home>
       <main className="store-home-main">
         <HomeHero />
         <HomeIconStrip />
         <HomeCarousel />
+        <h2 className="home-section-title">Handheld - Pro Shooting</h2>
+        <HomeBand title="DJI RS 5" image={homeAsset.proWide} to="/handheld" />
+        <ProductRail
+          products={proRail}
+          guideImage={homeAsset.proGuide}
+          guideTitle="Which Handheld Is Right for Me?"
+        />
         <h2 className="home-section-title">Camera Drones</h2>
         <HomeBand title="DJI Lito X1" image={homeAsset.cameraWide} to="/camera-drones" />
         <ProductRail
-          products={[
-            p('DJI Lito X1', homeAsset.rail.camera[0], '399', 'Beginner-Friendly Camera Drone', 'New'),
-            p('DJI Avata 360', homeAsset.rail.camera[1], '739', 'DJI Avata 360'),
-            p('DJI Neo 2', homeAsset.rail.camera[2], '209', 'Follow-Me Camera Drone'),
-            p('DJI Mini 5 Pro', homeAsset.rail.camera[3], '739', 'Advanced Mini Camera Drone'),
-          ]}
+          products={cameraRail}
           guideImage={homeAsset.droneGuide}
           guideTitle="Which Drone Is Right for Me?"
         />
         <h2 className="home-section-title">Handheld - Daily Vlogging</h2>
         <HomeBand title="Osmo Pocket 4" image={homeAsset.dailyWide} to="/handheld" />
         <ProductRail
-          products={[
-            p('Osmo Mobile 8P', homeAsset.rail.daily[0], '129', 'Pro Framing and Tracking'),
-            p('Osmo Action 6', homeAsset.rail.daily[1], '369', 'All-in-One Flagship Action Camera'),
-            p('Osmo Mobile 8', homeAsset.rail.daily[2], '83', '360 Tracking Phone Gimbal'),
-            p('Osmo Nano', homeAsset.rail.daily[3], '199', 'Wearable Camera for Vlog'),
-          ]}
+          products={dailyRail}
           guideImage={homeAsset.dailyGuide}
-          guideTitle="Which Handheld Is Right for Me?"
-        />
-        <h2 className="home-section-title">Handheld - Pro Shooting</h2>
-        <HomeBand title="DJI RS 5" image={homeAsset.proWide} to="/handheld" />
-        <ProductRail
-          products={[
-            p('DJI RS 4 Mini', homeAsset.rail.pro[0], '268', 'Compact and Lightweight Gimbal'),
-            p('DJI RS 4 Pro', homeAsset.rail.pro[1], '689', 'Flagship Camera Stabilizer'),
-            p('DJI Ronin 4D-8K', homeAsset.rail.pro[2], '6,299', 'Cinema Camera'),
-            p('DJI SDR Transmission', homeAsset.rail.pro[3], '309', 'Robust Full-HD Video Solution'),
-          ]}
-          guideImage={homeAsset.proGuide}
           guideTitle="Which Handheld Is Right for Me?"
         />
         <section className="home-education-block">
@@ -465,7 +477,7 @@ export function StoreHomePage() {
         <section className="store-playbook">
           <div className="home-module-heading">
             <h2>Buying Guides</h2>
-            <ScrollButtons target="home-guides" />
+            <ScrollButtons target="home-guides" variant="side" />
           </div>
           <div data-scroll="home-guides">
             {homeAsset.buyingGuides.map((image, index) => (
@@ -869,9 +881,34 @@ function ProductGroupView({ group, compact = false }: { group: ProductGroup; com
 }
 
 function ProductCard({ product, featured = false }: { product: Product; featured?: boolean }) {
+  const gallery = product.gallery?.length ? product.gallery : [product.image]
+  const [mediaIndex, setMediaIndex] = useState(0)
+  const changeMedia = (direction: number) => {
+    setMediaIndex((current) => (current + direction + gallery.length) % gallery.length)
+  }
+
   return (
     <Link to="/products" className={`store-product-card ${featured ? 'featured' : ''}`}>
-      <img src={product.image} alt={product.name} />
+      <div className="product-card-media">
+        <img src={gallery[mediaIndex]} alt={product.name} />
+        {gallery.length > 1 && (
+          <>
+            <button className="product-media-arrow left" type="button" aria-label={`Previous ${product.name} image`} onClick={(event) => { event.preventDefault(); changeMedia(-1) }}>‹</button>
+            <button className="product-media-arrow right" type="button" aria-label={`Next ${product.name} image`} onClick={(event) => { event.preventDefault(); changeMedia(1) }}>›</button>
+            <div className="product-media-progress" aria-label={`${product.name} image pagination`}>
+              {gallery.map((image, index) => (
+                <button
+                  key={`${product.name}-${image}`}
+                  type="button"
+                  className={index === mediaIndex ? 'active' : ''}
+                  aria-label={`Show ${product.name} image ${index + 1}`}
+                  onClick={(event) => { event.preventDefault(); setMediaIndex(index) }}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
       {product.tag && <span className={product.tag === 'Out of stock' ? 'muted' : ''}>{product.tag}</span>}
       <h3>{product.name}</h3>
       {product.desc && <p>{product.desc}</p>}
@@ -980,6 +1017,15 @@ function HomeHero() {
 }
 
 function HomeCarousel() {
+  const benefits: StoreBenefit[] = [
+    { title: '1% DJI Credit Reward', image: homeAsset.credit, detail: 'Earn DJI Credit with eligible DJI Store purchases and redeem it toward future orders.' },
+    { title: 'Up to 30-Day Returns', image: homeAsset.returns, imageClass: 'benefit-symbol returns', detail: 'Enjoy up to 30-day returns on eligible products purchased from DJI Store.' },
+    { title: 'Over USD $45 Ships Free', image: homeAsset.freeShipping, imageClass: 'benefit-symbol free', detail: 'Orders over USD $45 ship free, with tracking provided after dispatch.' },
+    { title: 'Get DJI Expert Help', image: homeAsset.expert, detail: 'Chat with DJI experts for product selection, order questions, and setup guidance.' },
+    { title: 'Official Refurbished', image: homeAsset.refurbished, detail: 'Shop certified refurbished DJI products inspected to official quality standards.' },
+    { title: 'Official Accessories', image: homeAsset.accessories, detail: 'Choose genuine DJI accessories designed for reliable compatibility and performance.' },
+  ]
+  const [activeBenefit, setActiveBenefit] = useState<StoreBenefit | null>(null)
   const fresh = [
     { name: 'Osmo Pocket 3', price: '358', desc: '1″ CMOS Pocket Gimbal Camera' },
     { name: 'Osmo Mobile 8P', price: '129', desc: 'Pro Framing and Tracking Phone Gimbal' },
@@ -1029,18 +1075,29 @@ function HomeCarousel() {
       </section>
       <h2 className="home-section-title compact">Why shop with DJI Store</h2>
       <section className="home-benefits">
-        <article className="benefit-tall"><h3>1% DJI Credit Reward</h3><img src={homeAsset.credit} alt="" /></article>
-        <article><h3>Up to 30-Day Returns</h3><img className="benefit-symbol" src={homeAsset.returns} alt="" /></article>
-        <article><h3>Over USD $45 Ships Free</h3><img className="benefit-symbol free" src={homeAsset.freeShipping} alt="" /></article>
-        <article><h3>Get DJI Expert Help</h3><img src={homeAsset.expert} alt="" /></article>
-        <article><h3>Official Refurbished</h3><img src={homeAsset.refurbished} alt="" /></article>
-        <article className="benefit-tall"><h3>Official Accessories</h3><img src={homeAsset.accessories} alt="" /></article>
+        {benefits.map((benefit) => (
+          <button key={benefit.title} className="benefit-card" type="button" onClick={() => setActiveBenefit(benefit)}>
+            <h3>{benefit.title}</h3>
+            <img className={benefit.imageClass || ''} src={benefit.image} alt="" />
+          </button>
+        ))}
       </section>
-      <Link className="home-sale-banner" to="/store-day" style={{ backgroundImage: `url(${homeAsset.storeDay})` }}>
-        <span>Up to 30% Off</span>
-        <strong>DJI Store Day</strong>
-      </Link>
+      {activeBenefit && <HomeBenefitModal benefit={activeBenefit} onClose={() => setActiveBenefit(null)} />}
     </>
+  )
+}
+
+function HomeBenefitModal({ benefit, onClose }: { benefit: StoreBenefit; onClose: () => void }) {
+  return (
+    <div className="benefit-modal" role="dialog" aria-modal="true" aria-label={benefit.title}>
+      <div className="benefit-modal-panel">
+        <button className="benefit-modal-close" type="button" aria-label="Close" onClick={onClose}>×</button>
+        <img src={benefit.image} alt="" />
+        <h3>{benefit.title}</h3>
+        <p>{benefit.detail}</p>
+        <Link to="/products" onClick={onClose}>Learn More</Link>
+      </div>
+    </div>
   )
 }
 
@@ -1078,12 +1135,28 @@ function ScrollButtons({ target, variant = 'compact' }: { target: string; varian
     update()
     const el = document.querySelector<HTMLElement>(`[data-scroll="${target}"]`)
     if (!el) return
-    const handle = () => update()
+    let frame = 0
+    const handle = () => {
+      if (frame) window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(update)
+    }
+    const handleWheel = () => {
+      handle()
+      window.setTimeout(update, 180)
+      window.setTimeout(update, 420)
+    }
     el.addEventListener('scroll', handle, { passive: true })
+    el.addEventListener('wheel', handleWheel, { passive: true })
+    el.addEventListener('touchmove', handleWheel, { passive: true })
     window.addEventListener('resize', handle)
+    const interval = window.setInterval(update, 500)
     return () => {
+      if (frame) window.cancelAnimationFrame(frame)
       el.removeEventListener('scroll', handle)
+      el.removeEventListener('wheel', handleWheel)
+      el.removeEventListener('touchmove', handleWheel)
       window.removeEventListener('resize', handle)
+      window.clearInterval(interval)
     }
   }, [target])
 
@@ -1127,9 +1200,12 @@ function HomeIconStrip() {
 
 function HomeBand({ title, image, to }: { title: string; image: string; to: string }) {
   return (
-    <Link to={to} className="home-band" style={{ backgroundImage: `url(${image})` }}>
-      <h2>{title}</h2>
-      <button>Buy Now</button>
+    <Link to={to} className="home-band">
+      <video className="home-band-video" poster={image} muted loop playsInline aria-hidden="true" />
+      <div>
+        <h2>{title}</h2>
+        <button>Buy Now</button>
+      </div>
     </Link>
   )
 }
@@ -1141,10 +1217,17 @@ function ProductRail({ products, guideImage, guideTitle = 'All Accessories' }: {
       <ScrollButtons target={target} variant="side" />
       <div className="product-rail" data-scroll={target}>
         {products.map((product) => <ProductCard key={product.name} product={product} />)}
-        <Link className={`guide-card ${guideImage ? 'with-image' : ''}`} to="/products" style={guideImage ? { backgroundImage: `url(${guideImage})` } : undefined}>
-          <span>{guideTitle}</span>
-          <strong>All Accessories</strong>
-        </Link>
+        <div className="rail-guide-stack">
+          <Link className={`guide-card ${guideImage ? 'with-image' : ''}`} to="/products" style={guideImage ? { backgroundImage: `url(${guideImage})` } : undefined}>
+            <small>Buying guides</small>
+            <span>{guideTitle}</span>
+            <i aria-hidden="true">›</i>
+          </Link>
+          <Link className="all-accessories-card" to="/products">
+            <span>All Accessories</span>
+            <i aria-hidden="true">›</i>
+          </Link>
+        </div>
       </div>
     </section>
   )
@@ -1230,12 +1313,41 @@ function TrustStrip() {
 function StoreFooter() {
   const cols = [
     ['Product Categories', 'Camera Drones', 'Handheld', 'Education & Industry', 'Accessory'],
-    ['Help & Support', 'Payment Methods', 'Order Information', 'Shipping & Delivery', 'Return Policy', 'Repair Services'],
+    ['Help & Support', 'Payment Methods', 'Order Information', 'Shipping & Delivery', 'Return Policy', 'Technical Support', 'Repair Services', 'After-Sales Service Policies'],
     ['Programs', 'DJI Credit', 'Official Refurbished', 'DJI Store App'],
     ['Explore', 'SkyPixel', 'DJI Forum', 'Buying Guides', 'Fly Safe', 'DJI Flying Tips'],
-    ['Subscribe', 'Be the first to find out about our newest offerings and hottest deals.'],
   ]
-  return <footer className="store-footer"><div>{cols.map((col) => <section key={col[0]}><h3>{col[0]}</h3>{col.slice(1).map((item) => <Link key={item} to="/products">{item}</Link>)}</section>)}</div><p><b>dji</b> Who We Are - Contact Us - Careers - Flagship Stores</p><small>Copyright 2026 DJI All Rights Reserved.</small></footer>
+  return (
+    <footer className="store-footer">
+      <div className="store-footer-top">
+        <strong>Product Categories</strong>
+        <nav>
+          {cols.map((col) => <Link key={col[0]} to="/products">{col[0]}</Link>)}
+        </nav>
+        <span>Singapore / English</span>
+      </div>
+      <div className="store-footer-grid">
+        {cols.map((col) => (
+          <section key={col[0]}>
+            <h3>{col[0]}</h3>
+            {col.slice(1).map((item) => <Link key={item} to="/products">{item}</Link>)}
+          </section>
+        ))}
+        <section className="store-footer-subscribe">
+          <h3>Subscribe</h3>
+          <p>Be the first to find out about our newest offerings and hottest deals, and what's new.</p>
+          <Link to="/products">Subscribe</Link>
+        </section>
+      </div>
+      <div className="store-footer-bottom">
+        <Link className="footer-logo" to="/"><img src="/logo-black.webp" alt="DJI" /></Link>
+        <nav>
+          {['Who We Are', 'Contact Us', 'Careers', 'Flagship Stores'].map((item) => <Link key={item} to="/products">{item}</Link>)}
+        </nav>
+      </div>
+      <small>Copyright 2026 DJI All Rights Reserved. Privacy Policy / Accessibility Statement / Terms of Use / Site Map</small>
+    </footer>
+  )
 }
 
 function OfficialFooter() {

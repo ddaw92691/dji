@@ -93,4 +93,6 @@ const startApp = async () => {
 // 启动应用
 startApp().catch((error) => {
   console.error('应用启动失败:', error)
+  // 兜底：启动流程异常时也移除加载动画，避免页面永远卡在 loading。
+  loadingFadeOut()
 })
