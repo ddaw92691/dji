@@ -41,6 +41,7 @@ function App() {
     '/education-industry',
     '/official-refurbished',
   ].includes(location.pathname)
+  const isFullWidthPage = isStorePage || location.pathname === '/login'
 
   const handleWsEvent = useCallback((event: any) => {
     const e = event as { type: string; data?: any }
@@ -62,8 +63,8 @@ function App() {
   }, [token, handleWsEvent])
 
   return (
-    <div className={isStorePage ? 'min-h-screen bg-white' : 'min-h-screen bg-gray-50'}>
-      <div className={isStorePage ? 'min-h-screen bg-white' : 'mx-auto max-w-[480px] min-h-screen bg-white shadow-sm'}>
+    <div className={isFullWidthPage ? 'min-h-screen bg-white' : 'min-h-screen bg-gray-50'}>
+      <div className={isFullWidthPage ? 'min-h-screen bg-white' : 'mx-auto max-w-[480px] min-h-screen bg-white shadow-sm'}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/store-day" element={<StoreCategoryPage section="store-day" />} />

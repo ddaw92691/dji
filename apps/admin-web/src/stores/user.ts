@@ -30,7 +30,12 @@ export const useUserStore = defineStore('user', () => {
 
   // 用户角色名称
   const userRoleName = computed(() => {
-    return roleList.value.find((role) => role.id === userInfo.value?.roleId)?.name ?? '无权限'
+    const info = userInfo.value
+    if (!info) return '无权限'
+    // 后端返回的是角色编码(role，如 SUPER_ADMIN)，优先按 code 匹配角色名；
+    // 兼容旧的 roleId 匹配；都匹配不到时直接展示角色编码，避免超管被误显示为“无权限”。
+    const matched = roleList.value.find((role) => role.code === info.role || role.id === info.roleId)
+    return matched?.name ?? info.role ?? '无权限'
   })
 
   // 地址信息
