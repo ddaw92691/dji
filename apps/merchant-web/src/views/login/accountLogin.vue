@@ -214,7 +214,12 @@ const handleLogin = async () => {
       password: loginForm.value.password,
       loginType: 'password',
     })
-    if (res.code !== 200) return
+    if (res.code !== 200) {
+      // 后端业务异常（账号/密码错误等）以 HTTP 200 + code!=200 返回，
+      // 这里显式提示，避免登录失败时界面静默无反馈。
+      ElMessage.error(res.message || t('login.loginFailed'))
+      return
+    }
     const role = res.data.user?.role
     if (role !== 'MERCHANT' && role !== 'AGENT') {
       ElMessage.error('This account does not have permission to access the merchant panel')

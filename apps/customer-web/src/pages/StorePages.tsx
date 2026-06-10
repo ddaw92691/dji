@@ -1312,11 +1312,11 @@ function PromoProduct({ product, index }: { product: Product; index: number }) {
 
 function TrustStrip() {
   const items = [
-    { icon: <TruckIcon />, text: 'Free shipping on orders over USD $45' },
-    { icon: <CardIcon />, text: 'We accept credit cards, PayPal, and bank wires' },
-    { icon: <ChatIcon />, text: 'Order Service: Live Chat' },
+    { icon: <TruckIcon />, content: <>Free shipping on orders over USD $45</> },
+    { icon: <CardIcon />, content: <>We accept credit cards, PayPal, and bank wires</> },
+    { icon: <ChatIcon />, content: <>Order Service: <Link to="/support">Live Chat</Link></> },
   ]
-  return <section className="trust-strip">{items.map((item) => <article key={item.text}><span className="trust-icon">{item.icon}</span><span>{item.text}</span></article>)}</section>
+  return <section className="trust-strip">{items.map((item, index) => <article key={index}><span className="trust-icon">{item.icon}</span><span>{item.content}</span></article>)}</section>
 }
 
 function TruckIcon() {
@@ -1368,8 +1368,25 @@ function StoreFooter() {
         <nav>
           {['Who We Are', 'Contact Us', 'Careers', 'Flagship Stores'].map((item) => <Link key={item} to="/products">{item}</Link>)}
         </nav>
+        <div className="store-social-links" aria-label="Social links">
+          {[
+            { label: 'Facebook', icon: <FacebookIcon /> },
+            { label: 'X', icon: <XIcon /> },
+            { label: 'YouTube', icon: <YouTubeIcon /> },
+            { label: 'Vimeo', icon: <VimeoIcon /> },
+            { label: 'Instagram', icon: <InstagramIcon /> },
+          ].map((item) => (
+            <Link key={item.label} to="/products" aria-label={item.label}>{item.icon}</Link>
+          ))}
+        </div>
       </div>
-      <small>Copyright 2026 DJI All Rights Reserved. Privacy Policy / Accessibility Statement / Terms of Use / Site Map</small>
+      <div className="store-footer-legal">
+        <small>
+          <span>Copyright © 2026 DJI All Rights Reserved.</span>
+          {['Privacy Policy', 'Accessibility Statement', 'Terms of Use', 'Site Map'].map((item) => <Link key={item} to="/products">{item}</Link>)}
+        </small>
+        <Link to="/support">Feedback on web experience? Click here</Link>
+      </div>
     </footer>
   )
 }
@@ -1411,7 +1428,45 @@ function OfficialFooter() {
 }
 
 function FloatingHelp() {
-  return <div className="floating-help"><button>^</button><button>?</button><button>[]</button></div>
+  return (
+    <div className="floating-help">
+      <button type="button" aria-label="Back to top"><ChevronUpIcon /></button>
+      <button type="button" aria-label="Customer service"><SupportAvatarIcon /></button>
+      <button type="button" aria-label="Support center"><SupportBoxIcon /></button>
+    </div>
+  )
+}
+
+function FacebookIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.3 8.1h2.1V4.8a27 27 0 0 0-3-.1c-3 0-5 1.8-5 5v2.8H5.1v3.7h3.3v7.6h4v-7.6h3.3l.5-3.7h-3.8V10c0-1.1.3-1.9 1.9-1.9Z" /></svg>
+}
+
+function XIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m13.8 10.4 6.4-7.1h-2.1l-5.2 5.8-4.2-5.8H3.3l6.7 9.1-6.8 7.6h2.1l5.6-6.2 4.5 6.2h5.4l-7-9.6Zm-2.2 2.4-.9-1.2-4-5.7h1.2l3.3 4.6.9 1.2 4.3 6h-1.2l-3.6-4.9Z" /></svg>
+}
+
+function YouTubeIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.4 7.2a2.6 2.6 0 0 0-1.8-1.8C18 5 12 5 12 5s-6 0-7.6.4a2.6 2.6 0 0 0-1.8 1.8A27 27 0 0 0 2.2 12a27 27 0 0 0 .4 4.8 2.6 2.6 0 0 0 1.8 1.8C6 19 12 19 12 19s6 0 7.6-.4a2.6 2.6 0 0 0 1.8-1.8 27 27 0 0 0 .4-4.8 27 27 0 0 0-.4-4.8ZM10 15V9l5.2 3L10 15Z" /></svg>
+}
+
+function VimeoIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 7.4c-.1 2.8-2.1 6.7-6 11.6-1.6 2-3 3-4.2 3-.7 0-1.4-.7-1.9-2L7.8 12c-.4-1.3-.9-2-1.4-2-.1 0-.5.2-1.2.7l-.7-.9 2.1-1.9c1-.9 1.8-1.4 2.4-1.4 1.3-.1 2.1.8 2.4 2.4.4 1.8.6 3 .8 3.4.4 1.5.9 2.2 1.4 2.2.4 0 1-.6 1.8-1.9.8-1.2 1.2-2.2 1.3-2.8.1-1.1-.3-1.7-1.3-1.7-.5 0-.9.1-1.4.3.9-3 2.7-4.5 5.3-4.4 1.9 0 2.8 1.1 2.7 3.4Z" /></svg>
+}
+
+function InstagramIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.4 2.8h9.2a4.6 4.6 0 0 1 4.6 4.6v9.2a4.6 4.6 0 0 1-4.6 4.6H7.4a4.6 4.6 0 0 1-4.6-4.6V7.4a4.6 4.6 0 0 1 4.6-4.6Zm0 1.8a2.8 2.8 0 0 0-2.8 2.8v9.2a2.8 2.8 0 0 0 2.8 2.8h9.2a2.8 2.8 0 0 0 2.8-2.8V7.4a2.8 2.8 0 0 0-2.8-2.8H7.4Zm4.6 3.1a4.3 4.3 0 1 1 0 8.6 4.3 4.3 0 0 1 0-8.6Zm0 1.8a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Zm4.5-2.3a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z" /></svg>
+}
+
+function ChevronUpIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m7 14 5-5 5 5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+}
+
+function SupportAvatarIcon() {
+  return <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="20" fill="#edf1f4" /><circle cx="20" cy="14" r="6" fill="#27323a" /><path d="M9 35c1.6-7.4 5.2-11 11-11s9.4 3.6 11 11" fill="#27323a" /><path d="M12 33c2.2-4.8 4.8-7.2 8-7.2s5.8 2.4 8 7.2" fill="#f0c7a1" opacity=".9" /></svg>
+}
+
+function SupportBoxIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M6 7.4 12 4l6 3.4v7.2L12 18l-6-3.4V7.4Z" strokeLinejoin="round" /><path d="m6 7.5 6 3.5 6-3.5M12 11v7M9.2 14.8h5.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
 }
 
 function flatProducts(groups: ProductGroup[]) {

@@ -95,6 +95,7 @@
     "admin": "管理员",
     "guest": "无权限用户",
     "loginSuccess": "登录成功",
+    "loginFailed": "登录失败，请检查账号和密码",
     "comingSoon": "敬请期待👀"
   },
   "user": {

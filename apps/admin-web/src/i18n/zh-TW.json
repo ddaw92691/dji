@@ -55,6 +55,7 @@
     "haveAccount": "已有帳號？",
     "loginRolePlaceholder": "請選擇登入身份",
     "loginSuccess": "登入成功",
+    "loginFailed": "登入失敗，請檢查帳號和密碼",
     "mobileLoginSubtitle": "使用您的行動裝置快速登入系統",
     "noAccount": "還沒有帳號？",
     "orUseOtherMethods": "或使用以下方式登入",

@@ -55,6 +55,7 @@
     "haveAccount": "Already have an account?",
     "loginRolePlaceholder": "Please select login identity",
     "loginSuccess": "Login successful",
+    "loginFailed": "Login failed, please check your account and password",
     "mobileLoginSubtitle": "Quickly log into the system using your mobile device",
     "noAccount": "Don’t have an account yet?",
     "orUseOtherMethods": "Or log in using",
