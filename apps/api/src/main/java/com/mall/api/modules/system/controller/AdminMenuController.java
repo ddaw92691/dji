@@ -36,6 +36,16 @@ public class AdminMenuController {
         return ApiResponse.success(permissionService.getAdminMenuTree(appType));
     }
 
+    @GetMapping("/{id}")
+    @Operation(summary = "菜单详情")
+    public ApiResponse<SysMenu> detail(@PathVariable Long id) {
+        SysMenu menu = sysMenuMapper.selectById(id);
+        if (menu == null || Boolean.TRUE.equals(menu.getDeleted())) {
+            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "菜单不存在");
+        }
+        return ApiResponse.success(menu);
+    }
+
     @PostMapping
     @Operation(summary = "创建菜单")
     public ApiResponse<SysMenu> create(@RequestBody SysMenu menu) {

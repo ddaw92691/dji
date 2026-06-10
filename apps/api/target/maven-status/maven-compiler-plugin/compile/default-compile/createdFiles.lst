@@ -84,6 +84,7 @@ com\mall\api\modules\category\mapper\CategoryMapper.class
 com\mall\api\security\UserPrincipal.class
 com\mall\api\modules\admin\controller\AdminI18nController.class
 com\mall\api\modules\auth\service\AuthService.class
+com\mall\api\security\UserDetailsServiceImpl$CacheEntry.class
 com\mall\api\modules\system\controller\AdminMerchantController.class
 com\mall\api\modules\support\dto\QuickReplyRequest.class
 com\mall\api\modules\order\OrderService.class

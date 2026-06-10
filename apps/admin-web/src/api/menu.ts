@@ -6,35 +6,35 @@ import type { IMenuParams, IMenuItem, ICreateOrUpdateMenuParams } from '@/types/
  * 获取菜单列表（树形结构）
  */
 export const menuPage = (params?: IMenuParams) => {
-  return request.get<ICommonResponse<IMenuItem[]>>('/menus', { params })
+  return request.get<ICommonResponse<IMenuItem[]>>('/admin/menus', { params })
 }
 
 /**
  * 根据ID获取菜单详情
  */
 export const menuInfo = (id: string) => {
-  return request.get<ICommonResponse<IMenuItem>>(`/menus/${id}`)
+  return request.get<ICommonResponse<IMenuItem>>(`/admin/menus/${id}`)
 }
 
 /**
  * 创建菜单
  */
 export const createMenu = (data: ICreateOrUpdateMenuParams) => {
-  return request.post<ICommonResponse<unknown>>('/menus', data)
+  return request.post<ICommonResponse<unknown>>('/admin/menus', data)
 }
 
 /**
  * 更新菜单
  */
 export const updateMenu = (data: ICreateOrUpdateMenuParams) => {
-  return request.put<ICommonResponse<unknown>>('/menus', data)
+  return request.put<ICommonResponse<unknown>>(`/admin/menus/${data.id}`, data)
 }
 
 /**
  * 删除菜单
  */
 export const deleteMenu = (id: string) => {
-  return request.delete<ICommonResponse<unknown>>(`/menus/${id}`)
+  return request.delete<ICommonResponse<unknown>>(`/admin/menus/${id}`)
 }
 
 export const menuApi = {

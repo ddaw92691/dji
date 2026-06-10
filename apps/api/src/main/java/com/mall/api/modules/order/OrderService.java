@@ -64,6 +64,7 @@ public class OrderService {
     private final NotificationService notificationService;
     private final RealtimeService realtimeService;
     private final CountryMapper countryMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public OrderService(MallOrderMapper orderMapper, OrderItemMapper orderItemMapper,
                         CartItemMapper cartItemMapper, AddressMapper addressMapper,

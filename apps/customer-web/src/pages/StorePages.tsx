@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { type CSSProperties, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 import './StorePages.css'
@@ -10,6 +10,8 @@ type NavKey = Exclude<StoreSection, 'store-day'>
 type Product = {
   name: string
   image: string
+  bgImage?: string
+  bgColor?: string
   price?: string
   oldPrice?: string
   tag?: string
@@ -29,10 +31,12 @@ type SideItem = {
 }
 
 type HomeBannerItem = {
-  eyebrow: string
+  eyebrow?: string
   title: string
   subtitle: string
   image: string
+  cta?: string
+  light?: boolean
   baked?: boolean
 }
 
@@ -60,6 +64,123 @@ const asset = {
   ronin: 'https://www-cdn.djiits.com/dps/72fd553b1234640bbe06aa703aeb25cd.jpg?w=2512&h=1392',
   laptop: 'https://www-cdn.djiits.com/cms/uploads/4fd3c35ee4bf3265bc4e5c5b16d132a3.png',
   romo: '/dji-home/tile-compare.jpg',
+}
+
+const home = (name: string) => `/home/${name}`
+
+const homeAsset = {
+  heroHome: home('imgi_5_532172b83ae3c25d346ed0cc73ef7077.jpg'),
+  storeDay: home('imgi_98_3782c873c0074415de3cd195fb78a9fe.jpg'),
+  icons: [
+    home('imgi_7_5b4238efcb259a43ccffd7dbb0cd1372.png'),
+    home('imgi_8_ff29737b15146791a385905ab937df57.png'),
+    home('imgi_9_5156524c9dbc46b978ff4410bd01205b.png'),
+    home('imgi_10_f1e315635b354d69a14c94c4499fbdbf.png'),
+    home('imgi_11_8e688f77665dfa02897bbe214ed2ac09.png'),
+    home('imgi_12_c9691ed1af5d83886df9349f79747996.png'),
+    home('imgi_13_f5ee8a4c286ac8367844f1025f6339d4.png'),
+    home('imgi_14_9adfb26a7d23e56b772b85ccb26eb804.png'),
+    home('imgi_15_97139517020a637dbd6a42dcf39a9f1c.png'),
+    home('imgi_16_60df9a600e879d18afaa9851e59e590e.png'),
+    home('imgi_17_9c558e62e4230ccd702f8bf7c331c31d.png'),
+    home('imgi_18_cb162ac9da339f3ab757f8934550a1cd.png'),
+    home('imgi_19_303f36e91b21ef018be5aad928658579.png'),
+    home('imgi_20_d75dda1d0d14c83524e53943418b4e89.png'),
+    home('imgi_21_2ee459ea07317dfa44b020226c310434.png'),
+    home('imgi_22_1d487982d0e652a9194e68c6c4104f9b.png'),
+    home('imgi_23_0a1b9e8a363b7ffb80c34cba83f33a7f.png'),
+    home('imgi_24_cbb91eec48665b197479fa641c5c507d.png'),
+    home('imgi_25_2d41ae9454d78459ffe0d4eb655420ee.png'),
+    home('imgi_26_a2cc75ea42e8b2b2cf00ecfcb0f86bf1.png'),
+  ],
+  whatsNew: [
+    { product: home('imgi_32_df537d7b13fd5aada161c63416d2b905.png'), bg: home('imgi_33_16f3c4fc8f2fb372fa111240ec9ad141.jpg'), color: '#b8c451' },
+    { product: home('imgi_34_4f349c761d049befad1545deb0f26621.png'), bg: home('imgi_35_4f99c42b87409f04533c0f352412cb94.jpg'), color: '#e1ae76' },
+    { product: home('imgi_36_8a285ec398e3d92c2486a053f1674196.png'), bg: home('imgi_37_a6f97e37a70582aac62af4b1fdca06a6.jpg'), color: '#466941' },
+    { product: home('imgi_38_f56e1f1f6cecb5cae9b35c83741ce0f4.png'), bg: home('imgi_39_6d914404e9305ee8de67b96a6b23d1e7.jpg'), color: '#595959' },
+    { product: home('imgi_40_92434972b8204f999dff70ee525186c9.png'), bg: home('imgi_41_b056ac45fedb8d842f3490c97015ab22.jpg'), color: '#bca98b' },
+    { product: home('imgi_42_4109a4a17cc7dcd14533f2cbf470b3c3.png'), bg: home('imgi_43_cc0b9edb1544694908e0cfe22563cef2.jpg'), color: '#152d3a' },
+    { product: home('imgi_44_13a80d3f7ae7d04d629d49c8c2f8de35.png'), bg: home('imgi_45_594718eef1712bcb732def7522ed8c90.jpg'), color: '#a6a7a3' },
+    { product: home('imgi_46_fe2569ab4447bec2c1d01e608885c8bc.png'), bg: home('imgi_47_046b7ca3308fd9d3fdbb0578577a9c96.png'), color: '#222a31' },
+    { product: home('imgi_48_23433c6c5d1a5b113fab3a09ae6ab4bb.png'), bg: home('imgi_49_ca589a93d582796deda317af6f240438.jpg'), color: '#3d5054' },
+    { product: home('imgi_50_00bbe483cfd95d3a77ea02d039c8f1e3.png'), bg: home('imgi_51_fbb3f29648098572226888c630239d69.jpg'), color: '#213e68' },
+    { product: home('imgi_52_718f51e3a6c29211b8b20a1bed1d355a.png'), bg: home('imgi_53_d996f7284ad9a9649ceefabb8de2c97b.jpg'), color: '#71856a' },
+    { product: home('imgi_54_cb57f4d055dcf2d6ae49f108c46afef9.png'), bg: home('imgi_55_36d6bbfe6aa4ab62028020c5ab49ceac.jpg'), color: '#5d8cad' },
+    { product: home('imgi_56_dc0ca202cc69b2225d069a037c68be81.png'), bg: home('imgi_57_da670c7bc0945e9114981a0c11a1d7e0.jpg'), color: '#786e5a' },
+    { product: home('imgi_58_f196207b671b11ed0058c564db36a27f.png'), bg: home('imgi_59_48dcbe933707bd002135e996991f2d30.jpg'), color: '#59631f' },
+    { product: home('imgi_60_3ca38a32bb60e912e6cde193d5020efb.png'), bg: home('imgi_61_bd9122cf0ef1c48df453d139375baa79.jpg'), color: '#435b78' },
+    { product: home('imgi_62_f99b0ba96368d16b8ea0cab30a65f778.png'), bg: home('imgi_63_8a716f8a5e48393fdd418e322287102c.jpg'), color: '#44484f' },
+    { product: home('imgi_64_8f37773e59b31264f628582aca294258.png'), bg: home('imgi_65_2d2e6e86fd57794e1c8129d4ddbbb12b.jpg'), color: '#41406b' },
+    { product: home('imgi_66_7f2a68230c09649ca7aab99e08d6653f.png'), bg: home('imgi_67_4ebd26fe63352cc5720de0bf5a7030f9.jpg'), color: '#22252c' },
+    { product: home('imgi_68_12782f885af1c6d77a8354966bbb7db7.png'), bg: home('imgi_69_1539cd998476aa0f24975a8f6518ca2f.jpg'), color: '#c7a16f' },
+    { product: home('imgi_70_c12fec95401abda9189e1ee81f6a3b2e.png'), bg: home('imgi_71_e760589ea6a7b283e54ea5fac728a49e.jpg'), color: '#4b321e' },
+    { product: home('imgi_72_b8e67d929c6f67a4725afc339bf2a1c9.png'), bg: home('imgi_73_2bc4a5def9f2844ad2f891ac1bd59594.jpg'), color: '#b7ab9b' },
+    { product: home('imgi_74_9d1176e01e3ff93b4e3bf4bd02ff0c4c.png'), bg: home('imgi_75_f9aa534e609d00e9a09fc99a48bc441f.jpg'), color: '#879bb1' },
+    { product: home('imgi_76_33d8abbc43b9ebaa71fc527aed4ff4a8.png'), bg: home('imgi_77_d7ae82a057c5d428cd8dbf4dba0abf7b.jpg'), color: '#0a0b0d' },
+    { product: home('imgi_78_72387a7f52a9c399fbfd3950f671cdaa.png'), bg: home('imgi_79_5d555f4809eb315598b75347e82d9e80.jpg'), color: '#5c697d' },
+    { product: home('imgi_80_42e0e653629399c88a880c43b5d442c0.png'), bg: home('imgi_81_75373b758b45d987edea90b2f45318bc.jpg'), color: '#477994' },
+    { product: home('imgi_82_85c7b1b1d3b47bd875005d9a880a610a.png'), bg: home('imgi_83_c8afb3ce395866e06079b5426842748b.jpg'), color: '#84afd0' },
+    { product: home('imgi_84_642fdc118455d3b719384b7f990d90f5.png'), bg: home('imgi_85_01cb1cffcc87488bfdbe695a0d972fbf.jpg'), color: '#16240f' },
+    { product: home('imgi_86_167aa78d106cd7ead497bb84fa123b70.png'), bg: home('imgi_87_283090155090a61b7051d6d3ae4d54a5.jpg'), color: '#111113' },
+    { product: home('imgi_88_5167560f1e39d3c81ee682629e4b49b1.png'), bg: home('imgi_89_7bfcc25f3c38828ba9500ea27e783caa.jpg'), color: '#2f3d48' },
+    { product: home('imgi_90_1ddba51d0a90aa701a1a66523692e651.png'), bg: home('imgi_91_674073269ae2a3f41855acbc1c813832.jpg'), color: '#0d0e12' },
+  ],
+  credit: home('imgi_92_b32772747fa866ff571cd1f570b996ce.jpg'),
+  returns: home('imgi_93_e5c1adb68470ba79cb867f69f9c7cf88.jpg'),
+  expert: home('imgi_94_56176753665d35ce447d6e0bf054f2f8.jpg'),
+  freeShipping: home('imgi_95_d6f1d760fc255d23fb457ad14b869343.jpg'),
+  refurbished: home('imgi_96_59cad53548ba55cbd2a8a31cbdc89fea.png'),
+  accessories: home('imgi_97_0a7a57ecac39bd197bb0045564fe2bfc.jpg'),
+  cameraWide: home('imgi_99_d3ba356b8130a6f0f8b5fde214d7836f.jpg'),
+  dailyWide: home('imgi_110_3fc9361c1f9eec315f56ddb4fa429e0e.jpg'),
+  proWide: home('imgi_121_4048945693033536766234ce05dc0243.jpg'),
+  droneGuide: home('imgi_109_23a70dac05dead196619dea78b50f200.png'),
+  dailyGuide: home('imgi_120_7b1b81a5280ff6bd5c3948e294158747.png'),
+  proGuide: home('imgi_131_dbda4b753f39f307589dc62b30a0dd47.png'),
+  educationEnterprise: home('imgi_132_c97c45b0e3727897dc32c72ca662f59b.jpg'),
+  educationClassroom: home('imgi_133_e568d74cda4b2a8d40b13d8fd36cfe9d.jpg'),
+  buyingGuides: [
+    home('imgi_134_3d0af363b0d0a410766c45e78b9ec050.jpg'),
+    home('imgi_135_fcc75db9143a73805269a95060f68b4c.jpg'),
+    home('imgi_136_224e4cc8e5346be0ba6b581f6dc9de10.jpg'),
+    home('imgi_137_46799f30907d418cf688775c860a3d7f.jpg'),
+    home('imgi_138_221c49a0f37adc12a0fa9111b5c735b7.jpg'),
+    home('imgi_139_17bbdda0fb4afb93fc972b81065900e8.jpg'),
+    home('imgi_140_8b8a93f27f2fc4408834a0973fb20d95.jpg'),
+    home('imgi_141_eb561680edeae1a10fecb5f43d76de1c.jpg'),
+    home('imgi_142_41856bb7eb8e615493fbc36e64322421.jpg'),
+    home('imgi_143_e8077951923ef0415d7be0759320bd22.jpg'),
+    home('imgi_144_6aae637b167b98422bb990912f19255b.jpg'),
+    home('imgi_145_bc556c804fb8abf78c92dec9af280b42.jpg'),
+    home('imgi_146_fbda6a1814991a55748bb3bd58072301.jpg'),
+    home('imgi_147_4e1f0214fea2a18d3266fa75d45a7b52.jpg'),
+    home('imgi_148_49595f893dc76ae46ae205e9c2a1e532.jpg'),
+    home('imgi_149_23d1581e7b36b505cc7c5b2f01c16812.jpg'),
+    home('imgi_150_2b46fe66bd1088860d70fac0b0115dc5.jpg'),
+    home('imgi_151_cd02a655fed1b6fdac7d2baa05fe0e32.jpg'),
+    home('imgi_152_a3c319a8f4e2d07403a11bd3c695cd41.jpg'),
+    home('imgi_153_c3e201b260aa026ea3b8b45b3d606a61.jpg'),
+  ],
+  rail: {
+    camera: [
+      home('imgi_101_82db54204716294bef78a1e1f034b650.png'),
+      home('imgi_104_1d52bfda8119fb92cfe6bd44ef4f3bc7.png'),
+      home('imgi_107_662cf598075a63b645c2e8801cf4a295.png'),
+      home('imgi_100_94e5948052963832cdbf2d32cb18f930.jpg'),
+    ],
+    daily: [
+      home('imgi_112_a39b913a06c74d5b2361e37b74dc0252.png'),
+      home('imgi_115_f37c811af72448e6af4f191beebae0d7.png'),
+      home('imgi_118_c1ba0ac967aa600919861af9ba6a604d.png'),
+      home('imgi_111_b057f520a24c0fbe8f4d9f78502d346d.jpg'),
+    ],
+    pro: [
+      home('imgi_122_fbde6ad1a4fbefcc990b5f38ec790243.jpg'),
+      home('imgi_123_533dbcd0bb5368cc672c0e81b5c481ee.png'),
+      home('imgi_129_eba0befc0de6d12bb208c6184fac5097.png'),
+      home('imgi_124_5022397088e5a7092de7a72c0503d955.jpg'),
+    ],
+  },
 }
 
 const p = (name: string, image: string, price = '39', desc = '', tag = ''): Product => ({
@@ -292,39 +413,65 @@ export function StoreHomePage() {
   return (
     <StoreShell home>
       <main className="store-home-main">
-        <section className="store-hero" style={{ backgroundImage: `url(${asset.heroHome})` }}>
-          <div>
-            <p>Stay Tuned</p>
-            <h1>OSMO POCKET 4P</h1>
-            <span>See More. Tell More.</span>
-            <Link to="/products">Learn More</Link>
-          </div>
-        </section>
+        <HomeHero />
         <HomeIconStrip />
         <HomeCarousel />
         <h2 className="home-section-title">Camera Drones</h2>
-        <HomeBand title="DJI Lito X1" image={asset.droneBeach} to="/camera-drones" />
-        <ProductRail products={[droneProducts[5], droneProducts[1], droneProducts[4], droneProducts[0]]} />
+        <HomeBand title="DJI Lito X1" image={homeAsset.cameraWide} to="/camera-drones" />
+        <ProductRail
+          products={[
+            p('DJI Lito X1', homeAsset.rail.camera[0], '399', 'Beginner-Friendly Camera Drone', 'New'),
+            p('DJI Avata 360', homeAsset.rail.camera[1], '739', 'DJI Avata 360'),
+            p('DJI Neo 2', homeAsset.rail.camera[2], '209', 'Follow-Me Camera Drone'),
+            p('DJI Mini 5 Pro', homeAsset.rail.camera[3], '739', 'Advanced Mini Camera Drone'),
+          ]}
+          guideImage={homeAsset.droneGuide}
+          guideTitle="Which Drone Is Right for Me?"
+        />
         <h2 className="home-section-title">Handheld - Daily Vlogging</h2>
-        <HomeBand title="Osmo Pocket 4" image={asset.shotMobile} to="/handheld" />
-        <ProductRail products={[p('Osmo Mobile 8P', asset.mobile, '129'), handheldProducts[1], p('Osmo Mobile 8', asset.mobile, '83'), p('Osmo Nano', asset.pocket, '199')]} />
+        <HomeBand title="Osmo Pocket 4" image={homeAsset.dailyWide} to="/handheld" />
+        <ProductRail
+          products={[
+            p('Osmo Mobile 8P', homeAsset.rail.daily[0], '129', 'Pro Framing and Tracking'),
+            p('Osmo Action 6', homeAsset.rail.daily[1], '369', 'All-in-One Flagship Action Camera'),
+            p('Osmo Mobile 8', homeAsset.rail.daily[2], '83', '360 Tracking Phone Gimbal'),
+            p('Osmo Nano', homeAsset.rail.daily[3], '199', 'Wearable Camera for Vlog'),
+          ]}
+          guideImage={homeAsset.dailyGuide}
+          guideTitle="Which Handheld Is Right for Me?"
+        />
         <h2 className="home-section-title">Handheld - Pro Shooting</h2>
-        <HomeBand title="DJI RS 5" image={asset.ronin} to="/handheld" />
-        <ProductRail products={[p('DJI RS 4 Mini', asset.ronin, '268'), p('DJI RS 4 Pro', asset.ronin, '689'), p('DJI Ronin 4D-8K', asset.fieldVideo, '6,299'), p('DJI SDR Transmission', asset.mic, '309')]} />
+        <HomeBand title="DJI RS 5" image={homeAsset.proWide} to="/handheld" />
+        <ProductRail
+          products={[
+            p('DJI RS 4 Mini', homeAsset.rail.pro[0], '268', 'Compact and Lightweight Gimbal'),
+            p('DJI RS 4 Pro', homeAsset.rail.pro[1], '689', 'Flagship Camera Stabilizer'),
+            p('DJI Ronin 4D-8K', homeAsset.rail.pro[2], '6,299', 'Cinema Camera'),
+            p('DJI SDR Transmission', homeAsset.rail.pro[3], '309', 'Robust Full-HD Video Solution'),
+          ]}
+          guideImage={homeAsset.proGuide}
+          guideTitle="Which Handheld Is Right for Me?"
+        />
         <section className="home-education-block">
-          <h2 className="home-section-title">Education & Industry</h2>
-          <div>
-            <ArticleCard title="Enterprise" subtitle="Integrated drone-based industrial solutions" image={asset.fieldEnterprise} />
-            <ArticleCard title="Education" subtitle="Programming education solutions" image={asset.fieldAgriculture} />
+          <div className="home-module-heading">
+            <h2 className="home-section-title">Education & Industry</h2>
+            <ScrollButtons target="home-education" />
+          </div>
+          <div data-scroll="home-education">
+            <ArticleCard title="Enterprise" subtitle="Integrated drone-based industrial solutions" image={homeAsset.educationEnterprise} />
+            <ArticleCard title="Education" subtitle="Programming education solutions" image={homeAsset.educationClassroom} />
           </div>
         </section>
         <section className="store-playbook">
-          <h2>Buying Guides</h2>
-          <div>
-            {[asset.droneHero, asset.droneAvata, asset.droneBeach, asset.bike].map((image, index) => (
+          <div className="home-module-heading">
+            <h2>Buying Guides</h2>
+            <ScrollButtons target="home-guides" />
+          </div>
+          <div data-scroll="home-guides">
+            {homeAsset.buyingGuides.map((image, index) => (
               <ArticleCard
                 key={`${image}-home-guide-${index}`}
-                title={['DJI Mini 4 Pro vs. DJI Air 3S vs. DJI Mavic 3 Pro', 'Follow Me Drones 2024', 'DJI Air 3S vs DJI Air 3', 'Osmo Action 5 Pro Unboxing'][index]}
+                title={['DJI Mini 4 Pro vs. DJI Air 3S vs. DJI Mavic 3 Pro', 'Follow Me Drones 2024', 'DJI Air 3S vs DJI Air 3', 'Osmo Action 5 Pro Unboxing', 'DJI Power 1000 V2 vs. DJI Power 1000', 'Follow Me Drones 2025', 'DJI Neo vs. DJI Flip', 'Osmo 360 vs. X5', 'Vlogging Reinvented', 'FPV Drones 2024', 'DJI Mini 4 Pro vs. Mini 3 Pro', 'Mini Drones: The Definitive Guide', 'Best Action Camera in 2024', 'DJI Air 3 vs Air 2S vs Mini 3 Pro', 'DJI Mavic 3 Pro vs. Mavic 3 vs. Mavic 3 Classic', 'Mavic 3 Pro: EPIC ROBOTIC SHOTS', 'DJI Mini 2 SE vs DJI Mini SE vs DJI Mini 3', 'Must-Have Gear for Camping Photographers', 'Best Action Cameras: In-depth Buying Guide', 'DJI RS 3 Mini: Unboxing & Highlights'][index] || 'Buying Guide'}
                 subtitle="Everything you need to know."
                 image={image}
               />
@@ -569,7 +716,7 @@ function StoreNav({ home }: { home: boolean }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const keys = topNavKeys(home)
   const transparent = home && !scrolled && !openPanel && !mobileMenuOpen
-  const logoSrc = transparent ? '/logo-white.webp' : '/logo-black.webp'
+  const logoSrc = home ? '/logo-black.webp' : transparent ? '/logo-white.webp' : '/logo-black.webp'
   const storeMobileNavItems = [
     { label: 'DJI STORE DAY', path: '/store-day', simple: true },
     ...(['camera-drones', 'handheld', 'robot-vacuum', 'services', 'accessories', 'education', 'refurbished'] as NavKey[]).map((key) => ({
@@ -802,31 +949,94 @@ function SpecComparison({ camera }: { camera: boolean }) {
   )
 }
 
+function HomeHero() {
+  const slides: HomeBannerItem[] = [
+    { eyebrow: 'June 1 - June 14', title: 'DJI STORE DAY', subtitle: 'Up to 30% Off', image: home('imgi_1_3e2f77565f1e91253031790a6844338d.png'), cta: 'Buy Now', light: true },
+    { eyebrow: 'Stay Tuned', title: 'OSMO POCKET 4P', subtitle: 'See More. Tell More.', image: homeAsset.heroHome, cta: 'Learn More' },
+    { eyebrow: 'Internal Recording Mini Wireless Mic', title: 'DJI MIC MINI 2S', subtitle: 'Capture Every Detail', image: home('imgi_3_ae9b431ffcb2bc8ba2b3d086a3b60938.jpg'), cta: 'Learn More' },
+    { title: 'My Pocket View', subtitle: 'Claim up to $800 DJI Credit.', image: home('imgi_2_78c4ee1b728cbcbec7047a91822ee991.jpg'), cta: 'Learn more', light: true },
+  ]
+  const [index, setIndex] = useState(0)
+  const active = slides[index]
+  const move = (direction: number) => setIndex((current) => (current + direction + slides.length) % slides.length)
+
+  return (
+    <section className={`store-hero home-hero-slide ${active.light ? 'light-copy' : ''}`} style={{ backgroundImage: `url(${active.image})` }}>
+      <button className="home-hero-arrow left" type="button" aria-label="Previous banner" onClick={() => move(-1)}>‹</button>
+      <button className="home-hero-arrow right" type="button" aria-label="Next banner" onClick={() => move(1)}>›</button>
+      <div>
+        {active.eyebrow && <p>{active.eyebrow}</p>}
+        <h1>{active.title}</h1>
+        <span>{active.subtitle}</span>
+        <Link to="/products">{active.cta || 'Learn More'}</Link>
+      </div>
+      <div className="home-hero-progress" aria-label="Banner pagination">
+        {slides.map((slide, slideIndex) => (
+          <button key={slide.title} type="button" className={slideIndex === index ? 'active' : ''} aria-label={`Show ${slide.title}`} onClick={() => setIndex(slideIndex)} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
 function HomeCarousel() {
   const fresh = [
-    p('Osmo Pocket 3', asset.pocket, '358', '1-Inch CMOS Pocket Gimbal Camera'),
-    p('Osmo Mobile 8P', asset.mobile, '129', 'Pro Framing and Tracking Phone Gimbal'),
-    p('DJI Mic Mini 2', asset.mic, '84', 'Mini Wireless Microphone'),
-    p('DJI Lito X1', asset.lito, '369', 'Beginner-Friendly Premium Camera Drone'),
-  ]
+    { name: 'Osmo Pocket 3', price: '358', desc: '1″ CMOS Pocket Gimbal Camera' },
+    { name: 'Osmo Mobile 8P', price: '129', desc: 'Pro Framing and Tracking Phone Gimbal' },
+    { name: 'DJI Mic Mini 2', price: '54', desc: 'Mini Wireless Microphone' },
+    { name: 'DJI Lito X1', price: '369', desc: 'Beginner-Friendly Premium Camera Drone' },
+    { name: 'DJI Lito 1', price: '299', desc: 'Beginner-Friendly Camera Drone' },
+    { name: 'Osmo Pocket 4', price: '473', desc: '1″ CMOS Pocket Gimbal Camera' },
+    { name: 'DJI Avata 360', price: '399', desc: '8K Flagship 360° Drone' },
+    { name: 'DJI ROMO', price: '899', desc: 'Flagship Robot Vacuum With Advanced Sensing' },
+    { name: 'DJI RS 5', price: '519', desc: 'Lightweight Commercial Stabilizer' },
+    { name: 'Osmo Action 6', price: '439', desc: 'All-In-One Flagship Action Camera' },
+    { name: 'DJI Neo 2', price: '209', desc: 'Follow Me Camera Drone' },
+    { name: 'Osmo Mobile 8', price: '83', desc: '360 Tracking Phone Gimbal' },
+    { name: 'Osmo Nano', price: '299', desc: 'Wearable Camera for Versatile Perspectives' },
+    { name: 'DJI Mini 5 Pro', price: '739', desc: 'All-In-One 1-Inch Large CMOS Mini Camera Drone' },
+    { name: 'DJI Mic 3', price: '149', desc: 'Advanced Mini Wireless Microphone' },
+    { name: 'Osmo 360', price: '357', desc: '8K Revolutionary 360 Camera' },
+    { name: 'DJI Mavic 4 Pro', price: '2,049', desc: 'Triple-Lens Flagship Camera Drone' },
+    { name: 'DJI RS 4 Mini', price: '268', desc: 'Compact and Lightweight Gimbal for Content Creators' },
+    { name: 'DJI Flip', price: '329', desc: 'All-in-One Vlog Camera Drone' },
+    { name: 'Osmo Mobile 7P', price: '94', desc: 'Flagship Intelligent Tracking Phone Gimbal' },
+    { name: 'DJI Mic Mini', price: '39', desc: 'Mini Wireless Microphone' },
+    { name: 'DJI O4 Air Unit Pro', price: '100', desc: 'Flagship FHD FPV Digital Video Transmission' },
+    { name: 'Osmo Action 5 Pro', price: '306', desc: 'The Action Camera With Revolutionary Image Quality' },
+    { name: 'DJI Neo', price: '139', desc: 'A Palm-Sized Drone for Vlogs' },
+    { name: 'DJI Mini 4K', price: '226', desc: 'In Stock - Easy-To-Use Mini Camera Drone' },
+    { name: 'DJI Mini 3', price: '227', desc: 'In Stock - Premier Entry-Level Camera Drone' },
+    { name: 'DJI Mini 4 Pro', price: '629', desc: 'All-In-One Omni Obstacle Sensing Mini Camera Drone' },
+    { name: 'DJI Air 3S', price: '926', desc: 'Dual-Camera Drone for Travel Photography' },
+    { name: 'DJI Avata 2', price: '729', desc: 'FPV Drone' },
+    { name: 'DJI RS 4 Pro', price: '889', desc: 'Expansive Flagship Stabilizer' },
+  ].map((item, itemIndex) => ({
+    ...p(item.name, homeAsset.whatsNew[itemIndex].product, item.price, item.desc),
+    bgColor: homeAsset.whatsNew[itemIndex].color,
+    bgImage: homeAsset.whatsNew[itemIndex].bg,
+  }))
   return (
     <>
       <section className="whats-new">
-        <h2>What's New</h2>
-        <div>
+        <div className="home-module-heading">
+          <h2>What's New</h2>
+          <ScrollButtons target="whats-new" variant="side" />
+        </div>
+        <div data-scroll="whats-new">
           {fresh.map((product) => <HomeNewCard key={product.name} product={product} />)}
         </div>
       </section>
       <h2 className="home-section-title compact">Why shop with DJI Store</h2>
       <section className="home-benefits">
-        <article className="benefit-tall"><h3>1% DJI Credit Reward</h3><img src={asset.storeDay} alt="" /></article>
-        <article><h3>Up to 30-Day Returns</h3><strong>30</strong></article>
-        <article><h3>Over USD $45 Ships Free</h3><strong>FREE</strong></article>
-        <article><h3>Get DJI Expert Help</h3><img src={asset.fieldAgriculture} alt="" /></article>
-        <article><h3>Official Refurbished</h3><img src={asset.droneHero} alt="" /></article>
-        <article className="benefit-tall"><h3>Official Accessories</h3><img src={asset.laptop} alt="" /></article>
+        <article className="benefit-tall"><h3>1% DJI Credit Reward</h3><img src={homeAsset.credit} alt="" /></article>
+        <article><h3>Up to 30-Day Returns</h3><img className="benefit-symbol" src={homeAsset.returns} alt="" /></article>
+        <article><h3>Over USD $45 Ships Free</h3><img className="benefit-symbol free" src={homeAsset.freeShipping} alt="" /></article>
+        <article><h3>Get DJI Expert Help</h3><img src={homeAsset.expert} alt="" /></article>
+        <article><h3>Official Refurbished</h3><img src={homeAsset.refurbished} alt="" /></article>
+        <article className="benefit-tall"><h3>Official Accessories</h3><img src={homeAsset.accessories} alt="" /></article>
       </section>
-      <Link className="home-sale-banner" to="/store-day" style={{ backgroundImage: `url(${asset.storeDay})` }}>
+      <Link className="home-sale-banner" to="/store-day" style={{ backgroundImage: `url(${homeAsset.storeDay})` }}>
         <span>Up to 30% Off</span>
         <strong>DJI Store Day</strong>
       </Link>
@@ -836,7 +1046,12 @@ function HomeCarousel() {
 
 function HomeNewCard({ product }: { product: Product }) {
   return (
-    <Link to="/products" className="home-new-card" style={{ backgroundImage: `url(${product.image})` }}>
+    <Link
+      to="/products"
+      className={`home-new-card ${product.bgImage ? 'has-product' : ''}`}
+      style={{ backgroundImage: `url(${product.bgImage || product.image})`, '--card-color': product.bgColor || '#575857' } as CSSProperties}
+    >
+      {product.bgImage && <img className="home-new-product" src={product.image} alt="" />}
       <h3>{product.name}</h3>
       <p>{product.desc}</p>
       <span>From USD ${product.price}</span>
@@ -845,17 +1060,67 @@ function HomeNewCard({ product }: { product: Product }) {
   )
 }
 
-function HomeIconStrip() {
-  const icons = ['DJI Mavic', 'DJI Air', 'DJI Mini', 'DJI Lito', 'DJI Flip', 'DJI Avata', 'DJI FPV', 'Osmo Pocket', 'Osmo Nano', 'Osmo 360']
-  const images = [asset.droneHero, asset.droneBeach, asset.droneMini, asset.lito, asset.droneAvata, asset.droneNeo, asset.droneHero, asset.pocket, asset.mobile, asset.action]
+function ScrollButtons({ target, variant = 'compact' }: { target: string; variant?: 'compact' | 'side' }) {
+  const [state, setState] = useState({ left: false, right: true })
+  const update = () => {
+    const el = document.querySelector<HTMLElement>(`[data-scroll="${target}"]`)
+    if (!el) return
+    const styles = getComputedStyle(el)
+    const startOffset = Number.parseFloat(styles.paddingLeft || '0') || 0
+    const max = Math.max(0, el.scrollWidth - el.clientWidth)
+    setState({
+      left: el.scrollLeft > startOffset + 2,
+      right: el.scrollLeft < max - 2,
+    })
+  }
+
+  useEffect(() => {
+    update()
+    const el = document.querySelector<HTMLElement>(`[data-scroll="${target}"]`)
+    if (!el) return
+    const handle = () => update()
+    el.addEventListener('scroll', handle, { passive: true })
+    window.addEventListener('resize', handle)
+    return () => {
+      el.removeEventListener('scroll', handle)
+      window.removeEventListener('resize', handle)
+    }
+  }, [target])
+
+  const scroll = (direction: number) => {
+    const el = document.querySelector<HTMLElement>(`[data-scroll="${target}"]`)
+    if (!el) return
+    const first = el.querySelector<HTMLElement>(':scope > *')
+    const styles = getComputedStyle(el)
+    const gap = Number.parseFloat(styles.columnGap || styles.gap || '0') || 0
+    const step = first ? first.getBoundingClientRect().width + gap : el.clientWidth * 0.82
+    el.scrollBy({ left: direction * Math.round(step), behavior: 'smooth' })
+    window.setTimeout(update, 120)
+    window.setTimeout(update, 360)
+    window.setTimeout(update, 620)
+  }
+
   return (
-    <section className="home-icon-strip">
-      {icons.map((label, index) => (
-        <Link key={label} to="/products">
-          <img src={images[index]} alt="" />
-          <span>{label}</span>
-        </Link>
-      ))}
+    <div className={`home-scroll-buttons ${variant}`}>
+      {state.left && <button className="left" type="button" aria-label="Scroll left" onClick={() => scroll(-1)}>‹</button>}
+      {state.right && <button className="right" type="button" aria-label="Scroll right" onClick={() => scroll(1)}>›</button>}
+    </div>
+  )
+}
+
+function HomeIconStrip() {
+  const icons = ['DJI Mavic', 'DJI Air', 'DJI Mini', 'DJI Lito', 'DJI Flip', 'DJI Avata', 'DJI Neo', 'DJI Inspire', 'DJI ROMO', 'Osmo Nano', 'Osmo 360', 'Osmo Action', 'Osmo Pocket', 'DJI Mic', 'Osmo Mobile', 'Ronin Stabilizers', 'Ronin Cinema Cameras', 'Pro Accessories', 'Enterprise', 'Education']
+  return (
+    <section className="home-icon-strip-wrap">
+      <ScrollButtons target="home-icons" variant="side" />
+      <div className="home-icon-strip" data-scroll="home-icons">
+        {icons.map((label, index) => (
+          <Link key={label} to="/products">
+            <img src={homeAsset.icons[index]} alt="" />
+            <span>{label}</span>
+          </Link>
+        ))}
+      </div>
     </section>
   )
 }
@@ -869,8 +1134,20 @@ function HomeBand({ title, image, to }: { title: string; image: string; to: stri
   )
 }
 
-function ProductRail({ products }: { products: Product[] }) {
-  return <div className="product-rail">{products.map((product) => <ProductCard key={product.name} product={product} />)}<Link className="guide-card" to="/products">All Accessories</Link></div>
+function ProductRail({ products, guideImage, guideTitle = 'All Accessories' }: { products: Product[]; guideImage?: string; guideTitle?: string }) {
+  const target = `rail-${`${guideTitle}-${products[0]?.name || 'products'}`.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`
+  return (
+    <section className="home-product-rail-wrap">
+      <ScrollButtons target={target} variant="side" />
+      <div className="product-rail" data-scroll={target}>
+        {products.map((product) => <ProductCard key={product.name} product={product} />)}
+        <Link className={`guide-card ${guideImage ? 'with-image' : ''}`} to="/products" style={guideImage ? { backgroundImage: `url(${guideImage})` } : undefined}>
+          <span>{guideTitle}</span>
+          <strong>All Accessories</strong>
+        </Link>
+      </div>
+    </section>
+  )
 }
 
 function ArticleCard({ title, subtitle, image }: { title: string; subtitle?: string; image: string }) {

@@ -60,7 +60,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/customer/support/**").authenticated()
                         .requestMatchers("/api/customer/cart/**", "/api/customer/addresses/**", "/api/customer/orders/**").authenticated()
                         .requestMatchers("/api/customer/coupons/**", "/api/customer/reviews/**").authenticated()
-                        .requestMatchers("/api/customer/**").permitAll()
                         .requestMatchers("/api/merchant/profile", "/api/merchant/orders/**", "/api/merchant/products/**", "/api/merchant/catalog/**", "/api/merchant/tax/**").hasRole("MERCHANT")
                         .requestMatchers("/api/merchant/reviews/**").hasRole("MERCHANT")
                         .requestMatchers("/api/merchant/agent/**").hasRole("AGENT")
