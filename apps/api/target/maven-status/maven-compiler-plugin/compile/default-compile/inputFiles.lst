@@ -31,9 +31,12 @@ C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\mo
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\agent\entity\Agent.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\agent\mapper\AgentMapper.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\auth\controller\AuthController.java
+C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\auth\dto\GoogleLoginRequest.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\auth\dto\LoginRequest.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\auth\dto\LoginResponse.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\auth\dto\MenuItem.java
+C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\auth\dto\MerchantApplicationRequest.java
+C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\auth\dto\MerchantApplicationResponse.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\auth\dto\PermissionsResponse.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\auth\dto\RegisterRequest.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\auth\dto\UserInfo.java
@@ -106,6 +109,8 @@ C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\mo
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\merchant\controller\MerchantProductController.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\merchant\controller\MerchantProfileController.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\merchant\entity\Merchant.java
+C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\merchant\entity\MerchantApplication.java
+C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\merchant\mapper\MerchantApplicationMapper.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\merchant\mapper\MerchantMapper.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\notification\controller\NotificationController.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\notification\entity\Notification.java

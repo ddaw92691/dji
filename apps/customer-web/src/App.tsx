@@ -4,7 +4,6 @@ import { useI18nStore } from './stores/i18nStore'
 import { useAuthStore } from './stores/authStore'
 import { connectRealtime, disconnectRealtime } from './services/realtime'
 import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
 import HomePage from './pages/HomePage'
 import CategoryPage from './pages/CategoryPage'
 import ProductListPage from './pages/ProductListPage'
@@ -76,7 +75,7 @@ function App() {
           <Route path="/education-industry" element={<StoreCategoryPage section="education" />} />
           <Route path="/official-refurbished" element={<StoreCategoryPage section="refurbished" />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/register" element={<Navigate to="/login?mode=register" replace />} />
           <Route path="/categories" element={<CategoryPage />} />
           <Route path="/products" element={<ProductListPage />} />
           <Route path="/products/:id" element={<ProductDetailPage />} />

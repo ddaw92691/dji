@@ -1,17 +1,46 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 
+type AuthMode = 'login' | 'register'
+
 export default function LoginPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'login'
+  const [mode, setMode] = useState<AuthMode>(initialMode)
   const [account, setAccount] = useState('customer@example.com')
   const [password, setPassword] = useState('customer123456')
+  const [registerEmail, setRegisterEmail] = useState('')
+  const [registerPhone, setRegisterPhone] = useState('')
+  const [registerPassword, setRegisterPassword] = useState('')
   const [marketingOptIn, setMarketingOptIn] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
-  const { login, loading } = useAuthStore()
+  const { login, googleLogin, register, loading } = useAuthStore()
   const merchantLoginUrl = import.meta.env.VITE_MERCHANT_WEB_URL || 'http://localhost:5174/login'
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    setMode(searchParams.get('mode') === 'register' ? 'register' : 'login')
+  }, [searchParams])
+
+  useEffect(() => {
+    if (!googleClientId || document.querySelector('script[data-google-identity]')) return
+    const script = document.createElement('script')
+    script.src = 'https://accounts.google.com/gsi/client'
+    script.async = true
+    script.defer = true
+    script.dataset.googleIdentity = 'true'
+    document.head.appendChild(script)
+  }, [googleClientId])
+
+  const switchMode = (nextMode: AuthMode) => {
+    setError('')
+    setMode(nextMode)
+    setSearchParams(nextMode === 'register' ? { mode: 'register' } : {})
+  }
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     try {
@@ -22,111 +51,101 @@ export default function LoginPage() {
     }
   }
 
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    try {
+      await register({
+        email: registerEmail,
+        phone: registerPhone,
+        password: registerPassword,
+        countryCode: 'JP',
+        languageCode: 'ja',
+      })
+      navigate('/')
+    } catch (err: any) {
+      setError(err.message || 'Registration failed')
+    }
+  }
+
+  const handleGoogleLogin = () => {
+    setError('')
+    if (!googleClientId) {
+      setError('Google login is not configured. Please set VITE_GOOGLE_CLIENT_ID.')
+      return
+    }
+    const google = (window as any).google
+    if (!google?.accounts?.id) {
+      setError('Google login is still loading. Please try again in a moment.')
+      return
+    }
+    google.accounts.id.initialize({
+      client_id: googleClientId,
+      callback: async (response: { credential?: string }) => {
+        if (!response.credential) {
+          setError('Google did not return a credential.')
+          return
+        }
+        try {
+          await googleLogin({
+            credential: response.credential,
+            countryCode: localStorage.getItem('countryCode') || 'JP',
+            languageCode: localStorage.getItem('languageCode') || 'ja',
+          })
+          navigate('/')
+        } catch (err: any) {
+          setError(err.message || 'Google login failed')
+        }
+      },
+    })
+    google.accounts.id.prompt()
+  }
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#1f1f1f] text-[#1f1f1f]">
-      <img
-        src="/login/banner.webp"
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 h-full w-full object-cover"
-      />
+      <img src="/login/banner.webp" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
       <div className="absolute inset-0 bg-black/10" />
 
       <section className="relative z-10 flex min-h-screen items-center justify-center px-5 py-6 lg:justify-end lg:px-[12vw]">
-        <form
-          onSubmit={handleSubmit}
-          className="login-panel w-full max-w-[464px] bg-white px-8 py-8 shadow-[0_18px_60px_rgba(0,0,0,0.18)] sm:px-12"
-        >
+        <div className="login-panel w-full max-w-[464px] bg-white px-8 py-8 shadow-[0_18px_60px_rgba(0,0,0,0.18)] sm:px-12">
           <Link to="/" aria-label="Mall home" className="mb-6 block w-[56px]">
             <img src="/logo-black.webp" alt="Mall" className="block h-auto w-full" />
           </Link>
 
-          <h1 className="mb-5 text-[24px] font-semibold leading-tight tracking-normal text-[#1f1f1f]">Log in to Mall</h1>
+          <h1 className="mb-5 text-[24px] font-semibold leading-tight tracking-normal text-[#1f1f1f]">
+            {mode === 'login' ? 'Log in to Mall' : 'Create Your Mall Account'}
+          </h1>
 
-          <div className="space-y-2">
-            <SocialButton provider="Apple" iconClass="bg-[#1f1f1f] text-white" iconText="A" />
-            <SocialButton provider="Google" iconClass="bg-white text-[#4285f4] ring-1 ring-black/10" iconText="G" />
-            <SocialButton provider="Facebook" iconClass="bg-[#1877f2] text-white" iconText="f" />
-          </div>
-
-          <div className="my-4 flex items-center gap-4 text-xs text-[#777]">
-            <span className="h-px flex-1 bg-[#ececec]" />
-            <span>or</span>
-            <span className="h-px flex-1 bg-[#ececec]" />
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="mb-2 block text-[14px] font-normal text-[#111]">email address</label>
-              <input
-                type="text"
-                value={account}
-                onChange={(e) => setAccount(e.target.value)}
-                className="h-10 w-full border border-[#d8d8d8] px-3 text-[14px] outline-none transition focus:border-[#111]"
-                placeholder="Email or phone"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-[14px] font-normal text-[#111]">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-10 w-full border border-[#d8d8d8] px-3 text-[14px] outline-none transition focus:border-[#111]"
-                placeholder="Password"
-                required
-              />
-            </div>
-          </div>
-
-          {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-
-          <div className="mt-3">
-            <Link to="/register" className="text-[13px] text-[#0066cc] hover:underline">
-              Forgot password? Go to reset &gt;
-            </Link>
-          </div>
-
-          <label className="mt-4 flex cursor-pointer items-start gap-2 text-[13px] leading-5 text-[#666]">
-            <input
-              type="checkbox"
-              checked={marketingOptIn}
-              onChange={(e) => setMarketingOptIn(e.target.checked)}
-              className="mt-[2px] h-4 w-4 rounded border-[#d8d8d8] text-[#0066cc] focus:ring-[#0066cc]"
+          {mode === 'login' ? (
+            <LoginForm
+              account={account}
+              password={password}
+              error={error}
+              loading={loading}
+              marketingOptIn={marketingOptIn}
+              onAccountChange={setAccount}
+              onPasswordChange={setPassword}
+              onMarketingOptInChange={setMarketingOptIn}
+              onSubmit={handleLoginSubmit}
+              onGoogleLogin={handleGoogleLogin}
+              onSwitchToRegister={() => switchMode('register')}
+              merchantLoginUrl={merchantLoginUrl}
             />
-            <span>Click to get exclusive Mall benefits, latest offers, and updates.</span>
-          </label>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-6 h-11 w-full border border-[#d8d8d8] bg-[#f7f7f7] text-[14px] font-normal text-[#999] transition hover:border-[#bdbdbd] hover:bg-[#f2f2f2] disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {loading ? 'Logging in...' : 'Log In'}
-          </button>
-
-          <p className="mt-4 text-center text-[13px] text-[#333]">
-            New user?{' '}
-            <Link to="/register" className="text-[#0066cc] hover:underline">
-              Create Your Mall Account
-            </Link>
-          </p>
-
-          <a
-            href={merchantLoginUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 flex h-11 w-full items-center justify-center border border-[#1f1f1f] bg-white text-[14px] font-medium text-[#1f1f1f] transition hover:bg-[#1f1f1f] hover:text-white"
-          >
-            商家后台登录
-          </a>
-
-          <p className="mx-auto mt-4 max-w-[310px] text-center text-[12px] leading-5 text-[#777]">
-            By continuing, you hereby agree to the Privacy Policy and Terms of Use.
-          </p>
-        </form>
+          ) : (
+            <RegisterForm
+              email={registerEmail}
+              phone={registerPhone}
+              password={registerPassword}
+              error={error}
+              loading={loading}
+              onEmailChange={setRegisterEmail}
+              onPhoneChange={setRegisterPhone}
+              onPasswordChange={setRegisterPassword}
+              onSubmit={handleRegisterSubmit}
+              onSwitchToLogin={() => switchMode('login')}
+            />
+          )}
+        </div>
       </section>
 
       <p className="pointer-events-none absolute bottom-4 left-4 z-10 text-[11px] leading-4 text-white/90">
@@ -142,24 +161,209 @@ export default function LoginPage() {
   )
 }
 
-function SocialButton({
-  provider,
-  iconClass,
-  iconText,
+function LoginForm({
+  account,
+  password,
+  error,
+  loading,
+  marketingOptIn,
+  onAccountChange,
+  onPasswordChange,
+  onMarketingOptInChange,
+  onSubmit,
+  onGoogleLogin,
+  onSwitchToRegister,
+  merchantLoginUrl,
 }: {
-  provider: string
-  iconClass: string
-  iconText: string
+  account: string
+  password: string
+  error: string
+  loading: boolean
+  marketingOptIn: boolean
+  onAccountChange: (value: string) => void
+  onPasswordChange: (value: string) => void
+  onMarketingOptInChange: (value: boolean) => void
+  onSubmit: (e: React.FormEvent) => void
+  onGoogleLogin: () => void
+  onSwitchToRegister: () => void
+  merchantLoginUrl: string
 }) {
   return (
-    <button
-      type="button"
-      className="flex h-12 w-full items-center justify-center gap-2 border border-[#d8d8d8] bg-white text-[14px] font-normal text-[#555] transition hover:border-[#b8b8b8] hover:bg-[#fafafa]"
-    >
-      <span className={`flex h-[18px] w-[18px] items-center justify-center rounded-full text-[12px] font-semibold ${iconClass}`}>
-        {iconText}
-      </span>
-      <span>Continue With {provider}</span>
-    </button>
+    <form onSubmit={onSubmit}>
+      <button
+        type="button"
+        onClick={onGoogleLogin}
+        className="flex h-12 w-full items-center justify-center gap-2 border border-[#d8d8d8] bg-white text-[14px] font-normal text-[#555] transition hover:border-[#b8b8b8] hover:bg-[#fafafa]"
+      >
+        <img src="/login/google-logo.svg" alt="" aria-hidden="true" className="h-[18px] w-[18px]" />
+        <span>Continue With Google</span>
+      </button>
+
+      <div className="my-4 flex items-center gap-4 text-xs text-[#777]">
+        <span className="h-px flex-1 bg-[#ececec]" />
+        <span>or</span>
+        <span className="h-px flex-1 bg-[#ececec]" />
+      </div>
+
+      <div className="space-y-4">
+        <Field label="email address">
+          <input
+            type="text"
+            value={account}
+            onChange={(e) => onAccountChange(e.target.value)}
+            className="h-10 w-full border border-[#d8d8d8] px-3 text-[14px] outline-none transition focus:border-[#111]"
+            placeholder="Email or phone"
+            required
+          />
+        </Field>
+        <Field label="Password">
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => onPasswordChange(e.target.value)}
+            className="h-10 w-full border border-[#d8d8d8] px-3 text-[14px] outline-none transition focus:border-[#111]"
+            placeholder="Password"
+            required
+          />
+        </Field>
+      </div>
+
+      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+
+      <div className="mt-3">
+        <button type="button" className="text-[13px] text-[#0066cc] hover:underline">
+          Forgot password? Go to reset &gt;
+        </button>
+      </div>
+
+      <label className="mt-4 flex cursor-pointer items-start gap-2 text-[13px] leading-5 text-[#666]">
+        <input
+          type="checkbox"
+          checked={marketingOptIn}
+          onChange={(e) => onMarketingOptInChange(e.target.checked)}
+          className="mt-[2px] h-4 w-4 rounded border-[#d8d8d8] text-[#0066cc] focus:ring-[#0066cc]"
+        />
+        <span>Click to get exclusive Mall benefits, latest offers, and updates.</span>
+      </label>
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="mt-6 h-11 w-full border border-[#d8d8d8] bg-[#f7f7f7] text-[14px] font-normal text-[#999] transition hover:border-[#bdbdbd] hover:bg-[#f2f2f2] disabled:cursor-not-allowed disabled:opacity-70"
+      >
+        {loading ? 'Logging in...' : 'Log In'}
+      </button>
+
+      <p className="mt-4 text-center text-[13px] text-[#333]">
+        New user?{' '}
+        <button type="button" onClick={onSwitchToRegister} className="text-[#0066cc] hover:underline">
+          Create Your Mall Account
+        </button>
+      </p>
+
+      <a
+        href={merchantLoginUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 flex h-11 w-full items-center justify-center border border-[#1f1f1f] bg-white text-[14px] font-medium text-[#1f1f1f] transition hover:bg-[#1f1f1f] hover:text-white"
+      >
+        商家后台登录
+      </a>
+
+      <p className="mx-auto mt-4 max-w-[310px] text-center text-[12px] leading-5 text-[#777]">
+        By continuing, you hereby agree to the Privacy Policy and Terms of Use.
+      </p>
+    </form>
+  )
+}
+
+function RegisterForm({
+  email,
+  phone,
+  password,
+  error,
+  loading,
+  onEmailChange,
+  onPhoneChange,
+  onPasswordChange,
+  onSubmit,
+  onSwitchToLogin,
+}: {
+  email: string
+  phone: string
+  password: string
+  error: string
+  loading: boolean
+  onEmailChange: (value: string) => void
+  onPhoneChange: (value: string) => void
+  onPasswordChange: (value: string) => void
+  onSubmit: (e: React.FormEvent) => void
+  onSwitchToLogin: () => void
+}) {
+  return (
+    <form onSubmit={onSubmit}>
+      <div className="space-y-4">
+        <Field label="email address">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => onEmailChange(e.target.value)}
+            className="h-10 w-full border border-[#d8d8d8] px-3 text-[14px] outline-none transition focus:border-[#111]"
+            placeholder="your@email.com"
+            required
+          />
+        </Field>
+        <Field label="phone number">
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => onPhoneChange(e.target.value)}
+            className="h-10 w-full border border-[#d8d8d8] px-3 text-[14px] outline-none transition focus:border-[#111]"
+            placeholder="+81 90 0000 0000"
+          />
+        </Field>
+        <Field label="Password">
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => onPasswordChange(e.target.value)}
+            className="h-10 w-full border border-[#d8d8d8] px-3 text-[14px] outline-none transition focus:border-[#111]"
+            placeholder="Min 6 characters"
+            required
+            minLength={6}
+          />
+        </Field>
+      </div>
+
+      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="mt-6 h-11 w-full border border-[#1f1f1f] bg-[#1f1f1f] text-[14px] font-medium text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
+      >
+        {loading ? 'Creating...' : 'Create Account'}
+      </button>
+
+      <p className="mt-4 text-center text-[13px] text-[#333]">
+        Already have an account?{' '}
+        <button type="button" onClick={onSwitchToLogin} className="text-[#0066cc] hover:underline">
+          Log In
+        </button>
+      </p>
+
+      <p className="mx-auto mt-5 max-w-[310px] text-center text-[12px] leading-5 text-[#777]">
+        By continuing, you hereby agree to the Privacy Policy and Terms of Use.
+      </p>
+    </form>
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="mb-2 block text-[14px] font-normal text-[#111]">{label}</label>
+      {children}
+    </div>
   )
 }

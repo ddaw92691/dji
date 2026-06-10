@@ -12,6 +12,7 @@ com\mall\api\modules\support\dto\SendMessageRequest.class
 com\mall\api\modules\order\OrderService$1.class
 com\mall\api\modules\publicapi\controller\PublicController.class
 com\mall\api\modules\agent\entity\Agent.class
+com\mall\api\modules\auth\dto\MerchantApplicationRequest.class
 com\mall\api\modules\support\mapper\SupportMessageMapper.class
 com\mall\api\modules\system\entity\SysMenu.class
 com\mall\api\modules\coupon\entity\CouponTranslation.class
@@ -97,6 +98,7 @@ com\mall\api\modules\admin\controller\AdminFinanceController.class
 com\mall\api\modules\system\controller\AdminRoleController.class
 com\mall\api\common\initializer\DataInitializer.class
 com\mall\api\modules\coupon\CouponService.class
+com\mall\api\modules\auth\dto\GoogleLoginRequest.class
 com\mall\api\modules\i18n\mapper\I18nTranslationMapper.class
 com\mall\api\modules\customer\controller\CartController.class
 com\mall\api\modules\support\entity\SupportReadState.class
@@ -124,6 +126,7 @@ com\mall\api\modules\banner\mapper\BannerTranslationMapper.class
 com\mall\api\modules\support\entity\SupportInspectionLog.class
 com\mall\api\config\MybatisPlusConfig$1.class
 com\mall\api\modules\payment\mapper\PaymentMapper.class
+com\mall\api\modules\merchant\entity\MerchantApplication.class
 com\mall\api\config\WebSocketConfig.class
 com\mall\api\modules\merchant\controller\MerchantProductController.class
 com\mall\api\modules\customer\controller\CustomerController.class
@@ -162,6 +165,7 @@ com\mall\api\modules\coupon\entity\Coupon.class
 com\mall\api\modules\order\entity\MallOrder.class
 com\mall\api\modules\banner\mapper\BannerMapper.class
 com\mall\api\modules\withdrawal\WithdrawalService.class
+com\mall\api\modules\auth\dto\MerchantApplicationResponse$MerchantApplicationResponseBuilder.class
 com\mall\api\modules\support\mapper\SupportQuickReplyMapper.class
 com\mall\api\modules\support\mapper\SupportSessionMapper.class
 com\mall\api\modules\coupon\entity\UserCoupon.class
@@ -189,7 +193,9 @@ com\mall\api\modules\upload\mapper\FileResourceMapper.class
 com\mall\api\modules\system\entity\SystemSetting.class
 com\mall\api\modules\auth\dto\UserInfo$UserInfoBuilder.class
 com\mall\api\modules\product\mapper\ProductTranslationMapper.class
+com\mall\api\modules\auth\dto\MerchantApplicationResponse.class
 com\mall\api\modules\dashboard\controller\MerchantDashboardController.class
+com\mall\api\modules\merchant\mapper\MerchantApplicationMapper.class
 com\mall\api\modules\realtime\RealtimeService.class
 com\mall\api\modules\payment\entity\Payment.class
 com\mall\api\security\UserDetailsServiceImpl.class

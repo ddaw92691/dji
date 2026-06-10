@@ -6,8 +6,13 @@ import com.mall.api.modules.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import com.mall.api.modules.upload.UploadService;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -15,9 +20,11 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final UploadService uploadService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, UploadService uploadService) {
         this.authService = authService;
+        this.uploadService = uploadService;
     }
 
     @PostMapping("/login")
@@ -32,6 +39,25 @@ public class AuthController {
     public ApiResponse<LoginResponse> register(@Valid @RequestBody RegisterRequest request) {
         LoginResponse response = authService.register(request);
         return ApiResponse.success(response);
+    }
+
+    @PostMapping("/google")
+    @Operation(summary = "Google 授权登录")
+    public ApiResponse<LoginResponse> googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
+        LoginResponse response = authService.googleLogin(request);
+        return ApiResponse.success(response);
+    }
+
+    @PostMapping(value = "/merchant-applications/files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "上传经销商申请材料")
+    public ApiResponse<Map<String, Object>> uploadMerchantApplicationFile(@RequestParam("file") MultipartFile file) {
+        return ApiResponse.success(uploadService.uploadMerchantApplicationFile(file));
+    }
+
+    @PostMapping("/merchant-applications")
+    @Operation(summary = "提交经销商申请")
+    public ApiResponse<MerchantApplicationResponse> submitMerchantApplication(@Valid @RequestBody MerchantApplicationRequest request) {
+        return ApiResponse.success(authService.submitMerchantApplication(request));
     }
 
     @GetMapping("/me")

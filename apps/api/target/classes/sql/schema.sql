@@ -114,6 +114,29 @@ CREATE TABLE IF NOT EXISTS merchant (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS uk_merchant_user ON merchant(user_id);
 
+-- Merchant Application
+CREATE TABLE IF NOT EXISTS merchant_application (
+    id                          BIGINT          PRIMARY KEY,
+    email                       VARCHAR(100)    NOT NULL,
+    phone                       VARCHAR(50)     NOT NULL,
+    password_hash               VARCHAR(255)    NOT NULL,
+    full_name                   VARCHAR(100)    NOT NULL,
+    age                         INTEGER         NOT NULL,
+    home_address                VARCHAR(500)    NOT NULL,
+    id_card_front_url           VARCHAR(500),
+    id_card_back_url            VARCHAR(500),
+    passport_page_url           VARCHAR(500),
+    driver_license_url          VARCHAR(500),
+    handheld_document_video_url VARCHAR(500)    NOT NULL,
+    status                      VARCHAR(30)     NOT NULL DEFAULT 'PENDING',
+    review_remark               VARCHAR(500),
+    deleted                     BOOLEAN         NOT NULL DEFAULT FALSE,
+    created_at                  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_merchant_application_email ON merchant_application(email);
+CREATE INDEX IF NOT EXISTS idx_merchant_application_status ON merchant_application(status);
+
 -- 8. Agent
 CREATE TABLE IF NOT EXISTS agent (
     id              BIGINT          PRIMARY KEY,

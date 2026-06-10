@@ -6,6 +6,12 @@ export interface LoginParams {
   loginType: string
 }
 
+export interface GoogleLoginParams {
+  credential: string
+  countryCode?: string
+  languageCode?: string
+}
+
 export interface RegisterParams {
   email: string
   phone: string
@@ -32,6 +38,7 @@ export interface LoginResult {
 
 export const authApi = {
   login: (params: LoginParams) => request.post<{ code: number; data: LoginResult }>('/auth/login', params),
+  googleLogin: (params: GoogleLoginParams) => request.post<{ code: number; data: LoginResult }>('/auth/google', params),
   register: (params: RegisterParams) => request.post<{ code: number; data: LoginResult }>('/auth/register', params),
   getMe: () => request.get<{ code: number; data: UserInfo }>('/auth/me'),
 }
