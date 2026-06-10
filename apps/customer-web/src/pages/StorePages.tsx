@@ -419,22 +419,22 @@ function topNavKeys(isHome: boolean): NavKey[] {
 
 export function StoreHomePage() {
   const cameraRail = [
-    { ...p('DJI Lito X1', homeAsset.rail.camera[0], '399', 'Beginner-Friendly Camera Drone', 'New'), gallery: [homeAsset.rail.camera[0], homeAsset.rail.camera[1], homeAsset.rail.camera[2]] },
-    { ...p('DJI Avata 360', homeAsset.rail.camera[1], '739', 'DJI Avata 360'), gallery: [homeAsset.rail.camera[1], homeAsset.rail.camera[2], homeAsset.rail.camera[3]] },
-    { ...p('DJI Neo 2', homeAsset.rail.camera[2], '209', 'Follow-Me Camera Drone'), gallery: [homeAsset.rail.camera[2], homeAsset.rail.camera[0], homeAsset.rail.camera[3]] },
+    { ...p('DJI Lito 1', homeAsset.rail.camera[0], '299', 'Beginner-Friendly Camera Drone', 'New'), gallery: [homeAsset.rail.camera[0], homeAsset.rail.camera[1], homeAsset.rail.camera[2]] },
+    { ...p('DJI Avata 360', homeAsset.rail.camera[1], '399', '8K Flagship 360° Drone', 'New'), gallery: [homeAsset.rail.camera[1], homeAsset.rail.camera[2], homeAsset.rail.camera[3]] },
+    { ...p('DJI Neo 2', homeAsset.rail.camera[2], '209', 'Follow Me Camera Drone'), gallery: [homeAsset.rail.camera[2], homeAsset.rail.camera[0], homeAsset.rail.camera[3]] },
     { ...p('DJI Mini 5 Pro', homeAsset.rail.camera[3], '739', 'Advanced Mini Camera Drone'), gallery: [homeAsset.rail.camera[3], homeAsset.rail.camera[0], homeAsset.rail.camera[1]] },
   ]
   const dailyRail = [
-    { ...p('Osmo Mobile 8P', homeAsset.rail.daily[0], '129', 'Pro Framing and Tracking'), gallery: [homeAsset.rail.daily[0], homeAsset.rail.daily[1], homeAsset.rail.daily[2]] },
-    { ...p('Osmo Action 6', homeAsset.rail.daily[1], '369', 'All-in-One Flagship Action Camera'), gallery: [homeAsset.rail.daily[1], homeAsset.rail.daily[2], homeAsset.rail.daily[3]] },
-    { ...p('Osmo Mobile 8', homeAsset.rail.daily[2], '83', '360 Tracking Phone Gimbal'), gallery: [homeAsset.rail.daily[2], homeAsset.rail.daily[0], homeAsset.rail.daily[3]] },
-    { ...p('Osmo Nano', homeAsset.rail.daily[3], '199', 'Wearable Camera for Vlog'), gallery: [homeAsset.rail.daily[3], homeAsset.rail.daily[0], homeAsset.rail.daily[1]] },
+    { ...p('Osmo Mobile 8P', homeAsset.rail.daily[0], '129', 'Pro Framing and Tracking Phone Gimbal', 'New'), gallery: [homeAsset.rail.daily[0], homeAsset.rail.daily[1], homeAsset.rail.daily[2]] },
+    { ...p('Osmo Action 6', homeAsset.rail.daily[1], '439', 'All-In-One Flagship Action Camera'), gallery: [homeAsset.rail.daily[1], homeAsset.rail.daily[2], homeAsset.rail.daily[3]] },
+    { ...p('Osmo Mobile 8', homeAsset.rail.daily[2], '83', '360° Tracking Phone Gimbal'), gallery: [homeAsset.rail.daily[2], homeAsset.rail.daily[0], homeAsset.rail.daily[3]] },
+    { ...p('Osmo Nano', homeAsset.rail.daily[3], '299', 'Wearable Camera for Versatile Perspectives'), gallery: [homeAsset.rail.daily[3], homeAsset.rail.daily[0], homeAsset.rail.daily[1]] },
   ]
   const proRail = [
     { ...p('DJI RS 4 Mini', homeAsset.rail.pro[0], '268', 'Compact and Lightweight Gimbal'), gallery: [homeAsset.rail.pro[0], homeAsset.rail.pro[1], homeAsset.rail.pro[2]] },
-    { ...p('DJI RS 4 Pro', homeAsset.rail.pro[1], '689', 'Flagship Camera Stabilizer'), gallery: [homeAsset.rail.pro[1], homeAsset.rail.pro[2], homeAsset.rail.pro[3]] },
-    { ...p('DJI Ronin 4D-8K', homeAsset.rail.pro[2], '6,299', 'Cinema Camera'), gallery: [homeAsset.rail.pro[2], homeAsset.rail.pro[3], homeAsset.rail.pro[0]] },
-    { ...p('DJI SDR Transmission', homeAsset.rail.pro[3], '309', 'Robust Full-HD Video Solution'), gallery: [homeAsset.rail.pro[3], homeAsset.rail.pro[0], homeAsset.rail.pro[1]] },
+    { ...p('DJI RS 4 Pro', homeAsset.rail.pro[1], '889', 'Expansive Flagship Stabilizer'), gallery: [homeAsset.rail.pro[1], homeAsset.rail.pro[2], homeAsset.rail.pro[3]] },
+    { ...p('DJI Ronin 4D-6K', homeAsset.rail.pro[2], '5,299', 'Cinema Camera'), gallery: [homeAsset.rail.pro[2], homeAsset.rail.pro[3], homeAsset.rail.pro[0]] },
+    { ...p('DJI SDR Transmission', homeAsset.rail.pro[3], '309', 'Portable Dual-Mode Video Transmission System'), gallery: [homeAsset.rail.pro[3], homeAsset.rail.pro[0], homeAsset.rail.pro[1]] },
   ]
 
   return (
@@ -443,13 +443,6 @@ export function StoreHomePage() {
         <HomeHero />
         <HomeIconStrip />
         <HomeCarousel />
-        <h2 className="home-section-title">Handheld - Pro Shooting</h2>
-        <HomeBand title="DJI RS 5" image={homeAsset.proWide} to="/handheld" />
-        <ProductRail
-          products={proRail}
-          guideImage={homeAsset.proGuide}
-          guideTitle="Which Handheld Is Right for Me?"
-        />
         <h2 className="home-section-title">Camera Drones</h2>
         <HomeBand title="DJI Lito X1" image={homeAsset.cameraWide} to="/camera-drones" />
         <ProductRail
@@ -457,11 +450,18 @@ export function StoreHomePage() {
           guideImage={homeAsset.droneGuide}
           guideTitle="Which Drone Is Right for Me?"
         />
-        <h2 className="home-section-title">Handheld - Daily Vlogging</h2>
+        <h2 className="home-section-title">Handheld · Daily Vlogging</h2>
         <HomeBand title="Osmo Pocket 4" image={homeAsset.dailyWide} to="/handheld" />
         <ProductRail
           products={dailyRail}
           guideImage={homeAsset.dailyGuide}
+          guideTitle="Which Handheld Is Right for Me?"
+        />
+        <h2 className="home-section-title">Handheld · Pro Shooting</h2>
+        <HomeBand title="DJI RS 5" image={homeAsset.proWide} to="/handheld" />
+        <ProductRail
+          products={proRail}
+          guideImage={homeAsset.proGuide}
           guideTitle="Which Handheld Is Right for Me?"
         />
         <section className="home-education-block">
@@ -1083,6 +1083,10 @@ function HomeCarousel() {
         ))}
       </section>
       {activeBenefit && <HomeBenefitModal benefit={activeBenefit} onClose={() => setActiveBenefit(null)} />}
+      <Link className="home-sale-banner" to="/store-day" style={{ backgroundImage: `url(${homeAsset.storeDay})` }}>
+        <span>Up to 30% Off</span>
+        <strong>DJI Store Day</strong>
+      </Link>
     </>
   )
 }
@@ -1307,7 +1311,24 @@ function PromoProduct({ product, index }: { product: Product; index: number }) {
 }
 
 function TrustStrip() {
-  return <section className="trust-strip">{['Free shipping on orders over USD $45', 'We accept credit cards, PayPal, and bank wires', 'Order Service: Live Chat'].map((item) => <article key={item}><span className="service-thumb" /><span>{item}</span></article>)}</section>
+  const items = [
+    { icon: <TruckIcon />, text: 'Free shipping on orders over USD $45' },
+    { icon: <CardIcon />, text: 'We accept credit cards, PayPal, and bank wires' },
+    { icon: <ChatIcon />, text: 'Order Service: Live Chat' },
+  ]
+  return <section className="trust-strip">{items.map((item) => <article key={item.text}><span className="trust-icon">{item.icon}</span><span>{item.text}</span></article>)}</section>
+}
+
+function TruckIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h3.5L21 13v3h-7zM7 19a1.6 1.6 0 1 0 0-3.2A1.6 1.6 0 0 0 7 19Zm10 0a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2Z" strokeLinejoin="round" /></svg>
+}
+
+function CardIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2" /><path d="M3 9.5h18M6.5 14.5h4" strokeLinecap="round" /></svg>
+}
+
+function ChatIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 5.5h16v10H9.5L5.5 19v-3.5H4z" strokeLinejoin="round" /></svg>
 }
 
 function StoreFooter() {
@@ -1336,7 +1357,10 @@ function StoreFooter() {
         <section className="store-footer-subscribe">
           <h3>Subscribe</h3>
           <p>Be the first to find out about our newest offerings and hottest deals, and what's new.</p>
-          <Link to="/products">Subscribe</Link>
+          <form className="footer-subscribe-form" onSubmit={(event) => event.preventDefault()}>
+            <input type="email" placeholder="Your Email Address" aria-label="Your Email Address" />
+            <button type="submit" aria-label="Subscribe">›</button>
+          </form>
         </section>
       </div>
       <div className="store-footer-bottom">

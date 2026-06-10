@@ -5899,3 +5899,265 @@
     margin-top: 16px;
   }
 }
+
+/* Screenshot 1 typography/card correction. */
+@media (min-width: 721px) {
+  .home-shell .home-sale-banner {
+    display: flex;
+    width: var(--store-content-width);
+    max-width: calc(100vw - (var(--store-edge) * 2));
+    height: 360px;
+    flex-direction: column;
+    justify-content: center;
+    margin: 72px auto 0;
+    border-radius: 4px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    color: rgba(0, 0, 0, 0.85);
+    padding-left: 64px;
+  }
+
+  .home-shell .home-sale-banner span {
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .home-shell .home-sale-banner strong {
+    margin-top: 4px;
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 36px;
+  }
+
+  .home-shell .home-section-title {
+    margin-top: 72px;
+    margin-bottom: 20px;
+    font-size: 32px;
+    line-height: 40px;
+  }
+
+  .home-shell .home-section-title.compact {
+    margin-top: 64px;
+    margin-bottom: 20px;
+  }
+
+  .home-shell .home-band {
+    height: 520px;
+  }
+
+  .home-shell .home-band h2 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 40px;
+  }
+
+  .home-shell .home-band > div {
+    padding-left: 64px;
+  }
+
+  .home-shell .home-band button {
+    height: 48px;
+    margin-top: 40px;
+    border-radius: 100px;
+    padding: 0 32px;
+    font-size: 16px;
+    line-height: 20px;
+  }
+
+  .home-shell .product-rail .store-product-card {
+    padding: 0 24px 28px;
+  }
+
+  .home-shell .product-card-media {
+    height: 276px;
+    min-height: 276px;
+    flex: 0 0 276px;
+  }
+
+  .home-shell .product-rail .store-product-card span {
+    min-height: 18px;
+    margin-top: 16px;
+    font-size: 12px;
+    line-height: 18px;
+  }
+
+  .home-shell .product-rail .store-product-card h3 {
+    margin: 4px 0 0;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 28px;
+  }
+
+  .home-shell .product-rail .store-product-card p {
+    max-width: 100%;
+    margin: 0;
+    overflow: hidden;
+    color: rgba(0, 0, 0, 0.65);
+    font-size: 14px;
+    line-height: 20px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .home-shell .product-rail .store-product-card strong {
+    display: block;
+    margin-top: 36px;
+    color: rgba(0, 0, 0, 0.85);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+  }
+
+  .home-shell .guide-card {
+    padding: 32px;
+  }
+
+  .home-shell .guide-card small {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .home-shell .guide-card span {
+    max-width: 210px;
+    font-size: 26px;
+    line-height: 32px;
+  }
+
+  .home-shell .all-accessories-card {
+    font-size: 20px;
+    line-height: 24px;
+  }
+}
+
+/* Screenshot 2 correction: What's New / Why shop / Buying Guides / footer. */
+@media (min-width: 721px) {
+  /* What's New cards */
+  .home-shell .home-new-card {
+    border-radius: 8px;
+  }
+
+  .home-shell .home-new-card h3 {
+    font-size: 24px;
+    line-height: 30px;
+  }
+
+  .home-shell .home-new-card button {
+    margin-top: -36px;
+    border-radius: 100px;
+    padding: 10px 22px;
+    font-size: 14px;
+    line-height: 18px;
+  }
+
+  /* Why shop bento tiles */
+  .home-shell .benefit-card {
+    border-radius: 8px;
+  }
+
+  /* Buying Guides cards */
+  .home-shell .store-playbook .article-card {
+    border-radius: 8px;
+  }
+
+  .home-shell .store-playbook .article-card::before {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.46) 0%, rgba(0, 0, 0, 0.14) 40%, rgba(0, 0, 0, 0) 100%);
+  }
+
+  .home-shell .store-playbook .article-card h3 {
+    font-size: 20px;
+    line-height: 26px;
+  }
+
+  .home-shell .store-playbook .article-card p {
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  /* Footer subscribe form */
+  .home-shell .footer-subscribe-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 280px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+  }
+
+  .home-shell .footer-subscribe-form input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    padding: 8px 0;
+    color: rgba(0, 0, 0, 0.85);
+    font-size: 14px;
+    line-height: 20px;
+    outline: none;
+  }
+
+  .home-shell .footer-subscribe-form input::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+  }
+
+  .home-shell .footer-subscribe-form button {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.06);
+    color: rgba(0, 0, 0, 0.7);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .home-shell .footer-subscribe-form button:hover {
+    background: rgba(0, 0, 0, 0.12);
+  }
+}
+
+/* Trust strip line icons (all store pages) */
+.trust-icon {
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.trust-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Screenshot 2.1 fixes: footer cleanup / Why-shop labels / Buying Guides legibility. */
+@media (min-width: 721px) {
+  /* Footer: hide the redundant duplicate "Product Categories" top row (DJI has none) */
+  .home-shell .store-footer-top {
+    display: none;
+  }
+
+  /* Why shop: pin each label to the top of its tile so it always renders visibly */
+  .home-shell .benefit-card h3 {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    left: 24px;
+    z-index: 3;
+    margin: 0;
+    text-align: center;
+  }
+
+  /* Buying Guides: stronger top scrim + text shadow keeps titles readable on bright images */
+  .home-shell .store-playbook .article-card::before {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.18) 46%, rgba(0, 0, 0, 0) 100%);
+  }
+
+  .home-shell .store-playbook .article-card h3,
+  .home-shell .store-playbook .article-card p {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+}

@@ -1,13 +1,20 @@
 let ws: WebSocket | null = null
 let reconnectTimer: any = null
 
-export function connectRealtime(token: string, onEvent: (event: any) => void) {
-  const wsUrl = window.location.protocol === 'https:'
+function resolveRealtimeUrl() {
+  const configuredUrl = import.meta.env.VITE_WS_URL?.trim()
+  if (configuredUrl) {
+    const wsUrl = configuredUrl.replace(/^https?:/, (protocol: string) => (protocol === 'https:' ? 'wss:' : 'ws:'))
+    return wsUrl.endsWith('/ws') ? wsUrl : `${wsUrl.replace(/\/$/, '')}/ws`
+  }
+
+  return window.location.protocol === 'https:'
     ? `wss://${window.location.host}/ws`
     : `ws://${window.location.host}/ws`
-  const devWsUrl = import.meta.env.VITE_WS_URL
-  const finalUrl = devWsUrl ? devWsUrl.replace(/^http/, 'ws') + '/ws' : wsUrl
-  const url = `${finalUrl}?token=${token}`
+}
+
+export function connectRealtime(token: string, onEvent: (event: any) => void) {
+  const url = `${resolveRealtimeUrl()}?token=${token}`
 
   function connect() {
     ws = new WebSocket(url)
