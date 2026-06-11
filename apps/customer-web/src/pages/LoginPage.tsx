@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useI18nStore } from '../stores/i18nStore'
 import { useAuthStore } from '../stores/authStore'
+import { getMerchantLoginUrl } from '../utils/merchantUrl'
 
 type AuthMode = 'login' | 'register'
 
@@ -19,7 +20,7 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const { t } = useI18nStore()
   const { login, googleLogin, register, loading } = useAuthStore()
-  const merchantLoginUrl = import.meta.env.VITE_MERCHANT_WEB_URL || 'http://localhost:5174/login'
+  const merchantLoginUrl = getMerchantLoginUrl()
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
   useEffect(() => {
