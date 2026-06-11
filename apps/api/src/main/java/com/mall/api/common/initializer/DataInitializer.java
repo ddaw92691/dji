@@ -10286,6 +10286,83 @@ public class DataInitializer implements CommandLineRunner {
         return id;
     }
 
+    private long addJaTranslations(long id) {
+        // 基础日语翻译兜底，避免初始化阶段找不到方法导致编译失败
+        addTranslation(id++, "common", "button.confirm", "ja", null, "確認");
+        addTranslation(id++, "common", "button.cancel", "ja", null, "キャンセル");
+        addTranslation(id++, "common", "button.save", "ja", null, "保存");
+        addTranslation(id++, "common", "button.delete", "ja", null, "削除");
+        addTranslation(id++, "common", "button.edit", "ja", null, "編集");
+        addTranslation(id++, "common", "button.search", "ja", null, "検索");
+        addTranslation(id++, "common", "button.reset", "ja", null, "リセット");
+        addTranslation(id++, "common", "status.enable", "ja", null, "有効");
+        addTranslation(id++, "common", "status.disable", "ja", null, "無効");
+        addTranslation(id++, "common", "welcome", "ja", null, "モールへようこそ");
+        addTranslation(id++, "common", "welcomeDesc", "ja", null, "素晴らしい商品をお手頃価格で見つけましょう");
+        return id;
+    }
+
+    private long addKoTranslations(long id) {
+        // 基础韩语翻译兜底，避免初始化阶段找不到方法导致编译失败
+        addTranslation(id++, "common", "button.confirm", "ko", null, "확인");
+        addTranslation(id++, "common", "button.cancel", "ko", null, "취소");
+        addTranslation(id++, "common", "button.save", "ko", null, "저장");
+        addTranslation(id++, "common", "button.delete", "ko", null, "삭제");
+        addTranslation(id++, "common", "button.edit", "ko", null, "편집");
+        addTranslation(id++, "common", "button.search", "ko", null, "검색");
+        addTranslation(id++, "common", "button.reset", "ko", null, "초기화");
+        addTranslation(id++, "common", "status.enable", "ko", null, "활성화");
+        addTranslation(id++, "common", "status.disable", "ko", null, "비활성화");
+        addTranslation(id++, "common", "welcome", "ko", null, "몰에 오신 것을 환영합니다");
+        addTranslation(id++, "common", "welcomeDesc", "ko", null, "좋은 가격의 다양한 상품을 만나보세요");
+        return id;
+    }
+
+    private long addCouponTranslations(long id) {
+        addTranslation(id++, "coupon", "title", "en", null, "Coupons");
+        addTranslation(id++, "coupon", "title", "zh-Hans", null, "优惠券");
+        addTranslation(id++, "coupon", "title", "zh-CN", null, "优惠券");
+
+        addTranslation(id++, "coupon", "available", "en", null, "Available Coupons");
+        addTranslation(id++, "coupon", "available", "zh-Hans", null, "可用优惠券");
+        addTranslation(id++, "coupon", "available", "zh-CN", null, "可用优惠券");
+
+        addTranslation(id++, "coupon", "myCoupons", "en", null, "My Coupons");
+        addTranslation(id++, "coupon", "myCoupons", "zh-Hans", null, "我的优惠券");
+        addTranslation(id++, "coupon", "myCoupons", "zh-CN", null, "我的优惠券");
+
+        addTranslation(id++, "coupon", "receive", "en", null, "Receive");
+        addTranslation(id++, "coupon", "receive", "zh-Hans", null, "领取");
+        addTranslation(id++, "coupon", "receive", "zh-CN", null, "领取");
+
+        addTranslation(id++, "coupon", "used", "en", null, "Used");
+        addTranslation(id++, "coupon", "used", "zh-Hans", null, "已使用");
+        addTranslation(id++, "coupon", "used", "zh-CN", null, "已使用");
+
+        addTranslation(id++, "coupon", "expired", "en", null, "Expired");
+        addTranslation(id++, "coupon", "expired", "zh-Hans", null, "已过期");
+        addTranslation(id++, "coupon", "expired", "zh-CN", null, "已过期");
+
+        return id;
+    }
+
+    private long addPhase9Translations(long id) {
+        // Phase 9 相关翻译兜底，保留方法避免初始化调用失败
+        addTranslation(id++, "system", "phase9.title", "en", null, "System Extension");
+        addTranslation(id++, "system", "phase9.title", "zh-Hans", null, "系统扩展");
+        addTranslation(id++, "system", "phase9.title", "zh-CN", null, "系统扩展");
+
+        addTranslation(id++, "system", "phase9.enabled", "en", null, "Enabled");
+        addTranslation(id++, "system", "phase9.enabled", "zh-Hans", null, "已启用");
+        addTranslation(id++, "system", "phase9.enabled", "zh-CN", null, "已启用");
+
+        addTranslation(id++, "system", "phase9.disabled", "en", null, "Disabled");
+        addTranslation(id++, "system", "phase9.disabled", "zh-Hans", null, "已禁用");
+        addTranslation(id++, "system", "phase9.disabled", "zh-CN", null, "已禁用");
+
+        return id;
+    }
+
     private void addTranslation(Long id, String ns, String key, String lang, String country, String text) {
         var qw = new LambdaQueryWrapper<I18nTranslation>()
                 .eq(I18nTranslation::getNamespaceCode, ns)
