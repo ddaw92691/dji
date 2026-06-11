@@ -63,7 +63,7 @@ public class AdminI18nService {
     @Transactional
     public Country createCountry(Country country) {
         Country exist = countryMapper.selectByCode(country.getCode());
-        if (exist != null) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Country code already exists");
+        if (exist != null) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "国家代码已存在");
         country.setId(System.currentTimeMillis());
         country.setCode(country.getCode().toUpperCase());
         country.setDeleted(false);
@@ -82,7 +82,7 @@ public class AdminI18nService {
         if (country.getCode() != null && !country.getCode().isEmpty()) {
             Country codeExist = countryMapper.selectByCode(country.getCode().toUpperCase());
             if (codeExist != null && !codeExist.getId().equals(id)) {
-                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Country code already exists");
+                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "国家代码已存在");
             }
             exist.setCode(country.getCode().toUpperCase());
         }
@@ -105,7 +105,7 @@ public class AdminI18nService {
     @Transactional
     public void updateCountryStatus(Long id, String status) {
         if (!"ENABLE".equals(status) && !"DISABLE".equals(status)) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Invalid status");
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "状态无效");
         }
         Country exist = countryMapper.selectById(id);
         if (exist == null) throw new BusinessException(ResultCode.NOT_FOUND);
@@ -142,9 +142,9 @@ public class AdminI18nService {
     @Transactional
     public Language createLanguage(Language language) {
         Language exist = languageMapper.selectByCode(language.getCode());
-        if (exist != null) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Language code already exists");
+        if (exist != null) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "语言代码已存在");
         language.setId(System.currentTimeMillis());
-        language.setCode(language.getCode().toLowerCase());
+        language.setCode(language.getCode());
         language.setDeleted(false);
         language.setCreatedAt(LocalDateTime.now());
         language.setUpdatedAt(LocalDateTime.now());
@@ -161,7 +161,7 @@ public class AdminI18nService {
         if (language.getCode() != null && !language.getCode().isEmpty()) {
             Language codeExist = languageMapper.selectByCode(language.getCode().toLowerCase());
             if (codeExist != null && !codeExist.getId().equals(id))
-                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Language code already exists");
+                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "语言代码已存在");
             exist.setCode(language.getCode().toLowerCase());
         }
         if (language.getName() != null) exist.setName(language.getName());
@@ -177,7 +177,7 @@ public class AdminI18nService {
     @Transactional
     public void updateLanguageStatus(Long id, String status) {
         if (!"ENABLE".equals(status) && !"DISABLE".equals(status))
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Invalid status");
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "状态无效");
         Language exist = languageMapper.selectById(id);
         if (exist == null) throw new BusinessException(ResultCode.NOT_FOUND);
         exist.setStatus(status);
@@ -233,13 +233,13 @@ public class AdminI18nService {
     @Transactional
     public CountryLanguage bindCountryLanguage(Long countryId, Long languageId, Boolean isDefault) {
         Country country = countryMapper.selectById(countryId);
-        if (country == null) throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "Country not found");
+        if (country == null) throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "国家不存在");
         Language lang = languageMapper.selectById(languageId);
-        if (lang == null) throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "Language not found");
+        if (lang == null) throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "语言不存在");
 
         Long count = countryLanguageMapper.selectCount(new LambdaQueryWrapper<CountryLanguage>()
                 .eq(CountryLanguage::getCountryId, countryId).eq(CountryLanguage::getLanguageId, languageId));
-        if (count > 0) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Language already bound to this country");
+        if (count > 0) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "该国家/地区已绑定此语言");
 
         CountryLanguage cl = new CountryLanguage();
         cl.setId(System.currentTimeMillis());
@@ -283,7 +283,7 @@ public class AdminI18nService {
         CountryLanguage cl = countryLanguageMapper.selectById(id);
         if (cl == null) throw new BusinessException(ResultCode.NOT_FOUND);
         if (Boolean.TRUE.equals(cl.getIsDefault())) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Cannot delete default language, set another default first");
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "不能删除默认语言，请先设置其他默认语言");
         }
         countryLanguageMapper.deleteById(id);
         i18nService.clearCache();
@@ -304,7 +304,7 @@ public class AdminI18nService {
     @Transactional
     public I18nNamespace createNamespace(I18nNamespace ns) {
         Long count = namespaceMapper.selectCount(new LambdaQueryWrapper<I18nNamespace>().eq(I18nNamespace::getCode, ns.getCode()));
-        if (count > 0) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Namespace code already exists");
+        if (count > 0) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "命名空间代码已存在");
         ns.setId(System.currentTimeMillis());
         ns.setCode(ns.getCode().toLowerCase());
         ns.setDeleted(false);
@@ -369,13 +369,13 @@ public class AdminI18nService {
 
     @Transactional
     public I18nTranslation createTranslation(I18nTranslation t) {
-        Long count = translationMapper.selectCount(new LambdaQueryWrapper<I18nTranslation>()
-                .eq(I18nTranslation::getNamespaceCode, t.getNamespaceCode())
-                .eq(I18nTranslation::getTranslationKey, t.getTranslationKey())
-                .eq(I18nTranslation::getLanguageCode, t.getLanguageCode())
-                .eq(I18nTranslation::getDeleted, false)
-                .and(w -> w.eq(I18nTranslation::getCountryCode, t.getCountryCode()).or().isNull(I18nTranslation::getCountryCode)));
-        if (count > 0) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Translation key already exists for this language/country");
+        if (t.getNamespaceCode() == null || t.getNamespaceCode().isBlank()) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "模块不能为空");
+        if (t.getTranslationKey() == null || t.getTranslationKey().isBlank()) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "翻译 key 不能为空");
+        if (t.getLanguageCode() == null || t.getLanguageCode().isBlank()) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "语言不能为空");
+        if (t.getTextValue() == null) t.setTextValue("");
+        if (t.getCountryCode() != null && t.getCountryCode().isBlank()) t.setCountryCode(null);
+        I18nTranslation duplicate = findExistingTranslation(t.getNamespaceCode(), t.getTranslationKey(), t.getLanguageCode(), t.getCountryCode());
+        if (duplicate != null) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "同一模块、key、语言和地区的翻译已存在");
         t.setId(System.currentTimeMillis());
         t.setDeleted(false);
         t.setCreatedAt(LocalDateTime.now());
@@ -492,4 +492,104 @@ public class AdminI18nService {
         result.put("messages", messages);
         return result;
     }
+
+    @Transactional
+    public Map<String, Integer> batchSaveTranslations(Map<String, Object> body) {
+        int created = 0, updated = 0, skipped = 0, failed = 0;
+        Object entriesObj = body.get("entries");
+        if (entriesObj instanceof List<?> entries) {
+            for (Object obj : entries) {
+                if (!(obj instanceof Map<?, ?> raw)) { failed++; continue; }
+                try {
+                    I18nTranslation item = mapToTranslation(raw);
+                    if (item.getNamespaceCode() == null || item.getNamespaceCode().isBlank()
+                            || item.getTranslationKey() == null || item.getTranslationKey().isBlank()
+                            || item.getLanguageCode() == null || item.getLanguageCode().isBlank()) {
+                        failed++;
+                        continue;
+                    }
+                    I18nTranslation exist = findExistingTranslation(item.getNamespaceCode(), item.getTranslationKey(), item.getLanguageCode(), item.getCountryCode());
+                    if (exist == null) {
+                        item.setId(System.currentTimeMillis() + created + updated + failed);
+                        item.setStatus(item.getStatus() == null || item.getStatus().isBlank() ? "ENABLE" : item.getStatus());
+                        item.setDeleted(false);
+                        item.setCreatedAt(LocalDateTime.now());
+                        item.setUpdatedAt(LocalDateTime.now());
+                        translationMapper.insert(item);
+                        created++;
+                    } else {
+                        exist.setTextValue(item.getTextValue());
+                        if (item.getDescription() != null) exist.setDescription(item.getDescription());
+                        if (item.getStatus() != null && !item.getStatus().isBlank()) exist.setStatus(item.getStatus());
+                        exist.setUpdatedAt(LocalDateTime.now());
+                        translationMapper.updateById(exist);
+                        updated++;
+                    }
+                } catch (Exception e) {
+                    failed++;
+                }
+            }
+        } else {
+            @SuppressWarnings("unchecked")
+            Map<String, String> messages = (Map<String, String>) body.get("messages");
+            String countryCode = stringOf(body.get("countryCode"));
+            String languageCode = stringOf(body.get("languageCode"));
+            String namespaceCode = stringOf(body.getOrDefault("module", body.get("namespaceCode")));
+            if (messages != null) {
+                Map<String, Integer> res = importTranslations(countryCode, languageCode, namespaceCode, true, messages);
+                created += res.getOrDefault("created", 0);
+                updated += res.getOrDefault("updated", 0);
+                skipped += res.getOrDefault("skipped", 0);
+                failed += res.getOrDefault("failed", 0);
+            }
+        }
+        Map<String, Integer> result = new LinkedHashMap<>();
+        result.put("created", created);
+        result.put("updated", updated);
+        result.put("skipped", skipped);
+        result.put("failed", failed);
+        i18nService.clearCache();
+        return result;
+    }
+
+    private I18nTranslation mapToTranslation(Map<?, ?> raw) {
+        I18nTranslation t = new I18nTranslation();
+        t.setNamespaceCode(stringOf(firstNonBlank(raw.get("module"), raw.get("namespaceCode"), "common")));
+        t.setTranslationKey(stringOf(firstNonBlank(raw.get("key"), raw.get("translationKey"), "")));
+        t.setLanguageCode(stringOf(raw.get("languageCode")));
+        t.setCountryCode(normalizeBlank(stringOf(raw.get("countryCode"))));
+        t.setTextValue(stringOf(firstNonBlank(raw.get("value"), raw.get("textValue"), "")));
+        t.setDescription(stringOf(raw.get("description")));
+        if (raw.get("status") != null) t.setStatus(stringOf(raw.get("status")));
+        else if (raw.get("enabled") != null) t.setStatus(Boolean.TRUE.equals(raw.get("enabled")) ? "ENABLE" : "DISABLE");
+        return t;
+    }
+
+    private Object firstNonBlank(Object... values) {
+        for (Object value : values) {
+            if (value != null && !String.valueOf(value).isBlank()) return value;
+        }
+        return "";
+    }
+
+    private I18nTranslation findExistingTranslation(String namespaceCode, String translationKey, String languageCode, String countryCode) {
+        LambdaQueryWrapper<I18nTranslation> qw = new LambdaQueryWrapper<I18nTranslation>()
+                .eq(I18nTranslation::getNamespaceCode, namespaceCode)
+                .eq(I18nTranslation::getTranslationKey, translationKey)
+                .eq(I18nTranslation::getLanguageCode, languageCode)
+                .eq(I18nTranslation::getDeleted, false);
+        if (countryCode == null || countryCode.isBlank()) qw.and(w -> w.isNull(I18nTranslation::getCountryCode).or().eq(I18nTranslation::getCountryCode, ""));
+        else qw.eq(I18nTranslation::getCountryCode, countryCode);
+        List<I18nTranslation> list = translationMapper.selectList(qw);
+        return list.isEmpty() ? null : list.get(0);
+    }
+
+    private String stringOf(Object value) {
+        return value == null ? "" : String.valueOf(value).trim();
+    }
+
+    private String normalizeBlank(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
 }
