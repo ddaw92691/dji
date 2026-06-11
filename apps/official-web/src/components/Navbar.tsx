@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useI18n } from '../i18n'
+import { getMallUrl } from '../utils/mallUrl'
 import LanguageSelector from './LanguageSelector'
 
 type NavItem = {
@@ -53,6 +54,8 @@ export default function Navbar() {
   const { t } = useI18n()
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+  const mallProductsUrl = getMallUrl('/products')
+  const mallLoginUrl = getMallUrl('/login')
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10)
@@ -114,12 +117,12 @@ export default function Navbar() {
           <Link to="/products" aria-label={t('website.nav.searchAria')} className="opacity-90 hover:opacity-100">
             <SearchIcon />
           </Link>
-          <a href="http://localhost:4173/login" target="_blank" rel="noopener" aria-label={t('website.nav.accountAria')} className="opacity-90 hover:opacity-100">
+          <a href={mallLoginUrl} target="_blank" rel="noopener" aria-label={t('website.nav.accountAria')} className="opacity-90 hover:opacity-100">
             <UserIcon />
           </a>
           <LanguageSelector buttonClassName={solid ? 'bg-[#f3f4f5]' : 'bg-white/15'} />
           <a
-            href="http://localhost:4173"
+            href={mallProductsUrl}
             target="_blank"
             rel="noopener"
             className="inline-flex h-8 min-w-[78px] items-center justify-center gap-2 rounded-full bg-[#0a84ff] px-4 text-[13px] font-normal text-white"
@@ -133,7 +136,7 @@ export default function Navbar() {
           <Link to="/products" aria-label={t('website.nav.searchAria')}>
             <SearchIcon />
           </Link>
-          <a href="http://localhost:4173" target="_blank" rel="noopener" aria-label={t('website.nav.store')}>
+          <a href={mallProductsUrl} target="_blank" rel="noopener" aria-label={t('website.nav.store')}>
             <BagIcon />
           </a>
         </div>

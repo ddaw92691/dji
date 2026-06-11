@@ -1,6 +1,6 @@
 import { useI18n } from '../i18n'
+import { getMallUrl } from '../utils/mallUrl'
 
-// 内部链接条目多为产品/品牌专有名词，按规则保留不翻译；列标题等展示文案走语言包
 const footerGroups: { titleKey: string; links: string[] }[] = [
   { titleKey: 'website.footer.colProductCategories', links: ['Camera Drones', 'Handheld', 'Specialized', 'Enterprise', 'Components'] },
   { titleKey: 'website.footer.colWhereToBuy', links: ['DJI Online Store', 'Flagship Stores', 'DJI Experience Stores', 'Retail Stores', 'Enterprise Dealers', 'Agricultural Drone Dealer'] },
@@ -12,6 +12,9 @@ const footerGroups: { titleKey: string; links: string[] }[] = [
 
 export default function Footer() {
   const { t } = useI18n()
+  const mallHomeUrl = getMallUrl()
+  const mallProductsUrl = getMallUrl('/products')
+  const mallSupportUrl = getMallUrl('/support')
   const bottomLinks: { key: string; label: string }[] = [
     { key: 'website.footer.whoWeAre', label: t('website.footer.whoWeAre') },
     { key: 'website.footer.contactUs', label: t('website.footer.contactUs') },
@@ -29,7 +32,7 @@ export default function Footer() {
             {t('website.footer.bannerDesc')}
           </p>
           <a
-            href="http://localhost:4173"
+            href={mallHomeUrl}
             target="_blank"
             rel="noopener"
             className="mt-4 inline-flex h-8 items-center justify-center rounded-full border border-white/30 px-5 text-[11px] font-semibold text-white transition-colors hover:bg-white hover:text-[#222]"
@@ -45,7 +48,7 @@ export default function Footer() {
               <div className="space-y-3 text-[11px] leading-none">
                 {group.links.map((link) => (
                   <p key={link}>
-                    <a href="http://localhost:4173/products" target="_blank" rel="noopener" className="transition-colors hover:text-white">
+                    <a href={mallProductsUrl} target="_blank" rel="noopener" className="transition-colors hover:text-white">
                       {link}
                     </a>
                   </p>
@@ -59,7 +62,7 @@ export default function Footer() {
           <div className="shrink-0 text-[22px] font-black italic leading-none tracking-normal text-white">dji</div>
           <div className="flex flex-1 flex-wrap gap-x-5 gap-y-2 text-[11px]">
             {bottomLinks.map((link) => (
-              <a key={link.key} href="http://localhost:4173" target="_blank" rel="noopener" className="hover:text-white">
+              <a key={link.key} href={mallHomeUrl} target="_blank" rel="noopener" className="hover:text-white">
                 {link.label}
               </a>
             ))}
@@ -68,7 +71,7 @@ export default function Footer() {
             {['f', 'x', 'in', 'yt', 'ig'].map((item) => (
               <a
                 key={item}
-                href="http://localhost:4173"
+                href={mallHomeUrl}
                 target="_blank"
                 rel="noopener"
                 className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-white/10 px-2 text-[10px] font-semibold text-white hover:bg-white/20"
@@ -81,23 +84,23 @@ export default function Footer() {
 
         <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[10px] text-[#777]">
           <span>{t('website.footer.copyright')}</span>
-          <a href="http://localhost:4173" target="_blank" rel="noopener" className="hover:text-white">
+          <a href={mallHomeUrl} target="_blank" rel="noopener" className="hover:text-white">
             {t('website.footer.privacy')}
           </a>
-          <a href="http://localhost:4173" target="_blank" rel="noopener" className="hover:text-white">
+          <a href={mallHomeUrl} target="_blank" rel="noopener" className="hover:text-white">
             {t('website.footer.terms')}
           </a>
-          <a href="http://localhost:4173" target="_blank" rel="noopener" className="hover:text-white">
+          <a href={mallHomeUrl} target="_blank" rel="noopener" className="hover:text-white">
             {t('website.footer.cookie')}
           </a>
         </div>
       </div>
 
       <div className="fixed bottom-5 right-5 z-40 hidden flex-col gap-2 md:flex">
-        <a href="http://localhost:4173/support" target="_blank" rel="noopener" className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[13px] font-bold text-[#333] shadow-lg">
+        <a href={mallSupportUrl} target="_blank" rel="noopener" className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[13px] font-bold text-[#333] shadow-lg">
           ?
         </a>
-        <a href="http://localhost:4173" target="_blank" rel="noopener" className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0a84ff] text-[13px] font-bold text-white shadow-lg">
+        <a href={mallProductsUrl} target="_blank" rel="noopener" className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0a84ff] text-[13px] font-bold text-white shadow-lg">
           S
         </a>
       </div>

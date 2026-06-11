@@ -4,6 +4,7 @@ import { api, type ProductItem } from "../services/product";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { useI18n } from "../i18n";
+import { getMallUrl } from "../utils/mallUrl";
 
 export default function ProductDetailPage() {
   const { t } = useI18n();
@@ -98,7 +99,7 @@ export default function ProductDetailPage() {
               </div>
               <div className="mt-8 flex gap-4">
                 <a
-                  href={`http://localhost:4173/products/${id}`}
+                  href={getMallUrl(`/products/${id}`)}
                   target="_blank"
                   rel="noopener"
                   className="flex-1 text-center px-8 py-3.5 bg-white text-black rounded-full text-base font-semibold hover:bg-gray-200 transition-colors"

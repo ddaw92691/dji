@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useI18n } from "../i18n";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
+import { getMallUrl } from "../utils/mallUrl";
 
 const D = {
   cameraBase:
@@ -1215,7 +1216,7 @@ function RomoNav() {
       </nav>
       <a
         className="romo-store"
-        href="http://localhost:4173"
+        href={getMallUrl("/products")}
         target="_blank"
         rel="noopener"
       >
