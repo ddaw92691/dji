@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
@@ -23,6 +24,7 @@ public class MerchantApplicationRequest {
     @NotBlank(message = "姓名不能为空")
     private String fullName;
 
+    @NotNull(message = "年龄不能为空")
     @Min(value = 18, message = "年龄必须大于等于 18")
     private Integer age;
 
