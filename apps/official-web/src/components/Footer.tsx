@@ -1,20 +1,32 @@
-const footerGroups = [
-  { title: 'Product Categories', links: ['Camera Drones', 'Handheld', 'Specialized', 'Enterprise', 'Components'] },
-  { title: 'Where to Buy', links: ['DJI Online Store', 'Flagship Stores', 'DJI Experience Stores', 'Retail Stores', 'Enterprise Dealers', 'Agricultural Drone Dealer'] },
-  { title: 'Fly Safe', links: ['Fly Safe', 'DJI Flying Tips'] },
-  { title: 'Support', links: ['Product Support', 'Service Request and Inquiry', 'Help Center', 'After-Sales Service Policies', 'Download Center', 'Security and Privacy'] },
-  { title: 'Explore', links: ['Media Center', 'Buying Guides', 'DJI Store Events', 'Stories'] },
-  { title: 'Community', links: ['SkyPixel', 'DJI Forum', 'Developer', 'Subscribe'] },
+import { useI18n } from '../i18n'
+
+// 内部链接条目多为产品/品牌专有名词，按规则保留不翻译；列标题等展示文案走语言包
+const footerGroups: { titleKey: string; links: string[] }[] = [
+  { titleKey: 'website.footer.colProductCategories', links: ['Camera Drones', 'Handheld', 'Specialized', 'Enterprise', 'Components'] },
+  { titleKey: 'website.footer.colWhereToBuy', links: ['DJI Online Store', 'Flagship Stores', 'DJI Experience Stores', 'Retail Stores', 'Enterprise Dealers', 'Agricultural Drone Dealer'] },
+  { titleKey: 'website.footer.colFlySafe', links: ['Fly Safe', 'DJI Flying Tips'] },
+  { titleKey: 'website.footer.colSupport', links: ['Product Support', 'Service Request and Inquiry', 'Help Center', 'After-Sales Service Policies', 'Download Center', 'Security and Privacy'] },
+  { titleKey: 'website.footer.colExplore', links: ['Media Center', 'Buying Guides', 'DJI Store Events', 'Stories'] },
+  { titleKey: 'website.footer.colCommunity', links: ['SkyPixel', 'DJI Forum', 'Developer', 'Subscribe'] },
 ]
 
 export default function Footer() {
+  const { t } = useI18n()
+  const bottomLinks: { key: string; label: string }[] = [
+    { key: 'website.footer.whoWeAre', label: t('website.footer.whoWeAre') },
+    { key: 'website.footer.contactUs', label: t('website.footer.contactUs') },
+    { key: 'website.footer.careers', label: t('website.footer.careers') },
+    { key: 'website.footer.dealerPortal', label: t('website.footer.dealerPortal') },
+    { key: 'RoboMaster', label: 'RoboMaster' },
+  ]
+
   return (
     <footer className="relative bg-[#222] text-[#a6a6a6]">
       <div className="mx-auto max-w-[1180px] px-6 pb-9 pt-9 md:px-8">
         <div className="border-b border-white/10 pb-9 text-center">
-          <p className="mb-2 text-[13px] font-semibold text-white">Only in the DJI Store App</p>
+          <p className="mb-2 text-[13px] font-semibold text-white">{t('website.footer.bannerTitle')}</p>
           <p className="mx-auto max-w-[520px] text-[11px] leading-5 text-[#9a9a9a]">
-            Try virtual flight, online store, and app-exclusive deals from your device.
+            {t('website.footer.bannerDesc')}
           </p>
           <a
             href="http://localhost:4173"
@@ -22,14 +34,14 @@ export default function Footer() {
             rel="noopener"
             className="mt-4 inline-flex h-8 items-center justify-center rounded-full border border-white/30 px-5 text-[11px] font-semibold text-white transition-colors hover:bg-white hover:text-[#222]"
           >
-            Download App
+            {t('website.footer.download')}
           </a>
         </div>
 
         <div className="grid grid-cols-2 gap-x-8 gap-y-8 py-10 md:grid-cols-3 lg:grid-cols-6">
           {footerGroups.map((group) => (
-            <div key={group.title}>
-              <h4 className="mb-4 text-[12px] font-semibold text-white">{group.title}</h4>
+            <div key={group.titleKey}>
+              <h4 className="mb-4 text-[12px] font-semibold text-white">{t(group.titleKey)}</h4>
               <div className="space-y-3 text-[11px] leading-none">
                 {group.links.map((link) => (
                   <p key={link}>
@@ -46,9 +58,9 @@ export default function Footer() {
         <div className="flex flex-col gap-6 border-t border-white/10 pt-6 md:flex-row md:items-center">
           <div className="shrink-0 text-[22px] font-black italic leading-none tracking-normal text-white">dji</div>
           <div className="flex flex-1 flex-wrap gap-x-5 gap-y-2 text-[11px]">
-            {['Who We Are', 'Contact Us', 'Careers', 'Dealer Portal', 'RoboMaster'].map((link) => (
-              <a key={link} href="http://localhost:4173" target="_blank" rel="noopener" className="hover:text-white">
-                {link}
+            {bottomLinks.map((link) => (
+              <a key={link.key} href="http://localhost:4173" target="_blank" rel="noopener" className="hover:text-white">
+                {link.label}
               </a>
             ))}
           </div>
@@ -68,15 +80,15 @@ export default function Footer() {
         </div>
 
         <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[10px] text-[#777]">
-          <span>Copyright (c) 2026 DJI All Rights Reserved.</span>
+          <span>{t('website.footer.copyright')}</span>
           <a href="http://localhost:4173" target="_blank" rel="noopener" className="hover:text-white">
-            Privacy Policy
+            {t('website.footer.privacy')}
           </a>
           <a href="http://localhost:4173" target="_blank" rel="noopener" className="hover:text-white">
-            Terms of Use
+            {t('website.footer.terms')}
           </a>
           <a href="http://localhost:4173" target="_blank" rel="noopener" className="hover:text-white">
-            Cookie Preferences
+            {t('website.footer.cookie')}
           </a>
         </div>
       </div>

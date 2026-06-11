@@ -1,51 +1,56 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useI18n } from '../i18n'
+import LanguageSelector from './LanguageSelector'
 
 type NavItem = {
-  label: string
+  // labelKey 走语言包；label 为品牌专有名词，不翻译
+  labelKey?: string
+  label?: string
   to?: string
   external?: string
   children?: NavItem[]
 }
 
 const navItems: NavItem[] = [
-  { label: 'Camera Drones', to: '/camera-drones' },
-  { label: 'Handheld', to: '/handheld' },
+  { labelKey: 'website.nav.cameraDrones', to: '/camera-drones' },
+  { labelKey: 'website.nav.handheld', to: '/handheld' },
   {
-    label: 'Lifestyle Tech',
+    labelKey: 'website.nav.lifestyleTech',
     children: [
-      { label: 'Power Stations', to: '/lifestyle-tech/power-stations' },
-      { label: 'Robot Vacuums', to: '/lifestyle-tech/robot-vacuums' },
+      { labelKey: 'website.nav.powerStations', to: '/lifestyle-tech/power-stations' },
+      { labelKey: 'website.nav.robotVacuums', to: '/lifestyle-tech/robot-vacuums' },
     ],
   },
   {
-    label: 'Specialized',
+    labelKey: 'website.nav.specialized',
     children: [
-      { label: 'Enterprise', external: 'https://enterprise.dji.com/?site=brandsite&from=nav' },
-      { label: 'Agriculture', external: 'https://ag.dji.com/?site=brandsite&from=nav' },
-      { label: 'DJI Delivery', to: '/delivery' },
+      { labelKey: 'website.nav.enterprise', external: 'https://enterprise.dji.com/?site=brandsite&from=nav' },
+      { labelKey: 'website.nav.agriculture', external: 'https://ag.dji.com/?site=brandsite&from=nav' },
+      { labelKey: 'website.nav.delivery', to: '/delivery' },
     ],
   },
   {
-    label: 'Explore',
+    labelKey: 'website.nav.explore',
     children: [
-      { label: 'Who We Are', to: '/company' },
+      { labelKey: 'website.nav.whoWeAre', to: '/company' },
       { label: 'SkyPixel', external: 'https://www.skypixel.com/?site=brandsite&from=nav' },
       { label: 'DJI Forum', external: 'https://forum.dji.com/?site=brandsite&from=nav' },
-      { label: 'Media Center', to: '/media-center' },
-      { label: 'DJI Trust Center', to: '/trust-center' },
+      { labelKey: 'website.nav.mediaCenter', to: '/media-center' },
+      { labelKey: 'website.nav.trustCenter', to: '/trust-center' },
       { label: 'DJI Blog', external: 'https://viewpoints.dji.com/blog?site=brandsite&from=nav' },
-      { label: 'Careers', external: 'https://we.dji.com/index_en.html?site=brandsite&from=nav' },
+      { labelKey: 'website.nav.careers', external: 'https://we.dji.com/index_en.html?site=brandsite&from=nav' },
     ],
   },
-  { label: 'Support', to: '/support' },
-  { label: 'Where to Buy', to: '/where-to-buy' },
+  { labelKey: 'website.nav.support', to: '/support' },
+  { labelKey: 'website.nav.whereToBuy', to: '/where-to-buy' },
 ]
 
 const shellClass = 'mx-auto w-full max-w-[1210px] px-5 xl:px-0'
 
 export default function Navbar() {
   const location = useLocation()
+  const { t } = useI18n()
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
 
@@ -70,7 +75,7 @@ export default function Navbar() {
       <div className={`grid h-full grid-cols-[auto_auto_1fr] items-center md:grid-cols-[auto_1fr_auto] ${shellClass}`}>
         <button
           type="button"
-          aria-label="Open menu"
+          aria-label={t('website.nav.menuAria')}
           onClick={() => setOpen((value) => !value)}
           className="mr-3 flex h-9 w-9 flex-col justify-center gap-[7px] md:hidden"
         >
@@ -88,13 +93,13 @@ export default function Navbar() {
 
         <div className="hidden items-center justify-center gap-[32px] justify-self-center text-[13px] font-normal leading-none md:flex xl:gap-[38px]">
           {navItems.map((item) => (
-            <div key={item.label} className="group relative flex h-14 items-center">
+            <div key={item.labelKey || item.label} className="group relative flex h-14 items-center">
               <NavLink item={item} className="whitespace-nowrap opacity-95 transition-opacity hover:opacity-100" />
               {item.children && (
                 <div className="invisible absolute left-1/2 top-full min-w-[210px] -translate-x-1/2 rounded-b-lg bg-white py-3 text-[#1f1f1f] opacity-0 shadow-[0_12px_30px_rgba(0,0,0,0.12)] transition-all duration-150 group-hover:visible group-hover:opacity-100">
                   {item.children.map((child) => (
                     <NavLink
-                      key={child.label}
+                      key={child.labelKey || child.label}
                       item={child}
                       className="block px-5 py-3 text-[13px] leading-none text-[#333] hover:bg-[#f5f5f5]"
                     />
@@ -106,22 +111,13 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-[20px] justify-self-end md:flex">
-          <Link to="/products" aria-label="Search" className="opacity-90 hover:opacity-100">
+          <Link to="/products" aria-label={t('website.nav.searchAria')} className="opacity-90 hover:opacity-100">
             <SearchIcon />
           </Link>
-          <a href="http://localhost:4173/login" target="_blank" rel="noopener" aria-label="Account" className="opacity-90 hover:opacity-100">
+          <a href="http://localhost:4173/login" target="_blank" rel="noopener" aria-label={t('website.nav.accountAria')} className="opacity-90 hover:opacity-100">
             <UserIcon />
           </a>
-          <button
-            type="button"
-            className={[
-              'inline-flex h-8 items-center gap-2 rounded-full px-4 text-[13px] font-normal transition-colors',
-              solid ? 'bg-[#f3f4f5]' : 'bg-white/15',
-            ].join(' ')}
-          >
-            <GlobeIcon />
-            Singapore
-          </button>
+          <LanguageSelector buttonClassName={solid ? 'bg-[#f3f4f5]' : 'bg-white/15'} />
           <a
             href="http://localhost:4173"
             target="_blank"
@@ -129,15 +125,15 @@ export default function Navbar() {
             className="inline-flex h-8 min-w-[78px] items-center justify-center gap-2 rounded-full bg-[#0a84ff] px-4 text-[13px] font-normal text-white"
           >
             <BagIcon />
-            Store
+            {t('website.nav.store')}
           </a>
         </div>
 
         <div className="flex items-center gap-5 justify-self-end md:hidden">
-          <Link to="/products" aria-label="Search">
+          <Link to="/products" aria-label={t('website.nav.searchAria')}>
             <SearchIcon />
           </Link>
-          <a href="http://localhost:4173" target="_blank" rel="noopener" aria-label="Store">
+          <a href="http://localhost:4173" target="_blank" rel="noopener" aria-label={t('website.nav.store')}>
             <BagIcon />
           </a>
         </div>
@@ -146,13 +142,16 @@ export default function Navbar() {
       {open && (
         <div className="border-t border-black/10 bg-white px-6 py-3 text-[#1f1f1f] shadow-lg md:hidden">
           {navItems.map((item) => (
-            <div key={item.label} className="border-b border-black/5 py-3">
+            <div key={item.labelKey || item.label} className="border-b border-black/5 py-3">
               <NavLink item={item} onClick={() => setOpen(false)} className="block py-1 text-[13px]" />
               {item.children?.map((child) => (
-                <NavLink key={child.label} item={child} onClick={() => setOpen(false)} className="block py-2 pl-4 text-[12px] text-[#666]" />
+                <NavLink key={child.labelKey || child.label} item={child} onClick={() => setOpen(false)} className="block py-2 pl-4 text-[12px] text-[#666]" />
               ))}
             </div>
           ))}
+          <div className="py-3">
+            <LanguageSelector variant="plain" buttonClassName="text-[#1f1f1f]" onChanged={() => setOpen(false)} />
+          </div>
         </div>
       )}
     </nav>
@@ -160,17 +159,19 @@ export default function Navbar() {
 }
 
 function NavLink({ item, className, onClick }: { item: NavItem; className?: string; onClick?: () => void }) {
+  const { t } = useI18n()
+  const text = item.labelKey ? t(item.labelKey) : item.label
   if (item.external) {
     return (
       <a href={item.external} target="_blank" rel="noopener" onClick={onClick} className={className}>
-        {item.label}
+        {text}
       </a>
     )
   }
 
   return (
     <Link to={item.to || '#'} onClick={onClick} className={className}>
-      {item.label}
+      {text}
     </Link>
   )
 }
@@ -187,14 +188,6 @@ function UserIcon() {
   return (
     <svg className="h-[18px] w-[18px] fill-current" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M12 12.3a4.7 4.7 0 1 1 0-9.4 4.7 4.7 0 0 1 0 9.4Zm0-1.8a2.9 2.9 0 1 0 0-5.8 2.9 2.9 0 0 0 0 5.8Zm8.2 10.6h-1.8a6.4 6.4 0 0 0-12.8 0H3.8a8.2 8.2 0 0 1 16.4 0Z" />
-    </svg>
-  )
-}
-
-function GlobeIcon() {
-  return (
-    <svg className="h-[14px] w-[14px] fill-current" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18Zm5.7-10a7 7 0 0 0-1.4-3.7h-2.1c.3 1.1.5 2.4.6 3.7h2.9Zm-4.8 0a18 18 0 0 0-.6-3.7h-.6a18 18 0 0 0-.6 3.7h1.8Zm-3.7 0c.1-1.3.3-2.6.6-3.7H7.7A7 7 0 0 0 6.3 11h2.9Zm-2.9 2a7 7 0 0 0 1.4 3.7h2.1A17 17 0 0 1 9.2 13H6.3Zm4.8 0c.1 1.4.3 2.6.6 3.7h.6c.3-1.1.5-2.3.6-3.7h-1.8Zm3.7 0c-.1 1.4-.3 2.6-.6 3.7h2.1a7 7 0 0 0 1.4-3.7h-2.9Z" />
     </svg>
   )
 }
