@@ -51,12 +51,14 @@ service.interceptors.response.use(
   (response: AxiosResponse) => {
     const { code, message } = response.data
 
-    if (code === 500) {
-      ElMessage.error(message)
-    }
-
     if (code === 401) {
-      ElMessage.error('401')
+      ElMessage.error('登录已过期，请重新登录')
+      storage.remove(STORAGE_KEYS.TOKEN)
+      router.push('/login')
+    } else if (code === 403) {
+      ElMessage.error('没有权限访问')
+    } else if (code === 500) {
+      ElMessage.error(message || '服务器异常，请稍后重试')
     }
 
     return response
@@ -65,26 +67,27 @@ service.interceptors.response.use(
     let errorMessage = '请求失败'
 
     if (error.response) {
+      const backendMsg = error.response.data?.message
       switch (error.response.status) {
         case 401:
-          errorMessage = '未授权，请重新登录'
+          errorMessage = '登录已过期，请重新登录'
           storage.remove(STORAGE_KEYS.TOKEN)
           router.push('/login')
           break
         case 403:
-          errorMessage = '拒绝访问'
+          errorMessage = '没有权限访问'
           break
         case 404:
-          errorMessage = '请求地址不存在'
+          errorMessage = '接口不存在'
           break
         case 500:
-          errorMessage = '服务器内部错误'
+          errorMessage = backendMsg || '服务器异常，请稍后重试'
           break
         default:
           errorMessage = error.response.data?.message || `请求失败(${error.response.status})`
       }
     } else if (error.request) {
-      errorMessage = '网络连接失败，请检查网络'
+      errorMessage = '网络连接失败，请检查服务是否正常'
     } else {
       errorMessage = error.message || '请求失败'
     }

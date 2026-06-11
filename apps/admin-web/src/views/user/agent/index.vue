@@ -10,33 +10,52 @@
       @refresh="fetchData"
     >
       <template #tableOperationLeft>
-        <el-button type="primary" :icon="menuStore.iconComponents.Plus" v-permission="['agent:add']" @click="openCreate">
-          Create Agent
+        <el-button
+          type="primary"
+          :icon="menuStore.iconComponents.Plus"
+          v-permission="['agent:add']"
+          @click="openCreate"
+        >
+          新增代理
         </el-button>
       </template>
       <template #status="{ row }">
-        <BaseTag :type="getColorByValue(STATUS_OPTIONS, row.status)" :text="getLabelByValue(STATUS_OPTIONS, row.status)" />
+        <BaseTag
+          :type="getColorByValue(STATUS_OPTIONS, row.status)"
+          :text="getLabelByValue(STATUS_OPTIONS, row.status)"
+        />
       </template>
       <template #operation="{ row }">
-        <el-button type="primary" link v-permission="['agent:edit']" @click="openEdit(row)">编辑</el-button>
-        <el-button type="info" link @click="openCustomers(row)">客户</el-button>
+        <el-button type="primary" link v-permission="['agent:edit']" @click="openEdit(row)"
+          >编辑</el-button
+        >
+        <el-button type="info" link @click="open客户(row)">客户</el-button>
         <el-button type="warning" link @click="openCommissions(row)">佣金</el-button>
         <el-popconfirm
-          :title="row.status === 'ENABLE' ? 'Disable this agent?' : 'Enable this agent?'"
+          :title="row.status === 'ENABLE' ? '确定要禁用该代理吗？' : '确定要启用该代理吗？'"
           :placement="POPCONFIRM_CONFIG.placement"
           :width="POPCONFIRM_CONFIG.width"
-          @confirm="handleToggleStatus(row)"
+          @confirm="handleToggle状态(row)"
         >
           <template #reference>
-            <el-button link :type="row.status === 'ENABLE' ? 'danger' : 'success'" v-permission="['agent:edit']">
-              {{ row.status === 'ENABLE' ? 'Disable' : 'Enable' }}
+            <el-button
+              link
+              :type="row.status === 'ENABLE' ? 'danger' : 'success'"
+              v-permission="['agent:edit']"
+            >
+              {{ row.status === 'ENABLE' ? '禁用' : '启用' }}
             </el-button>
           </template>
         </el-popconfirm>
       </template>
     </BasePage>
 
-    <BaseDialog v-model="dialogVisible" :title="editForm.id ? 'Edit Agent' : 'Create Agent'" width="600" @close="dialogVisible = false">
+    <BaseDialog
+      v-model="dialogVisible"
+      :title="editForm.id ? '编辑代理' : '新增代理'"
+      width="600"
+      @close="dialogVisible = false"
+    >
       <el-form ref="formRef" :model="editForm" :rules="formRules" label-width="130px">
         <el-form-item label="邮箱" prop="email"><el-input v-model="editForm.email" /></el-form-item>
         <el-form-item label="密码" prop="password" v-if="!editForm.id">
@@ -45,7 +64,13 @@
         <el-form-item label="昵称"><el-input v-model="editForm.nickname" /></el-form-item>
         <el-form-item label="手机号"><el-input v-model="editForm.phone" /></el-form-item>
         <el-form-item label="佣金比例(%)">
-          <el-input-number v-model="editForm.commissionRate" :min="0" :max="100" :precision="2" style="width:100%" />
+          <el-input-number
+            v-model="editForm.commissionRate"
+            :min="0"
+            :max="100"
+            :precision="2"
+            style="width: 100%"
+          />
         </el-form-item>
         <el-form-item label="邀请码">
           <el-input v-model="editForm.inviteCode" :disabled="!!editForm.id" />
@@ -57,7 +82,12 @@
       </template>
     </BaseDialog>
 
-    <BaseDialog v-model="customersVisible" title="代理客户" width="700" @close="customersVisible = false">
+    <BaseDialog
+      v-model="customersVisible"
+      title="代理客户"
+      width="700"
+      @close="customersVisible = false"
+    >
       <el-table :data="customerList" v-loading="customerLoading" border stripe max-height="400">
         <el-table-column prop="email" label="邮箱" min-width="180" />
         <el-table-column prop="phone" label="手机号" min-width="130" />
@@ -71,13 +101,18 @@
         :total="customerTotal"
         :page-sizes="[10, 20, 50]"
         layout="total, sizes, prev, pager, next"
-        @change="fetchCustomers"
-        style="margin-top:12px;justify-content:flex-end"
+        @change="fetch客户"
+        style="margin-top: 12px; justify-content: flex-end"
       />
       <template #footer><el-button @click="customersVisible = false">关闭</el-button></template>
     </BaseDialog>
 
-    <BaseDialog v-model="commissionsVisible" title="代理佣金" width="700" @close="commissionsVisible = false">
+    <BaseDialog
+      v-model="commissionsVisible"
+      title="代理佣金"
+      width="700"
+      @close="commissionsVisible = false"
+    >
       <el-table :data="commissionList" v-loading="commissionLoading" border stripe max-height="400">
         <el-table-column prop="orderId" label="订单ID" min-width="120" />
         <el-table-column prop="amount" label="金额" width="120" />
@@ -93,7 +128,7 @@
         :page-sizes="[10, 20, 50]"
         layout="total, sizes, prev, pager, next"
         @change="fetchCommissions"
-        style="margin-top:12px;justify-content:flex-end"
+        style="margin-top: 12px; justify-content: flex-end"
       />
       <template #footer><el-button @click="commissionsVisible = false">关闭</el-button></template>
     </BaseDialog>
@@ -145,38 +180,55 @@ const editForm = reactive({
 })
 
 const formRules: FormRules = {
-  email: [{ required: true, message: 'Email is required', trigger: 'blur' }],
-  password: [{ required: true, message: 'Password is required', trigger: 'blur' }],
+  email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }],
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
 }
 
 const searchFormConfig = ref<IFormConfig[]>([
-  { label: 'Keyword', prop: 'keyword', type: 'elInput', attrs: { placeholder: 'Search...', clearable: true } },
-  { label: 'Status', prop: 'status', type: 'elSelect', attrs: { placeholder: 'Select status', options: STATUS_OPTIONS, clearable: true } },
+  {
+    label: '关键词',
+    prop: 'keyword',
+    type: 'elInput',
+    attrs: { placeholder: '请输入关键词', clearable: true },
+  },
+  {
+    label: '状态',
+    prop: 'status',
+    type: 'elSelect',
+    attrs: { placeholder: '请选择状态', options: STATUS_OPTIONS, clearable: true },
+  },
 ])
 
 const columns = ref([
   { type: 'index', label: '#', width: 55, fixed: 'left' },
-  { prop: 'agentId', label: 'Agent ID', minWidth: 100 },
-  { prop: 'email', label: 'Email', minWidth: 180 },
-  { prop: 'phone', label: 'Phone', minWidth: 130 },
-  { prop: 'nickname', label: 'Nickname', minWidth: 120 },
-  { prop: 'inviteCode', label: 'Invite Code', minWidth: 120 },
+  { prop: 'agentId', label: '代理ID', minWidth: 100 },
+  { prop: 'email', label: '邮箱', minWidth: 180 },
+  { prop: 'phone', label: '手机号', minWidth: 130 },
+  { prop: 'nickname', label: '昵称', minWidth: 120 },
+  { prop: 'inviteCode', label: '邀请码', minWidth: 120 },
   { prop: 'commissionRate', label: 'Rate(%)', width: 90 },
-  { prop: 'customerCount', label: 'Customers', width: 100 },
+  { prop: 'customerCount', label: '客户', width: 100 },
   { prop: 'totalCommission', label: 'Commission', width: 120 },
-  { prop: 'balance', label: 'Balance', width: 100 },
-  { prop: 'frozenBalance', label: 'Frozen', width: 100 },
-  { prop: 'status', label: 'Status', width: 100 },
-  { prop: 'createdAt', label: 'Created', minWidth: 160 },
-  { prop: 'operation', label: 'Actions', width: 300, fixed: 'right' },
+  { prop: 'balance', label: '余额', width: 100 },
+  { prop: 'frozen余额', label: '冻结金额', width: 100 },
+  { prop: 'status', label: '状态', width: 100 },
+  { prop: 'createdAt', label: '创建时间', minWidth: 160 },
+  { prop: 'operation', label: '操作', width: 300, fixed: 'right' },
 ])
 
 const fetchData = async (queryForm: Record<string, unknown>, page: number, pageSize: number) => {
   loading.value = true
   try {
-    const { data: res } = await agentApi.getAgents({ ...queryForm, page, pageSize })
-    if (res.code === 200) { tableData.value = res.data?.list || []; total.value = res.data?.total || 0 }
-  } catch { /* ignore */ } finally { loading.value = false }
+    const { data: res } = await agentApi.get代理({ ...queryForm, page, pageSize })
+    if (res.code === 200) {
+      tableData.value = res.data?.list || []
+      total.value = res.data?.total || 0
+    }
+  } catch {
+    /* ignore */
+  } finally {
+    loading.value = false
+  }
 }
 
 const resetForm = () => {
@@ -190,11 +242,18 @@ const resetForm = () => {
   formRef.value?.resetFields()
 }
 
-const openCreate = () => { resetForm(); dialogVisible.value = true }
+const openCreate = () => {
+  resetForm()
+  dialogVisible.value = true
+}
 
 const openEdit = async (row: any) => {
   try {
-    const { data: res } = await agentApi.getAgents({ agentId: row.agentId || row.id, page: 1, pageSize: 1 })
+    const { data: res } = await agentApi.get代理({
+      agentId: row.agentId || row.id,
+      page: 1,
+      pageSize: 1,
+    })
     const d = res.code === 200 && res.data?.list?.[0] ? res.data.list[0] : row
     Object.assign(editForm, {
       id: d.id || row.id,
@@ -207,8 +266,12 @@ const openEdit = async (row: any) => {
     dialogVisible.value = true
   } catch {
     Object.assign(editForm, {
-      id: row.id, email: row.email || '', nickname: row.nickname || '',
-      phone: row.phone || '', commissionRate: row.commissionRate ?? null, inviteCode: row.inviteCode || '',
+      id: row.id,
+      email: row.email || '',
+      nickname: row.nickname || '',
+      phone: row.phone || '',
+      commissionRate: row.commissionRate ?? null,
+      inviteCode: row.inviteCode || '',
     })
     dialogVisible.value = true
   }
@@ -219,8 +282,11 @@ const handleSubmit = async () => {
   submitLoading.value = true
   try {
     const payload = {
-      email: editForm.email, nickname: editForm.nickname, phone: editForm.phone,
-      commissionRate: editForm.commissionRate, inviteCode: editForm.inviteCode,
+      email: editForm.email,
+      nickname: editForm.nickname,
+      phone: editForm.phone,
+      commissionRate: editForm.commissionRate,
+      inviteCode: editForm.inviteCode,
     }
     let res
     if (editForm.id) {
@@ -229,35 +295,59 @@ const handleSubmit = async () => {
       res = await agentApi.createAgent({ ...payload, password: editForm.password })
     }
     if (res.data.code === 200) {
-      ElMessage.success(editForm.id ? 'Agent updated' : 'Agent created')
+      ElMessage.success(editForm.id ? '代理更新成功' : '代理创建成功')
       dialogVisible.value = false
-      editForm.id ? basePageRef.value?.refreshCurrentPage() : basePageRef.value?.refreshToFirstPage()
-    } else { ElMessage.error(res.data.message || '操作失败') }
-  } catch { ElMessage.error('操作失败') } finally { submitLoading.value = false }
+      editForm.id
+        ? basePageRef.value?.refreshCurrentPage()
+        : basePageRef.value?.refreshToFirstPage()
+    } else {
+      ElMessage.error(res.data.message || '操作失败')
+    }
+  } catch {
+    ElMessage.error('操作失败')
+  } finally {
+    submitLoading.value = false
+  }
 }
 
-const handleToggleStatus = async (row: any) => {
-  const newStatus = row.status === 'ENABLE' ? 'DISABLE' : 'ENABLE'
+const handleToggle状态 = async (row: any) => {
+  const new状态 = row.status === 'ENABLE' ? 'DISABLE' : 'ENABLE'
   try {
-    const { data: res } = await agentApi.updateAgentStatus(row.id, newStatus)
-    if (res.code === 200) { ElMessage.success('状态已更新'); basePageRef.value?.refreshCurrentPage() }
-    else { ElMessage.error(res.message || '状态更新失败') }
-  } catch { ElMessage.error('状态更新失败') }
+    const { data: res } = await agentApi.updateAgent状态(row.id, new状态)
+    if (res.code === 200) {
+      ElMessage.success('状态已更新')
+      basePageRef.value?.refreshCurrentPage()
+    } else {
+      ElMessage.error(res.message || '状态更新失败')
+    }
+  } catch {
+    ElMessage.error('状态更新失败')
+  }
 }
 
-const openCustomers = (row: any) => {
+const open客户 = (row: any) => {
   currentAgentId.value = row.id
   customerPage.value = 1
   customersVisible.value = true
-  fetchCustomers()
+  fetch客户()
 }
 
-const fetchCustomers = async () => {
+const fetch客户 = async () => {
   customerLoading.value = true
   try {
-    const { data: res } = await agentApi.getAgentCustomers(currentAgentId.value, { page: customerPage.value, pageSize: customerPageSize.value })
-    if (res.code === 200) { customerList.value = res.data?.list || []; customerTotal.value = res.data?.total || 0 }
-  } catch { /* ignore */ } finally { customerLoading.value = false }
+    const { data: res } = await agentApi.getAgent客户(currentAgentId.value, {
+      page: customerPage.value,
+      pageSize: customerPageSize.value,
+    })
+    if (res.code === 200) {
+      customerList.value = res.data?.list || []
+      customerTotal.value = res.data?.total || 0
+    }
+  } catch {
+    /* ignore */
+  } finally {
+    customerLoading.value = false
+  }
 }
 
 const openCommissions = (row: any) => {
@@ -270,8 +360,18 @@ const openCommissions = (row: any) => {
 const fetchCommissions = async () => {
   commissionLoading.value = true
   try {
-    const { data: res } = await agentApi.getAgentCommissions(currentAgentId.value, { page: commissionPage.value, pageSize: commissionPageSize.value })
-    if (res.code === 200) { commissionList.value = res.data?.list || []; commissionTotal.value = res.data?.total || 0 }
-  } catch { /* ignore */ } finally { commissionLoading.value = false }
+    const { data: res } = await agentApi.getAgentCommissions(currentAgentId.value, {
+      page: commissionPage.value,
+      pageSize: commissionPageSize.value,
+    })
+    if (res.code === 200) {
+      commissionList.value = res.data?.list || []
+      commissionTotal.value = res.data?.total || 0
+    }
+  } catch {
+    /* ignore */
+  } finally {
+    commissionLoading.value = false
+  }
 }
 </script>

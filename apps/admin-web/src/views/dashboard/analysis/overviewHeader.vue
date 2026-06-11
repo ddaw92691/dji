@@ -61,21 +61,21 @@ const menuStore = useMenuStore()
 // 核心运营指标
 const businessStats = ref([
   {
-    label: 'Total Revenue',
+    label: '总收入',
     value: '￥1,284,500',
     trend: '+15.2%',
     icon: 'HSolid:BanknotesIcon',
     type: 'blue',
   },
   {
-    label: 'Total Orders',
+    label: 'Total 订单',
     value: '8,429',
     trend: '+8.4%',
     icon: 'HSolid:ShoppingCartIcon',
     type: 'orange',
   },
   {
-    label: 'New Members',
+    label: '新增会员',
     value: '1,562',
     trend: '+22.1%',
     icon: 'HSolid:UserPlusIcon',

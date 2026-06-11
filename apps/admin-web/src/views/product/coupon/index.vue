@@ -2,16 +2,32 @@
   <div class="coupon-page">
     <el-form :inline="true" :model="searchForm" class="search-bar">
       <el-form-item>
-        <el-input v-model="searchForm.keyword" placeholder="关键词" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input
+          v-model="searchForm.keyword"
+          placeholder="关键词"
+          clearable
+          @clear="handleSearch"
+          @keyup.enter="handleSearch"
+        />
       </el-form-item>
       <el-form-item>
         <el-select v-model="searchForm.type" placeholder="类型" clearable @change="handleSearch">
-          <el-option v-for="o in COUPON_TYPE_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
+          <el-option
+            v-for="o in COUPON_TYPE_OPTIONS"
+            :key="o.value"
+            :label="o.label"
+            :value="o.value"
+          />
         </el-select>
       </el-form-item>
       <el-form-item>
         <el-select v-model="searchForm.status" placeholder="状态" clearable @change="handleSearch">
-          <el-option v-for="o in COUPON_STATUS_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
+          <el-option
+            v-for="o in COUPON_STATUS_OPTIONS"
+            :key="o.value"
+            :label="o.label"
+            :value="o.value"
+          />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -19,7 +35,9 @@
         <el-button @click="handleReset">重置</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="success" v-permission="'coupon:add'" @click="openCreate">新建优惠券</el-button>
+        <el-button type="success" v-permission="'coupon:add'" @click="openCreate"
+          >新建优惠券</el-button
+        >
       </el-form-item>
     </el-form>
 
@@ -34,7 +52,9 @@
       </el-table-column>
       <el-table-column prop="amount" label="金额" width="90" align="right" />
       <el-table-column prop="discountRate" label="比例" width="70" align="center">
-        <template #default="{ row }">{{ row.discountRate ? row.discountRate + '%' : '-' }}</template>
+        <template #default="{ row }">{{
+          row.discountRate ? row.discountRate + '%' : '-'
+        }}</template>
       </el-table-column>
       <el-table-column prop="minSpend" label="最低消费" width="100" align="right" />
       <el-table-column prop="totalQuantity" label="合计" width="70" align="center" />
@@ -51,12 +71,23 @@
       </el-table-column>
       <el-table-column label="操作" width="240" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" v-permission="'coupon:edit'" @click="openEdit(row)">编辑</el-button>
-          <el-button link :type="row.status === 'ENABLE' ? 'warning' : 'success'" v-permission="'coupon:edit'" @click="toggleStatus(row)">
-            {{ row.status === 'ENABLE' ? 'Disable' : 'Enable' }}
+          <el-button link type="primary" v-permission="'coupon:edit'" @click="openEdit(row)"
+            >编辑</el-button
+          >
+          <el-button
+            link
+            :type="row.status === 'ENABLE' ? 'warning' : 'success'"
+            v-permission="'coupon:edit'"
+            @click="toggle状态(row)"
+          >
+            {{ row.status === 'ENABLE' ? '禁用' : '启用' }}
           </el-button>
-          <el-button link type="info" v-permission="'coupon:view'" @click="openRecords(row)">记录</el-button>
-          <el-button link type="danger" v-permission="'coupon:delete'" @click="handleDelete(row)">删除</el-button>
+          <el-button link type="info" v-permission="'coupon:view'" @click="openRecords(row)"
+            >记录</el-button
+          >
+          <el-button link type="danger" v-permission="'coupon:delete'" @click="handleDelete(row)"
+            >删除</el-button
+          >
         </template>
       </el-table-column>
     </el-table>
@@ -70,7 +101,12 @@
       @change="fetchData"
     />
 
-    <el-dialog v-model="formVisible" :title="editingId ? 'Edit Coupon' : 'Create Coupon'" width="700px" @closed="resetForm">
+    <el-dialog
+      v-model="formVisible"
+      :title="editingId ? '编辑优惠券' : '新建优惠券'"
+      width="700px"
+      @closed="resetForm"
+    >
       <el-form ref="formRef" :model="form" label-width="130px" :rules="formRules">
         <el-form-item label="名称" prop="name">
           <el-input v-model="form.name" placeholder="优惠券名称" />
@@ -79,35 +115,65 @@
           <el-input v-model="form.code" placeholder="优惠券码" :disabled="!!editingId" />
         </el-form-item>
         <el-form-item label="类型" prop="type">
-          <el-select v-model="form.type" placeholder="请选择类型" style="width:100%">
-            <el-option v-for="o in COUPON_TYPE_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
+          <el-select v-model="form.type" placeholder="请选择类型" style="width: 100%">
+            <el-option
+              v-for="o in COUPON_TYPE_OPTIONS"
+              :key="o.value"
+              :label="o.label"
+              :value="o.value"
+            />
           </el-select>
         </el-form-item>
         <el-form-item v-if="form.type === 'FIXED_AMOUNT'" label="金额" prop="amount">
-          <el-input-number v-model="form.amount" :min="0" :precision="2" style="width:100%" />
+          <el-input-number v-model="form.amount" :min="0" :precision="2" style="width: 100%" />
         </el-form-item>
         <el-form-item v-if="form.type === 'PERCENTAGE'" label="折扣率" prop="discountRate">
-          <el-input-number v-model="form.discountRate" :min="0" :max="100" :precision="1" style="width:100%" />
-          <span style="margin-left:4px">%</span>
+          <el-input-number
+            v-model="form.discountRate"
+            :min="0"
+            :max="100"
+            :precision="1"
+            style="width: 100%"
+          />
+          <span style="margin-left: 4px">%</span>
         </el-form-item>
         <el-form-item label="最低消费" prop="minSpend">
-          <el-input-number v-model="form.minSpend" :min="0" :precision="2" style="width:100%" />
+          <el-input-number v-model="form.minSpend" :min="0" :precision="2" style="width: 100%" />
         </el-form-item>
         <el-form-item label="总数量" prop="totalQuantity">
-          <el-input-number v-model="form.totalQuantity" :min="1" style="width:100%" />
+          <el-input-number v-model="form.totalQuantity" :min="1" style="width: 100%" />
         </el-form-item>
         <el-form-item label="每用户限制" prop="perUserLimit">
-          <el-input-number v-model="form.perUserLimit" :min="1" style="width:100%" />
+          <el-input-number v-model="form.perUserLimit" :min="1" style="width: 100%" />
         </el-form-item>
         <el-form-item label="开始日期" prop="startAt">
-          <el-date-picker v-model="form.startAt" type="datetime" placeholder="开始日期" format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" style="width:100%" />
+          <el-date-picker
+            v-model="form.startAt"
+            type="datetime"
+            placeholder="开始日期"
+            format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            style="width: 100%"
+          />
         </el-form-item>
         <el-form-item label="结束日期" prop="endAt">
-          <el-date-picker v-model="form.endAt" type="datetime" placeholder="结束日期" format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" style="width:100%" />
+          <el-date-picker
+            v-model="form.endAt"
+            type="datetime"
+            placeholder="结束日期"
+            format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            style="width: 100%"
+          />
         </el-form-item>
         <el-form-item label="状态" prop="status">
-          <el-select v-model="form.status" style="width:100%">
-            <el-option v-for="o in COUPON_STATUS_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
+          <el-select v-model="form.status" style="width: 100%">
+            <el-option
+              v-for="o in COUPON_STATUS_OPTIONS"
+              :key="o.value"
+              :label="o.label"
+              :value="o.value"
+            />
           </el-select>
         </el-form-item>
         <el-divider>翻译</el-divider>
@@ -115,19 +181,34 @@
           <el-input v-model="form.translations.ja.name" placeholder="日文名称" />
         </el-form-item>
         <el-form-item label="日文描述">
-          <el-input v-model="form.translations.ja.description" type="textarea" :rows="2" placeholder="日文描述" />
+          <el-input
+            v-model="form.translations.ja.description"
+            type="textarea"
+            :rows="2"
+            placeholder="日文描述"
+          />
         </el-form-item>
         <el-form-item label="韩文名称">
           <el-input v-model="form.translations.ko.name" placeholder="韩文名称" />
         </el-form-item>
         <el-form-item label="韩文描述">
-          <el-input v-model="form.translations.ko.description" type="textarea" :rows="2" placeholder="韩文描述" />
+          <el-input
+            v-model="form.translations.ko.description"
+            type="textarea"
+            :rows="2"
+            placeholder="韩文描述"
+          />
         </el-form-item>
         <el-form-item label="英文名称">
           <el-input v-model="form.translations.en.name" placeholder="英文名称" />
         </el-form-item>
         <el-form-item label="英文描述">
-          <el-input v-model="form.translations.en.description" type="textarea" :rows="2" placeholder="英文描述" />
+          <el-input
+            v-model="form.translations.en.description"
+            type="textarea"
+            :rows="2"
+            placeholder="英文描述"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -143,7 +224,11 @@
         <el-table-column prop="userName" label="用户" min-width="120" />
         <el-table-column label="状态" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'USED' ? 'success' : row.status === 'RECEIVED' ? 'primary' : 'info'">
+            <el-tag
+              :type="
+                row.status === 'USED' ? 'success' : row.status === 'RECEIVED' ? 'primary' : 'info'
+              "
+            >
               {{ row.status }}
             </el-tag>
           </template>
@@ -168,14 +253,19 @@
 </template>
 
 <script setup lang="ts">
-import { couponApi, type IAdminCoupon, type ICouponRecord } from '@/api/coupon'
-import { COUPON_STATUS_OPTIONS, COUPON_TYPE_OPTIONS, getLabelByValue, getColorByValue } from '@/constants/dict'
+import { couponApi, type I管理员Coupon, type ICouponRecord } from '@/api/coupon'
+import {
+  COUPON_STATUS_OPTIONS,
+  COUPON_TYPE_OPTIONS,
+  getLabelByValue,
+  getColorByValue,
+} from '@/constants/dict'
 import type { FormInstance, FormRules } from 'element-plus'
 
-defineOptions({ name: 'AdminCouponView' })
+defineOptions({ name: '管理员CouponView' })
 
 const loading = ref(false)
-const tableData = ref<IAdminCoupon[]>([])
+const tableData = ref<I管理员Coupon[]>([])
 const total = ref(0)
 
 const formVisible = ref(false)
@@ -267,9 +357,13 @@ function openCreate() {
   formVisible.value = true
 }
 
-function openEdit(row: IAdminCoupon) {
+function openEdit(row: I管理员Coupon) {
   editingId.value = row.id
-  const trans: any = { ja: { name: '', description: '' }, ko: { name: '', description: '' }, en: { name: '', description: '' } }
+  const trans: any = {
+    ja: { name: '', description: '' },
+    ko: { name: '', description: '' },
+    en: { name: '', description: '' },
+  }
   if (row.translations) {
     for (const t of row.translations) {
       if (trans[t.languageCode]) {
@@ -315,17 +409,17 @@ async function handleSubmit() {
   }
 }
 
-async function toggleStatus(row: IAdminCoupon) {
-  const newStatus = row.status === 'ENABLE' ? 'DISABLE' : 'ENABLE'
-  const { data: res } = await couponApi.updateCouponStatus(row.id, newStatus)
+async function toggle状态(row: I管理员Coupon) {
+  const new状态 = row.status === 'ENABLE' ? 'DISABLE' : 'ENABLE'
+  const { data: res } = await couponApi.updateCoupon状态(row.id, new状态)
   if (res.code !== 200) return
   ElMessage.success('状态已更新')
   fetchData()
 }
 
-async function handleDelete(row: IAdminCoupon) {
+async function handleDelete(row: I管理员Coupon) {
   try {
-    await ElMessageBox.confirm(`Delete coupon "${row.name}"?`, 'Confirm', { type: 'warning' })
+    await ElMessageBox.confirm(`确定要删除优惠券“${row.name}”吗？`, '确认', { type: 'warning' })
   } catch {
     return
   }
@@ -335,7 +429,7 @@ async function handleDelete(row: IAdminCoupon) {
   fetchData()
 }
 
-function openRecords(row: IAdminCoupon) {
+function openRecords(row: I管理员Coupon) {
   viewingCouponId.value = row.id
   recordsPage.value = 1
   recordsVisible.value = true
@@ -368,6 +462,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.coupon-page { padding: 20px; }
-.search-bar { margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+.coupon-page {
+  padding: 20px;
+}
+.search-bar {
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 </style>

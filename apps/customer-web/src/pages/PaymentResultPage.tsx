@@ -1,12 +1,14 @@
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { useI18nStore } from "../stores/i18nStore";
 
 export default function PaymentResultPage() {
-  const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { t } = useI18nStore();
 
-  const orderId = searchParams.get('orderId')
-  const status = searchParams.get('status')
-  const isSuccess = status === 'success'
+  const orderId = searchParams.get("orderId");
+  const status = searchParams.get("status");
+  const isSuccess = status === "success";
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -16,22 +18,34 @@ export default function PaymentResultPage() {
             <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-4">
               <span className="text-4xl text-green-500">✓</span>
             </div>
-            <h1 className="text-xl font-bold text-gray-900 mb-2">Payment Successful</h1>
-            <p className="text-sm text-gray-500 mb-6">Your order has been placed successfully.</p>
+            <h1 className="text-xl font-bold text-gray-900 mb-2">
+              {t("payment.successTitle", "Payment Successful")}
+            </h1>
+            <p className="text-sm text-gray-500 mb-6">
+              {t(
+                "payment.successDesc",
+                "Your order has been placed successfully.",
+              )}
+            </p>
           </>
         ) : (
           <>
             <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center mb-4">
               <span className="text-4xl text-red-500">✕</span>
             </div>
-            <h1 className="text-xl font-bold text-gray-900 mb-2">Payment Failed</h1>
-            <p className="text-sm text-gray-500 mb-6">Please try again or contact support.</p>
+            <h1 className="text-xl font-bold text-gray-900 mb-2">
+              {t("payment.failedTitle", "Payment Failed")}
+            </h1>
+            <p className="text-sm text-gray-500 mb-6">
+              {t("payment.failedDesc", "Please try again or contact support.")}
+            </p>
           </>
         )}
 
         {orderId && (
           <p className="text-sm text-gray-400 mb-8">
-            Order No: <span className="font-mono text-gray-600">#{orderId}</span>
+            {t("order.orderNo", "Order No")}:{" "}
+            <span className="font-mono text-gray-600">#{orderId}</span>
           </p>
         )}
 
@@ -41,17 +55,17 @@ export default function PaymentResultPage() {
               onClick={() => navigate(`/orders/${orderId}`)}
               className="flex-1 py-3 rounded-lg border border-blue-500 text-blue-500 font-semibold text-sm"
             >
-              View Order
+              {t("order.viewOrder", "View Order")}
             </button>
           )}
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="flex-1 py-3 rounded-lg bg-blue-500 text-white font-semibold text-sm"
           >
-            Back to Home
+            {t("common.backToHome", "Back to Home")}
           </button>
         </div>
       </main>
     </div>
-  )
+  );
 }

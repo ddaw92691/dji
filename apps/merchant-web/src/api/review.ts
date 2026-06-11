@@ -22,5 +22,5 @@ export const reviewApi = {
     request.get<ICommonPageResponse<ReviewItem[]>>('/merchant/reviews', { params }),
 
   replyReview: (id: number, replyContent: string) =>
-    request.put<ICommonResponse<any>>(`/merchant/reviews/${id}/reply`, { replyContent }),
+    request.post<ICommonResponse<any>>(`/merchant/reviews/${id}/reply`, { replyContent }),
 }

@@ -2,7 +2,13 @@
   <div class="tax-merchant-page">
     <el-form :inline="true" :model="searchForm" class="search-bar">
       <el-form-item>
-        <el-input v-model="searchForm.merchantId" placeholder="商户ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input
+          v-model="searchForm.merchantId"
+          placeholder="商户ID"
+          clearable
+          @clear="handleSearch"
+          @keyup.enter="handleSearch"
+        />
       </el-form-item>
       <el-form-item>
         <el-select v-model="searchForm.status" placeholder="状态" clearable @change="handleSearch">
@@ -25,7 +31,9 @@
         <el-button type="primary" @click="handleSearch">搜索</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="success" v-permission="'tax:create'" @click="openCreate">+ Create Notice</el-button>
+        <el-button type="success" v-permission="'tax:create'" @click="openCreate"
+          >+ 新建通知</el-button
+        >
       </el-form-item>
     </el-form>
 
@@ -35,7 +43,9 @@
       <el-table-column prop="title" label="标题" min-width="160" show-overflow-tooltip />
       <el-table-column prop="taxType" label="类型" width="110" align="center">
         <template #default="{ row }">
-          <el-tag :type="taxTypeColors[row.taxType] || 'info'" size="small">{{ row.taxType }}</el-tag>
+          <el-tag :type="taxTypeColors[row.taxType] || 'info'" size="small">{{
+            row.taxType
+          }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="amount" label="金额" width="100" align="right" />
@@ -48,19 +58,30 @@
       <el-table-column label="标记" width="130" align="center">
         <template #default="{ row }">
           <el-tag v-if="row.forcePopup" type="warning" size="small" effect="dark">弹窗</el-tag>
-          <el-tag v-if="row.blockUntilPaid" type="danger" size="small" effect="dark" style="margin-left: 4px">拉黑</el-tag>
+          <el-tag
+            v-if="row.blockUntil已支付"
+            type="danger"
+            size="small"
+            effect="dark"
+            style="margin-left: 4px"
+            >拉黑</el-tag
+          >
         </template>
       </el-table-column>
       <el-table-column prop="dueAt" label="应缴" width="160" />
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" v-permission="'tax:view'" @click="openDetail(row)">详情</el-button>
+          <el-button link type="primary" v-permission="'tax:view'" @click="openDetail(row)"
+            >详情</el-button
+          >
           <el-button
             v-if="row.status === 'PENDING' || row.status === 'OVERDUE'"
-            link type="warning"
+            link
+            type="warning"
             v-permission="'tax:edit'"
             @click="handleCancel(row)"
-          >取消</el-button>
+            >取消</el-button
+          >
         </template>
       </el-table-column>
     </el-table>
@@ -77,7 +98,15 @@
     <el-dialog v-model="createVisible" title="新建税务通知" width="600px" @close="resetCreateForm">
       <el-form ref="createFormRef" :model="createForm" label-width="130px">
         <el-form-item label="商户" required>
-          <el-select v-model="createForm.merchantId" filterable remote :remote-method="searchMerchants" :loading="merchantLoading" placeholder="搜索商户" style="width:100%">
+          <el-select
+            v-model="createForm.merchantId"
+            filterable
+            remote
+            :remote-method="search商家"
+            :loading="merchantLoading"
+            placeholder="搜索商户"
+            style="width: 100%"
+          >
             <el-option v-for="m in merchantOptions" :key="m.id" :label="m.name" :value="m.id" />
           </el-select>
         </el-form-item>
@@ -88,7 +117,7 @@
           <el-input v-model="createForm.content" type="textarea" :rows="4" placeholder="通知内容" />
         </el-form-item>
         <el-form-item label="税种">
-          <el-select v-model="createForm.taxType" style="width:100%">
+          <el-select v-model="createForm.taxType" style="width: 100%">
             <el-option label="销售税" value="SALES_TAX" />
             <el-option label="所得税" value="INCOME_TAX" />
             <el-option label="平台费用" value="PLATFORM_FEE" />
@@ -98,7 +127,12 @@
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="金额">
-              <el-input-number v-model="createForm.amount" :min="0" :precision="2" style="width:100%" />
+              <el-input-number
+                v-model="createForm.amount"
+                :min="0"
+                :precision="2"
+                style="width: 100%"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -108,13 +142,18 @@
           </el-col>
         </el-row>
         <el-form-item label="截止日期">
-          <el-date-picker v-model="createForm.dueAt" type="date" placeholder="请选择日期" style="width:100%" />
+          <el-date-picker
+            v-model="createForm.dueAt"
+            type="date"
+            placeholder="请选择日期"
+            style="width: 100%"
+          />
         </el-form-item>
         <el-form-item label="强制弹窗">
           <el-checkbox v-model="createForm.forcePopup" />
         </el-form-item>
         <el-form-item label="未支付前锁定">
-          <el-checkbox v-model="createForm.blockUntilPaid" />
+          <el-checkbox v-model="createForm.blockUntil已支付" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -130,12 +169,22 @@
           <el-descriptions-item label="商户">{{ detailItem.merchantName }}</el-descriptions-item>
           <el-descriptions-item label="标题">{{ detailItem.title }}</el-descriptions-item>
           <el-descriptions-item label="税种">{{ detailItem.taxType }}</el-descriptions-item>
-          <el-descriptions-item label="金额">{{ detailItem.amount }} {{ detailItem.currency }}</el-descriptions-item>
+          <el-descriptions-item label="金额"
+            >{{ detailItem.amount }} {{ detailItem.currency }}</el-descriptions-item
+          >
           <el-descriptions-item label="状态">{{ detailItem.status }}</el-descriptions-item>
-          <el-descriptions-item label="截止日期">{{ detailItem.dueAt || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="支付时间">{{ detailItem.paidAt || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="强制弹窗">{{ detailItem.forcePopup ? 'Yes' : 'No' }}</el-descriptions-item>
-          <el-descriptions-item label="未支付前锁定">{{ detailItem.blockUntilPaid ? 'Yes' : 'No' }}</el-descriptions-item>
+          <el-descriptions-item label="截止日期">{{
+            detailItem.dueAt || '-'
+          }}</el-descriptions-item>
+          <el-descriptions-item label="支付时间">{{
+            detailItem.paidAt || '-'
+          }}</el-descriptions-item>
+          <el-descriptions-item label="强制弹窗">{{
+            detailItem.forcePopup ? 'Yes' : 'No'
+          }}</el-descriptions-item>
+          <el-descriptions-item label="未支付前锁定">{{
+            detailItem.blockUntil已支付 ? 'Yes' : 'No'
+          }}</el-descriptions-item>
           <el-descriptions-item label="创建时间">{{ detailItem.createdAt }}</el-descriptions-item>
           <el-descriptions-item label="更新时间">{{ detailItem.updatedAt }}</el-descriptions-item>
         </el-descriptions>
@@ -145,8 +194,14 @@
         </div>
         <div v-if="detailItem.paymentProof" style="margin-top: 12px">
           <strong>Payment Proof:</strong>
-          <el-image :src="detailItem.paymentProof" style="max-width: 100%; max-height: 300px; margin-top: 4px; display: block" fit="contain" />
-          <p v-if="detailItem.proofRemark" style="margin-top: 4px">Remark: {{ detailItem.proofRemark }}</p>
+          <el-image
+            :src="detailItem.paymentProof"
+            style="max-width: 100%; max-height: 300px; margin-top: 4px; display: block"
+            fit="contain"
+          />
+          <p v-if="detailItem.proofRemark" style="margin-top: 4px">
+            Remark: {{ detailItem.proofRemark }}
+          </p>
         </div>
         <div v-if="detailItem.paymentMethod" style="margin-top: 8px">
           <strong>Payment Method:</strong> {{ detailItem.paymentMethod }}
@@ -155,11 +210,27 @@
           <strong>Reject Reason:</strong> {{ detailItem.rejectReason }}
         </div>
 
-        <div v-if="detailItem.status === 'SUBMITTED'" style="margin-top: 16px; border-top: 1px solid #ebeef5; padding-top: 12px">
+        <div
+          v-if="detailItem.status === 'SUBMITTED'"
+          style="margin-top: 16px; border-top: 1px solid #ebeef5; padding-top: 12px"
+        >
           <strong>Review:</strong>
           <div style="margin-top: 8px; display: flex; gap: 8px">
-            <el-button type="success" v-permission="'tax:review'" @click="handleReview(detailItem, true)">通过</el-button>
-            <el-button type="danger" v-permission="'tax:review'" @click="reviewRejectVisible = true; reviewTarget = detailItem">拒绝</el-button>
+            <el-button
+              type="success"
+              v-permission="'tax:review'"
+              @click="handleReview(detailItem, true)"
+              >通过</el-button
+            >
+            <el-button
+              type="danger"
+              v-permission="'tax:review'"
+              @click="
+                reviewRejectVisible = true
+                reviewTarget = detailItem
+              "
+              >拒绝</el-button
+            >
           </div>
         </div>
       </div>
@@ -171,12 +242,22 @@
     <el-dialog v-model="reviewRejectVisible" title="拒绝原因" width="450px">
       <el-form>
         <el-form-item label="原因">
-          <el-input v-model="rejectReason" type="textarea" :rows="3" placeholder="请说明凭证被拒绝的原因" />
+          <el-input
+            v-model="rejectReason"
+            type="textarea"
+            :rows="3"
+            placeholder="请说明凭证被拒绝的原因"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="reviewRejectVisible = false">取消</el-button>
-        <el-button type="danger" :loading="reviewLoading" @click="handleReview(reviewTarget!, false)">拒绝</el-button>
+        <el-button
+          type="danger"
+          :loading="reviewLoading"
+          @click="handleReview(reviewTarget!, false)"
+          >拒绝</el-button
+        >
       </template>
     </el-dialog>
   </div>
@@ -196,10 +277,17 @@ const total = ref(0)
 type TagType = 'success' | 'primary' | 'warning' | 'info' | 'danger'
 
 const statusColors: Record<string, TagType> = {
-  PENDING: 'warning', OVERDUE: 'danger', PAID: 'success', SUBMITTED: 'primary', CANCELLED: 'info',
+  PENDING: 'warning',
+  OVERDUE: 'danger',
+  PAID: 'success',
+  SUBMITTED: 'primary',
+  CANCELLED: 'info',
 }
 const taxTypeColors: Record<string, TagType> = {
-  SALES_TAX: 'primary', INCOME_TAX: 'warning', PLATFORM_FEE: 'danger', OTHER: 'info',
+  SALES_TAX: 'primary',
+  INCOME_TAX: 'warning',
+  PLATFORM_FEE: 'danger',
+  OTHER: 'info',
 }
 
 const searchForm = reactive({
@@ -224,7 +312,7 @@ const createForm = reactive({
   currency: 'JPY',
   dueAt: '' as string | Date,
   forcePopup: false,
-  blockUntilPaid: false,
+  blockUntil已支付: false,
 })
 
 const detailVisible = ref(false)
@@ -263,7 +351,10 @@ function handleSearch() {
   fetchData()
 }
 
-function openCreate() { resetCreateForm(); createVisible.value = true }
+function openCreate() {
+  resetCreateForm()
+  createVisible.value = true
+}
 function resetCreateForm() {
   createForm.merchantId = null
   createForm.title = ''
@@ -273,17 +364,24 @@ function resetCreateForm() {
   createForm.currency = 'JPY'
   createForm.dueAt = ''
   createForm.forcePopup = false
-  createForm.blockUntilPaid = false
+  createForm.blockUntil已支付 = false
 }
 
-async function searchMerchants(query: string) {
+async function search商家(query: string) {
   if (!query) return
   merchantLoading.value = true
   try {
     const { default: request } = await import('@/utils/request')
-    const { data: res } = await request.get<{ code: number; data: { list: any[] } }>('/admin/merchants', { params: { keyword: query, pageSize: 20 } })
+    const { data: res } = await request.get<{ code: number; data: { list: any[] } }>(
+      '/admin/merchants',
+      { params: { keyword: query, pageSize: 20 } },
+    )
     if (res.code === 200) merchantOptions.value = res.data?.list || []
-  } catch { /* ignore */ } finally { merchantLoading.value = false }
+  } catch {
+    /* ignore */
+  } finally {
+    merchantLoading.value = false
+  }
 }
 
 async function handleCreate() {
@@ -302,7 +400,7 @@ async function handleCreate() {
       currency: createForm.currency,
       dueAt: createForm.dueAt || undefined,
       forcePopup: createForm.forcePopup,
-      blockUntilPaid: createForm.blockUntilPaid,
+      blockUntil已支付: createForm.blockUntil已支付,
     })
     if (res.code === 200) {
       ElMessage.success('税务通知已创建')
@@ -366,6 +464,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.tax-merchant-page { padding: 20px; }
-.search-bar { margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+.tax-merchant-page {
+  padding: 20px;
+}
+.search-bar {
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 </style>

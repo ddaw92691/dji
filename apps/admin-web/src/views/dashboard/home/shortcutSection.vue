@@ -2,11 +2,7 @@
 <template>
   <BaseCard title="便捷工具" title-icon="HOutline:WrenchScrewdriverIcon">
     <div class="grid grid-cols-4 gap-6">
-      <div
-        v-for="item in shortcuts"
-        :key="item.label"
-        @click="router.push(item.path)"
-      >
+      <div v-for="item in shortcuts" :key="item.label" @click="router.push(item.path)">
         <HoverAnimateWrapper name="jelly" intensity="normal">
           <div
             class="group flex flex-col items-center gap-3 py-3 rounded-2xl transition-all duration-300 hover:bg-(--el-bg-color-page)"
@@ -33,14 +29,34 @@ const router = useRouter()
 const menuStore = useMenuStore()
 
 const shortcuts = ref([
-  { label: 'Dashboard', icon: 'HOutline:ChartBarIcon', color: '#ef4444', path: '/dashboard/overview' },
-  { label: 'Customers', icon: 'HOutline:UserGroupIcon', color: '#f59e0b', path: '/user/customer' },
-  { label: 'Merchants', icon: 'HOutline:BuildingStorefrontIcon', color: '#10b981', path: '/user/merchant' },
-  { label: 'Products', icon: 'HOutline:ShoppingBagIcon', color: '#4f46e5', path: '/product/list' },
-  { label: 'Orders', icon: 'HOutline:DocumentTextIcon', color: '#ec4899', path: '/order/list' },
-  { label: 'Finance', icon: 'HOutline:CurrencyDollarIcon', color: '#8b5cf6', path: '/finance/overview' },
-  { label: 'Support', icon: 'HOutline:ChatBubbleLeftRightIcon', color: '#06b6d4', path: '/support/customer-merchant' },
-  { label: 'Audit Logs', icon: 'HOutline:ClipboardDocumentListIcon', color: '#f97316', path: '/system/audit-log' },
+  { label: '控制台', icon: 'HOutline:ChartBarIcon', color: '#ef4444', path: '/dashboard/overview' },
+  { label: '客户管理', icon: 'HOutline:UserGroupIcon', color: '#f59e0b', path: '/user/customer' },
+  {
+    label: '商家管理',
+    icon: 'HOutline:BuildingStorefrontIcon',
+    color: '#10b981',
+    path: '/user/merchant',
+  },
+  { label: '商品管理', icon: 'HOutline:ShoppingBagIcon', color: '#4f46e5', path: '/product/list' },
+  { label: '订单', icon: 'HOutline:DocumentTextIcon', color: '#ec4899', path: '/order/list' },
+  {
+    label: '财务中心',
+    icon: 'HOutline:CurrencyDollarIcon',
+    color: '#8b5cf6',
+    path: '/finance/overview',
+  },
+  {
+    label: '客服管理',
+    icon: 'HOutline:ChatBubbleLeftRightIcon',
+    color: '#06b6d4',
+    path: '/support/customer-merchant',
+  },
+  {
+    label: '操作日志',
+    icon: 'HOutline:ClipboardDocumentListIcon',
+    color: '#f97316',
+    path: '/system/audit-log',
+  },
 ])
 </script>
 

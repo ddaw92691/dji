@@ -9,7 +9,9 @@
       <el-table-column type="index" label="#" width="55" />
       <el-table-column prop="title" label="标题" min-width="150" show-overflow-tooltip />
       <el-table-column label="内容" min-width="250" show-overflow-tooltip>
-        <template #default="{ row }">{{ row.content?.length > 60 ? row.content.slice(0, 60) + '...' : row.content }}</template>
+        <template #default="{ row }">{{
+          row.content?.length > 60 ? row.content.slice(0, 60) + '...' : row.content
+        }}</template>
       </el-table-column>
       <el-table-column prop="languageCode" label="语言" width="90" align="center" />
       <el-table-column prop="merchantId" label="商户" width="80" align="center">
@@ -17,7 +19,9 @@
       </el-table-column>
       <el-table-column label="状态" width="90" align="center">
         <template #default="{ row }">
-          <el-tag :type="row.status === 'ENABLE' ? 'success' : 'info'" size="small">{{ row.status }}</el-tag>
+          <el-tag :type="row.status === 'ENABLE' ? 'success' : 'info'" size="small">{{
+            row.status
+          }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="sort" label="排序" width="60" align="center" />
@@ -42,7 +46,12 @@
       @change="fetchData"
     />
 
-    <el-dialog v-model="formVisible" :title="editingId ? 'Edit Quick Reply' : 'Add Quick Reply'" width="550px" @closed="resetForm">
+    <el-dialog
+      v-model="formVisible"
+      :title="editingId ? '编辑快捷回复' : '新增快捷回复'"
+      width="550px"
+      @closed="resetForm"
+    >
       <el-form :model="formData" label-width="120px">
         <el-form-item label="标题" required>
           <el-input v-model="formData.title" placeholder="快捷回复标题" />
@@ -81,9 +90,9 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { quickReplyAdminApi, type IQuickReply } from '@/api/support'
+import { quickReply管理员Api, type IQuickReply } from '@/api/support'
 
-defineOptions({ name: 'AdminQuickReplyView' })
+defineOptions({ name: '管理员QuickReplyView' })
 
 const loading = ref(false)
 const tableData = ref<IQuickReply[]>([])
@@ -109,14 +118,21 @@ const formData = reactive({
 async function fetchData() {
   loading.value = true
   try {
-    const { data: res } = await quickReplyAdminApi.getList({ page: searchForm.page, pageSize: searchForm.pageSize })
+    const { data: res } = await quickReply管理员Api.getList({
+      page: searchForm.page,
+      pageSize: searchForm.pageSize,
+    })
     if (res.code === 200) {
       tableData.value = res.data.list || []
       total.value = res.data.total || 0
     } else {
       ElMessage.error(res.message || '获取失败')
     }
-  } catch { ElMessage.error('获取失败') } finally { loading.value = false }
+  } catch {
+    ElMessage.error('获取失败')
+  } finally {
+    loading.value = false
+  }
 }
 
 function openCreate() {
@@ -162,37 +178,55 @@ async function handleSubmit() {
     if (formData.merchantId) payload.merchantId = Number(formData.merchantId)
     let res
     if (editingId.value) {
-      res = await quickReplyAdminApi.update(editingId.value, payload)
+      res = await quickReply管理员Api.update(editingId.value, payload)
     } else {
-      res = await quickReplyAdminApi.create(payload)
+      res = await quickReply管理员Api.create(payload)
     }
     if (res.data.code === 200) {
-      ElMessage.success(editingId.value ? 'Updated' : 'Created')
+      ElMessage.success(editingId.value ? '更新成功' : '新增成功')
       formVisible.value = false
       fetchData()
     } else {
       ElMessage.error(res.data.message || '保存失败')
     }
-  } catch { ElMessage.error('保存失败') } finally { submitting.value = false }
+  } catch {
+    ElMessage.error('保存失败')
+  } finally {
+    submitting.value = false
+  }
 }
 
 async function handleDelete(row: IQuickReply) {
   try {
-    const { data: res } = await quickReplyAdminApi.delete(row.id)
+    const { data: res } = await quickReply管理员Api.delete(row.id)
     if (res.code === 200) {
       ElMessage.success('已删除')
       fetchData()
     } else {
       ElMessage.error(res.message || '删除失败')
     }
-  } catch { ElMessage.error('删除失败') }
+  } catch {
+    ElMessage.error('删除失败')
+  }
 }
 
-onMounted(() => { fetchData() })
+onMounted(() => {
+  fetchData()
+})
 </script>
 
 <style scoped>
-.quick-reply-admin-page { padding: 20px; }
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.page-header h3 { margin: 0; font-size: 16px; }
+.quick-reply-admin-page {
+  padding: 20px;
+}
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.page-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
 </style>

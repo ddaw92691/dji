@@ -15,31 +15,31 @@
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">客户</div>
-          <div class="stat-value">{{ summary.totalCustomers }}</div>
+          <div class="stat-value">{{ summary.total客户 }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">商户</div>
-          <div class="stat-value">{{ summary.totalMerchants }}</div>
+          <div class="stat-value">{{ summary.total商家 }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">代理</div>
-          <div class="stat-value">{{ summary.totalAgents }}</div>
+          <div class="stat-value">{{ summary.total代理 }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">商品</div>
-          <div class="stat-value">{{ summary.totalProducts }}</div>
+          <div class="stat-value">{{ summary.total商品数 }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="stat-card pending-card">
           <div class="stat-label">待审商品</div>
-          <div class="stat-value">{{ summary.pendingProducts }}</div>
+          <div class="stat-value">{{ summary.pending商品数 }}</div>
         </el-card>
       </el-col>
     </el-row>
@@ -48,19 +48,19 @@
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">订单总数</div>
-          <div class="stat-value">{{ summary.totalOrders }}</div>
+          <div class="stat-value">{{ summary.total订单 }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">已支付订单</div>
-          <div class="stat-value">{{ summary.paidOrders }}</div>
+          <div class="stat-value">{{ summary.paid订单 }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">已完成订单</div>
-          <div class="stat-value">{{ summary.completedOrders }}</div>
+          <div class="stat-value">{{ summary.completed订单 }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
@@ -102,7 +102,7 @@
       <el-col :span="12">
         <el-card shadow="hover" class="section-card">
           <template #header><span class="section-title">最近订单</span></template>
-          <el-table :data="summary.recentOrders || []" border size="small">
+          <el-table :data="summary.recent订单 || []" border size="small">
             <el-table-column prop="orderNo" label="订单号" min-width="140" show-overflow-tooltip />
             <el-table-column label="客户" min-width="100" show-overflow-tooltip>
               <template #default="{ row }">{{ row.userName || '-' }}</template>
@@ -120,7 +120,7 @@
       <el-col :span="12">
         <el-card shadow="hover" class="section-card">
           <template #header><span class="section-title">最近退款</span></template>
-          <el-table :data="summary.recentRefunds || []" border size="small">
+          <el-table :data="summary.recent退款s || []" border size="small">
             <el-table-column prop="orderNo" label="订单号" min-width="140" show-overflow-tooltip />
             <el-table-column label="客户" min-width="100" show-overflow-tooltip>
               <template #default="{ row }">{{ row.userName || '-' }}</template>
@@ -128,8 +128,17 @@
             <el-table-column prop="refundAmount" label="金额" width="90" align="right" />
             <el-table-column label="状态" width="100" align="center">
               <template #default="{ row }">
-                <el-tag size="small" :type="row.refundStatus === 'REQUESTED' ? 'warning' : row.refundStatus === 'APPROVED' ? 'success' : 'danger'">
-                  {{ row.refundStatus }}
+                <el-tag
+                  size="small"
+                  :type="
+                    row.refund状态 === 'REQUESTED'
+                      ? 'warning'
+                      : row.refund状态 === 'APPROVED'
+                        ? 'success'
+                        : 'danger'
+                  "
+                >
+                  {{ row.refund状态 }}
                 </el-tag>
               </template>
             </el-table-column>
@@ -158,7 +167,7 @@
       <el-col :span="12">
         <el-card shadow="hover" class="section-card">
           <template #header><span class="section-title">订单状态分布</span></template>
-          <div ref="orderStatusChartRef" class="chart-box" />
+          <div ref="order状态ChartRef" class="chart-box" />
         </el-card>
       </el-col>
       <el-col :span="12">
@@ -172,40 +181,40 @@
 </template>
 
 <script setup lang="ts">
-import { dashboardApi, type IAdminDashboard } from '@/api/dashboard'
+import { dashboardApi, type I管理员Dashboard } from '@/api/dashboard'
 import * as echarts from 'echarts'
 
-defineOptions({ name: 'AdminDashboardOverviewView' })
+defineOptions({ name: '管理员DashboardOverviewView' })
 
 const loading = ref(false)
 
 const salesChartRef = ref<HTMLElement | null>(null)
 const orderChartRef = ref<HTMLElement | null>(null)
-const orderStatusChartRef = ref<HTMLElement | null>(null)
+const order状态ChartRef = ref<HTMLElement | null>(null)
 const userRoleChartRef = ref<HTMLElement | null>(null)
 
-const summary = reactive<IAdminDashboard>({
+const summary = reactive<I管理员Dashboard>({
   totalUsers: 0,
-  totalCustomers: 0,
-  totalMerchants: 0,
-  totalAgents: 0,
-  totalProducts: 0,
-  pendingProducts: 0,
-  totalOrders: 0,
-  paidOrders: 0,
-  completedOrders: 0,
+  total客户: 0,
+  total商家: 0,
+  total代理: 0,
+  total商品数: 0,
+  pending商品数: 0,
+  total订单: 0,
+  paid订单: 0,
+  completed订单: 0,
   refundRequests: 0,
   totalSales: 0,
   todaySales: 0,
   totalCommission: 0,
   pendingWithdrawals: 0,
-  recentOrders: [],
-  recentRefunds: [],
+  recent订单: [],
+  recent退款s: [],
 })
 
 let salesChart: echarts.ECharts | null = null
 let orderChart: echarts.ECharts | null = null
-let orderStatusChart: echarts.ECharts | null = null
+let order状态Chart: echarts.ECharts | null = null
 let userRoleChart: echarts.ECharts | null = null
 
 function formatAmount(val: number) {
@@ -220,13 +229,15 @@ function initSalesChart() {
     tooltip: { trigger: 'axis' },
     xAxis: { type: 'category', data: days },
     yAxis: { type: 'value' },
-    series: [{
-      name: 'Sales',
-      type: 'line',
-      smooth: true,
-      data: days.map(() => Math.floor(Math.random() * 5000 + 1000)),
-      itemStyle: { color: '#409EFF' },
-    }],
+    series: [
+      {
+        name: 'Sales',
+        type: 'line',
+        smooth: true,
+        data: days.map(() => Math.floor(Math.random() * 5000 + 1000)),
+        itemStyle: { color: '#409EFF' },
+      },
+    ],
   })
 }
 
@@ -238,29 +249,33 @@ function initOrderChart() {
     tooltip: { trigger: 'axis' },
     xAxis: { type: 'category', data: days },
     yAxis: { type: 'value' },
-    series: [{
-      name: 'Orders',
-      type: 'bar',
-      data: days.map(() => Math.floor(Math.random() * 100 + 20)),
-      itemStyle: { color: '#67C23A' },
-    }],
+    series: [
+      {
+        name: '订单',
+        type: 'bar',
+        data: days.map(() => Math.floor(Math.random() * 100 + 20)),
+        itemStyle: { color: '#67C23A' },
+      },
+    ],
   })
 }
 
-function initOrderStatusChart() {
-  if (!orderStatusChartRef.value) return
-  orderStatusChart = echarts.init(orderStatusChartRef.value)
-  orderStatusChart.setOption({
+function initOrder状态Chart() {
+  if (!order状态ChartRef.value) return
+  order状态Chart = echarts.init(order状态ChartRef.value)
+  order状态Chart.setOption({
     tooltip: { trigger: 'item' },
-    series: [{
-      type: 'pie',
-      radius: ['40%', '70%'],
-      data: [
-        { value: summary.paidOrders || 10, name: 'Paid' },
-        { value: summary.completedOrders || 5, name: 'Completed' },
-        { value: summary.refundRequests || 2, name: 'Refund' },
-      ],
-    }],
+    series: [
+      {
+        type: 'pie',
+        radius: ['40%', '70%'],
+        data: [
+          { value: summary.paid订单 || 10, name: '已支付' },
+          { value: summary.completed订单 || 5, name: '已完成' },
+          { value: summary.refundRequests || 2, name: '退款' },
+        ],
+      },
+    ],
   })
 }
 
@@ -269,16 +284,22 @@ function initUserRoleChart() {
   userRoleChart = echarts.init(userRoleChartRef.value)
   userRoleChart.setOption({
     tooltip: { trigger: 'item' },
-    series: [{
-      type: 'pie',
-      radius: '70%',
-      data: [
-        { value: summary.totalCustomers || 10, name: 'Customers' },
-        { value: summary.totalMerchants || 3, name: 'Merchants' },
-        { value: summary.totalAgents || 2, name: 'Agents' },
-        { value: summary.totalUsers - summary.totalCustomers - summary.totalMerchants - summary.totalAgents || 1, name: 'Admin' },
-      ],
-    }],
+    series: [
+      {
+        type: 'pie',
+        radius: '70%',
+        data: [
+          { value: summary.total客户 || 10, name: '客户' },
+          { value: summary.total商家 || 3, name: '商家' },
+          { value: summary.total代理 || 2, name: '代理' },
+          {
+            value:
+              summary.totalUsers - summary.total客户 - summary.total商家 - summary.total代理 || 1,
+            name: '管理员',
+          },
+        ],
+      },
+    ],
   })
 }
 
@@ -296,7 +317,7 @@ function initCharts() {
   nextTick(() => {
     initSalesChart()
     initOrderChart()
-    initOrderStatusChart()
+    initOrder状态Chart()
     initUserRoleChart()
   })
 }
@@ -304,7 +325,7 @@ function initCharts() {
 window.addEventListener('resize', () => {
   salesChart?.resize()
   orderChart?.resize()
-  orderStatusChart?.resize()
+  order状态Chart?.resize()
   userRoleChart?.resize()
 })
 
@@ -316,7 +337,7 @@ async function fetchData() {
     if (res.data) {
       Object.assign(summary, res.data)
       nextTick(() => {
-        initOrderStatusChart()
+        initOrder状态Chart()
         initUserRoleChart()
       })
     }
@@ -332,19 +353,60 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.dashboard-overview { padding: 20px; }
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.page-header h2 { margin: 0; font-size: 20px; }
-.stats-row { margin-bottom: 16px; }
-.stat-card { text-align: center; padding: 8px 0; }
-.stat-label { font-size: 13px; color: #909399; margin-bottom: 8px; }
-.stat-value { font-size: 24px; font-weight: 700; color: #303133; }
-.stat-value.green { color: #67c23a; }
-.pending-card .stat-value { color: #f56c6c; }
-.warn-card .stat-value { color: #e6a23c; }
-.tables-row { margin-top: 8px; }
-.section-card { margin-bottom: 16px; }
-.section-title { font-weight: 600; font-size: 15px; }
-.charts-row { margin-top: 8px; }
-.chart-box { width: 100%; height: 300px; }
+.dashboard-overview {
+  padding: 20px;
+}
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.page-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.stats-row {
+  margin-bottom: 16px;
+}
+.stat-card {
+  text-align: center;
+  padding: 8px 0;
+}
+.stat-label {
+  font-size: 13px;
+  color: #909399;
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #303133;
+}
+.stat-value.green {
+  color: #67c23a;
+}
+.pending-card .stat-value {
+  color: #f56c6c;
+}
+.warn-card .stat-value {
+  color: #e6a23c;
+}
+.tables-row {
+  margin-top: 8px;
+}
+.section-card {
+  margin-bottom: 16px;
+}
+.section-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+.charts-row {
+  margin-top: 8px;
+}
+.chart-box {
+  width: 100%;
+  height: 300px;
+}
 </style>

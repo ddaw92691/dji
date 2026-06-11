@@ -24,7 +24,7 @@ export const APP_CONFIG: IAppConfig = {
   },
 
   // 项目名称
-  name: 'Mall Admin',
+  name: '商城总后台',
 
   // Favicon src - 根据环境动态设置 base path
   faviconSrc: `${import.meta.env.VITE_STATIC_URL}favicon.ico`,
@@ -61,7 +61,7 @@ export const APP_CONFIG: IAppConfig = {
   showNotification: true,
 
   // 登录页面是否展示手机号登录
-  showPhoneLogin: true,
+  show手机号Login: true,
 
   // 登录页面是否展示扫码登录
   showQrLogin: true,

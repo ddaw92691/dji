@@ -44,5 +44,5 @@ export const bannerApi = {
     request.delete<ICommonResponse<any>>(`/admin/banners/${id}`),
 
   saveTranslations: (bannerId: number, data: any[]) =>
-    request.post<ICommonResponse<any>>(`/admin/banners/${bannerId}/translations`, data),
+    request.put<ICommonResponse<any>>(`/admin/banners/${bannerId}/translations`, data),
 }

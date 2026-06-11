@@ -2,7 +2,13 @@
   <div class="product-page">
     <el-form :inline="true" :model="searchForm" class="search-bar">
       <el-form-item>
-        <el-input v-model="searchForm.keyword" placeholder="关键词" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input
+          v-model="searchForm.keyword"
+          placeholder="关键词"
+          clearable
+          @clear="handleSearch"
+          @keyup.enter="handleSearch"
+        />
       </el-form-item>
       <el-form-item>
         <el-select v-model="searchForm.status" placeholder="状态" clearable @change="handleSearch">
@@ -21,7 +27,12 @@
     <el-table :data="tableData" border stripe v-loading="loading">
       <el-table-column label="图片" width="120" align="center">
         <template #default="{ row }">
-          <el-image v-if="row.imageUrl" :src="row.imageUrl" style="width: 100px; height: 50px; object-fit: cover; border-radius: 4px" fit="cover" />
+          <el-image
+            v-if="row.imageUrl"
+            :src="row.imageUrl"
+            style="width: 100px; height: 50px; object-fit: cover; border-radius: 4px"
+            fit="cover"
+          />
           <span v-else>-</span>
         </template>
       </el-table-column>
@@ -38,18 +49,33 @@
       </el-table-column>
       <el-table-column prop="status" label="状态" width="100" align="center">
         <template #default="{ row }">
-          <el-tag :type="row.status === 'ENABLE' ? 'success' : 'danger'">{{ row.status === 'ENABLE' ? 'Enabled' : 'Disabled' }}</el-tag>
+          <el-tag :type="row.status === 'ENABLE' ? 'success' : 'danger'">{{
+            row.status === 'ENABLE' ? '已启用' : '已禁用'
+          }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="sort" label="排序" width="70" align="center" />
       <el-table-column prop="createdAt" label="创建时间" width="180" />
       <el-table-column label="操作" width="280" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" v-permission="'banner:edit'" @click="handleEdit(row)">编辑</el-button>
-          <el-button link :type="row.status === 'ENABLE' ? 'warning' : 'success'" v-permission="'banner:edit'" @click="handleToggleStatus(row)">
-            {{ row.status === 'ENABLE' ? 'Disable' : 'Enable' }}
+          <el-button link type="primary" v-permission="'banner:edit'" @click="handleEdit(row)"
+            >编辑</el-button
+          >
+          <el-button
+            link
+            :type="row.status === 'ENABLE' ? 'warning' : 'success'"
+            v-permission="'banner:edit'"
+            @click="handleToggleStatus(row)"
+          >
+            {{ row.status === 'ENABLE' ? '禁用' : '启用' }}
           </el-button>
-          <el-button link type="info" v-permission="'banner:edit'" @click="handleOpenTranslations(row)">翻译</el-button>
+          <el-button
+            link
+            type="info"
+            v-permission="'banner:edit'"
+            @click="handleOpenTranslations(row)"
+            >翻译</el-button
+          >
           <el-popconfirm title="确定要删除吗？" @confirm="handleDelete(row)">
             <template #reference>
               <el-button link type="danger" v-permission="'banner:delete'">删除</el-button>
@@ -68,7 +94,12 @@
       @change="fetchData"
     />
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? 'Edit Banner' : 'Create Banner'" width="650px" @close="resetForm">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="isEdit ? '编辑轮播图' : '新增轮播图'"
+      width="650px"
+      @close="resetForm"
+    >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="130px">
         <el-form-item label="标题" prop="title">
           <el-input v-model="form.title" placeholder="横幅标题" />
@@ -79,15 +110,16 @@
         <el-form-item label="图片地址" prop="imageUrl">
           <div class="upload-wrap">
             <el-input v-model="form.imageUrl" placeholder="https://..." class="input-with-upload" />
-            <el-upload
-              :show-file-list="false"
-              :http-request="handleImageUpload"
-              accept="image/*"
-            >
+            <el-upload :show-file-list="false" :http-request="handleImageUpload" accept="image/*">
               <el-button type="primary" :loading="uploading">上传</el-button>
             </el-upload>
           </div>
-          <el-image v-if="form.imageUrl" :src="form.imageUrl" style="width: 200px; height: 100px; margin-top: 8px; border-radius: 4px" fit="cover" />
+          <el-image
+            v-if="form.imageUrl"
+            :src="form.imageUrl"
+            style="width: 200px; height: 100px; margin-top: 8px; border-radius: 4px"
+            fit="cover"
+          />
         </el-form-item>
         <el-form-item label="链接地址" prop="linkUrl">
           <el-input v-model="form.linkUrl" placeholder="/products?category=1" />
@@ -134,7 +166,9 @@
       </el-form>
       <template #footer>
         <el-button @click="transDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="transLoading" @click="handleSaveTranslations">保存</el-button>
+        <el-button type="primary" :loading="transLoading" @click="handleSaveTranslations"
+          >保存</el-button
+        >
       </template>
     </el-dialog>
   </div>
@@ -223,7 +257,14 @@ function handleSearch() {
 function handleCreate() {
   isEdit.value = false
   editingId.value = null
-  Object.assign(form, { title: '', subtitle: '', imageUrl: '', linkUrl: '', sort: 0, status: 'ENABLE' })
+  Object.assign(form, {
+    title: '',
+    subtitle: '',
+    imageUrl: '',
+    linkUrl: '',
+    sort: 0,
+    status: 'ENABLE',
+  })
   dialogVisible.value = true
 }
 
@@ -374,8 +415,21 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.product-page { padding: 20px; }
-.search-bar { margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
-.upload-wrap { display: flex; gap: 8px; width: 100%; }
-.input-with-upload { flex: 1; }
+.product-page {
+  padding: 20px;
+}
+.search-bar {
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.upload-wrap {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.input-with-upload {
+  flex: 1;
+}
 </style>

@@ -1,33 +1,47 @@
-import axios from 'axios'
+import axios from "axios";
 
 const service = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api",
   timeout: 30000,
-  headers: { 'Content-Type': 'application/json;charset=UTF-8' },
-})
+  headers: { "Content-Type": "application/json;charset=UTF-8" },
+});
 
 service.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem("token");
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+    config.headers.Authorization = `Bearer ${token}`;
   }
-  const cc = localStorage.getItem('mall_countryCode') || localStorage.getItem('countryCode') || 'US'
-  const lc = localStorage.getItem('mall_languageCode') || localStorage.getItem('languageCode') || 'en'
-  config.headers['X-Country-Code'] = cc
-  config.headers['X-Language-Code'] = lc
-  config.headers['Accept-Language'] = lc
-  return config
-})
+  const cc =
+    localStorage.getItem("mall_countryCode") ||
+    localStorage.getItem("countryCode") ||
+    "US";
+  const lc =
+    localStorage.getItem("mall_languageCode") ||
+    localStorage.getItem("languageCode") ||
+    "en";
+  config.headers["X-Country-Code"] = cc;
+  config.headers["X-Language-Code"] = lc;
+  config.headers["Accept-Language"] = lc;
+  return config;
+});
 
 service.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const code = response.data?.code;
+    if (code === 401) {
+      localStorage.removeItem("token");
+      if (!window.location.pathname.startsWith("/login"))
+        window.location.href = "/login";
+    }
+    return response;
+  },
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      window.location.href = '/login'
+      localStorage.removeItem("token");
+      window.location.href = "/login";
     }
-    return Promise.reject(error)
+    return Promise.reject(error);
   },
-)
+);
 
-export default service
+export default service;

@@ -10,8 +10,13 @@
       @refresh="fetchData"
     >
       <template #tableOperationLeft>
-        <el-button type="primary" :icon="menuStore.iconComponents.Plus" v-permission="['merchant:add']" @click="openCreate">
-          Create Merchant
+        <el-button
+          type="primary"
+          :icon="menuStore.iconComponents.Plus"
+          v-permission="['merchant:add']"
+          @click="openCreate"
+        >
+          新增商家
         </el-button>
       </template>
       <template #status="{ row }">
@@ -21,34 +26,53 @@
         />
       </template>
       <template #operation="{ row }">
-        <el-button type="primary" link v-permission="['merchant:edit']" @click="openEdit(row)">编辑</el-button>
+        <el-button type="primary" link v-permission="['merchant:edit']" @click="openEdit(row)"
+          >编辑</el-button
+        >
         <el-popconfirm
-          :title="row.status === 'ENABLE' ? 'Disable this merchant?' : 'Enable this merchant?'"
+          :title="row.status === 'ENABLE' ? '确定要禁用该商家吗？' : '确定要启用该商家吗？'"
           :placement="POPCONFIRM_CONFIG.placement"
           :width="POPCONFIRM_CONFIG.width"
-          @confirm="handleToggleStatus(row)"
+          @confirm="handleToggle状态(row)"
         >
           <template #reference>
-            <el-button link :type="row.status === 'ENABLE' ? 'danger' : 'success'" v-permission="['merchant:edit']">
-              {{ row.status === 'ENABLE' ? 'Disable' : 'Enable' }}
+            <el-button
+              link
+              :type="row.status === 'ENABLE' ? 'danger' : 'success'"
+              v-permission="['merchant:edit']"
+            >
+              {{ row.status === 'ENABLE' ? '禁用' : '启用' }}
             </el-button>
           </template>
         </el-popconfirm>
       </template>
     </BasePage>
 
-    <BaseDialog v-model="dialogVisible" :title="editForm.id ? 'Edit Merchant' : 'Create Merchant'" width="600" @close="dialogVisible = false">
+    <BaseDialog
+      v-model="dialogVisible"
+      :title="editForm.id ? '编辑商家' : '新增商家'"
+      width="600"
+      @close="dialogVisible = false"
+    >
       <el-form ref="formRef" :model="editForm" :rules="formRules" label-width="120px">
         <el-form-item label="邮箱" prop="email"><el-input v-model="editForm.email" /></el-form-item>
         <el-form-item label="密码" prop="password" v-if="!editForm.id">
           <el-input v-model="editForm.password" type="password" show-password />
         </el-form-item>
-        <el-form-item label="店铺名称" prop="name"><el-input v-model="editForm.name" /></el-form-item>
-        <el-form-item label="手机号" prop="phone"><el-input v-model="editForm.phone" /></el-form-item>
-        <el-form-item label="国家" prop="country"><el-input v-model="editForm.country" /></el-form-item>
-        <el-form-item label="语言" prop="language"><el-input v-model="editForm.language" /></el-form-item>
+        <el-form-item label="店铺名称" prop="name"
+          ><el-input v-model="editForm.name"
+        /></el-form-item>
+        <el-form-item label="手机号" prop="phone"
+          ><el-input v-model="editForm.phone"
+        /></el-form-item>
+        <el-form-item label="国家" prop="country"
+          ><el-input v-model="editForm.country"
+        /></el-form-item>
+        <el-form-item label="语言" prop="language"
+          ><el-input v-model="editForm.language"
+        /></el-form-item>
         <el-form-item label="联系人"><el-input v-model="editForm.contactName" /></el-form-item>
-        <el-form-item label="联系电话"><el-input v-model="editForm.contactPhone" /></el-form-item>
+        <el-form-item label="联系电话"><el-input v-model="editForm.contact手机号" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -86,44 +110,66 @@ const editForm = reactive({
   country: '',
   language: '',
   contactName: '',
-  contactPhone: '',
+  contact手机号: '',
 })
 
 const formRules: FormRules = {
-  email: [{ required: true, message: 'Email is required', trigger: 'blur' }],
-  name: [{ required: true, message: 'Shop name is required', trigger: 'blur' }],
-  password: [{ required: true, message: 'Password is required', trigger: 'blur' }],
+  email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }],
+  name: [{ required: true, message: '请输入店铺名称', trigger: 'blur' }],
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
 }
 
 const searchFormConfig = ref<IFormConfig[]>([
-  { label: 'Keyword', prop: 'keyword', type: 'elInput', attrs: { placeholder: 'Search...', clearable: true } },
-  { label: 'Status', prop: 'status', type: 'elSelect', attrs: { placeholder: 'Select status', options: STATUS_OPTIONS, clearable: true } },
-  { label: 'Country', prop: 'country', type: 'elInput', attrs: { placeholder: 'Country', clearable: true } },
+  {
+    label: '关键词',
+    prop: 'keyword',
+    type: 'elInput',
+    attrs: { placeholder: '请输入关键词', clearable: true },
+  },
+  {
+    label: '状态',
+    prop: 'status',
+    type: 'elSelect',
+    attrs: { placeholder: '请选择状态', options: STATUS_OPTIONS, clearable: true },
+  },
+  {
+    label: '国家',
+    prop: 'country',
+    type: 'elInput',
+    attrs: { placeholder: '国家', clearable: true },
+  },
 ])
 
 const columns = ref([
   { type: 'index', label: '#', width: 55, fixed: 'left' },
-  { prop: 'merchantId', label: 'Merchant ID', minWidth: 100 },
-  { prop: 'shopName', label: 'Shop Name', minWidth: 150 },
-  { prop: 'email', label: 'Email', minWidth: 180 },
-  { prop: 'phone', label: 'Phone', minWidth: 130 },
-  { prop: 'country', label: 'Country', width: 90 },
-  { prop: 'language', label: 'Language', width: 90 },
-  { prop: 'productCount', label: 'Products', width: 90 },
-  { prop: 'totalSales', label: 'Total Sales', width: 110 },
-  { prop: 'balance', label: 'Balance', width: 100 },
-  { prop: 'frozenBalance', label: 'Frozen', width: 100 },
-  { prop: 'status', label: 'Status', width: 100 },
-  { prop: 'createdAt', label: 'Created', minWidth: 160 },
-  { prop: 'operation', label: 'Actions', width: 150, fixed: 'right' },
+  { prop: 'merchantId', label: '商家ID', minWidth: 100 },
+  { prop: 'shopName', label: '店铺名称', minWidth: 150 },
+  { prop: 'email', label: '邮箱', minWidth: 180 },
+  { prop: 'phone', label: '手机号', minWidth: 130 },
+  { prop: 'country', label: '国家', width: 90 },
+  { prop: 'language', label: '语言', width: 90 },
+  { prop: 'productCount', label: '商品数', width: 90 },
+  { prop: 'totalSales', label: '总销售额', width: 110 },
+  { prop: 'balance', label: '余额', width: 100 },
+  { prop: 'frozen余额', label: '冻结金额', width: 100 },
+  { prop: 'status', label: '状态', width: 100 },
+  { prop: 'createdAt', label: '创建时间', minWidth: 160 },
+  { prop: 'operation', label: '操作', width: 150, fixed: 'right' },
 ])
 
 const fetchData = async (queryForm: Record<string, unknown>, page: number, pageSize: number) => {
   loading.value = true
   try {
-    const { data: res } = await merchantApi.getMerchants({ ...queryForm, page, pageSize })
-    if (res.code === 200) { tableData.value = res.data?.list || []; total.value = res.data?.total || 0 }
-  } catch { /* ignore */ } finally { loading.value = false }
+    const { data: res } = await merchantApi.get商家({ ...queryForm, page, pageSize })
+    if (res.code === 200) {
+      tableData.value = res.data?.list || []
+      total.value = res.data?.total || 0
+    }
+  } catch {
+    /* ignore */
+  } finally {
+    loading.value = false
+  }
 }
 
 const resetForm = () => {
@@ -135,7 +181,7 @@ const resetForm = () => {
   editForm.country = ''
   editForm.language = ''
   editForm.contactName = ''
-  editForm.contactPhone = ''
+  editForm.contact手机号 = ''
   formRef.value?.resetFields()
 }
 
@@ -146,7 +192,11 @@ const openCreate = () => {
 
 const openEdit = async (row: any) => {
   try {
-    const { data: res } = await merchantApi.getMerchants({ merchantId: row.merchantId || row.id, page: 1, pageSize: 1 })
+    const { data: res } = await merchantApi.get商家({
+      merchantId: row.merchantId || row.id,
+      page: 1,
+      pageSize: 1,
+    })
     const d = res.code === 200 && res.data?.list?.[0] ? res.data.list[0] : row
     Object.assign(editForm, {
       id: d.id || row.id,
@@ -156,7 +206,7 @@ const openEdit = async (row: any) => {
       country: d.country || row.country || '',
       language: d.language || row.language || '',
       contactName: d.contactName || row.contactName || '',
-      contactPhone: d.contactPhone || row.contactPhone || '',
+      contact手机号: d.contact手机号 || row.contact手机号 || '',
     })
     dialogVisible.value = true
   } catch {
@@ -177,9 +227,14 @@ const handleSubmit = async () => {
   submitLoading.value = true
   try {
     const payload = {
-      email: editForm.email, shopName: editForm.name, nickname: editForm.name, phone: editForm.phone,
-      country: editForm.country, language: editForm.language,
-      contactName: editForm.contactName, contactPhone: editForm.contactPhone,
+      email: editForm.email,
+      shopName: editForm.name,
+      nickname: editForm.name,
+      phone: editForm.phone,
+      country: editForm.country,
+      language: editForm.language,
+      contactName: editForm.contactName,
+      contact手机号: editForm.contact手机号,
     }
     let res
     if (editForm.id) {
@@ -188,21 +243,33 @@ const handleSubmit = async () => {
       res = await merchantApi.createMerchant({ ...payload, password: editForm.password })
     }
     if (res.data.code === 200) {
-      ElMessage.success(editForm.id ? 'Merchant updated' : 'Merchant created')
+      ElMessage.success(editForm.id ? '商家更新成功' : '商家创建成功')
       dialogVisible.value = false
-      editForm.id ? basePageRef.value?.refreshCurrentPage() : basePageRef.value?.refreshToFirstPage()
+      editForm.id
+        ? basePageRef.value?.refreshCurrentPage()
+        : basePageRef.value?.refreshToFirstPage()
     } else {
       ElMessage.error(res.data.message || '操作失败')
     }
-  } catch { ElMessage.error('操作失败') } finally { submitLoading.value = false }
+  } catch {
+    ElMessage.error('操作失败')
+  } finally {
+    submitLoading.value = false
+  }
 }
 
-const handleToggleStatus = async (row: any) => {
-  const newStatus = row.status === 'ENABLE' ? 'DISABLE' : 'ENABLE'
+const handleToggle状态 = async (row: any) => {
+  const new状态 = row.status === 'ENABLE' ? 'DISABLE' : 'ENABLE'
   try {
-    const { data: res } = await merchantApi.updateMerchantStatus(row.id, newStatus)
-    if (res.code === 200) { ElMessage.success('状态已更新'); basePageRef.value?.refreshCurrentPage() }
-    else { ElMessage.error(res.message || '状态更新失败') }
-  } catch { ElMessage.error('状态更新失败') }
+    const { data: res } = await merchantApi.updateMerchant状态(row.id, new状态)
+    if (res.code === 200) {
+      ElMessage.success('状态已更新')
+      basePageRef.value?.refreshCurrentPage()
+    } else {
+      ElMessage.error(res.message || '状态更新失败')
+    }
+  } catch {
+    ElMessage.error('状态更新失败')
+  }
 }
 </script>

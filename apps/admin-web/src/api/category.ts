@@ -41,5 +41,5 @@ export const categoryApi = {
     request.delete<ICommonResponse<any>>(`/admin/categories/${id}`),
 
   saveTranslations: (categoryId: number, data: any[]) =>
-    request.post<ICommonResponse<any>>(`/admin/categories/${categoryId}/translations`, data),
+    request.put<ICommonResponse<any>>(`/admin/categories/${categoryId}/translations`, data),
 }

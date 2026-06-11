@@ -67,9 +67,11 @@ export const useMenuStore = defineStore('menu', () => {
   // 获取用户权限
   const getUserPermissions = async () => {
     const { data: res } = await userPermissions()
-    if (res.code !== 200) return
-    menuList.value = res.data.menus
-    buttonPermissions.value = res.data.buttonPermissions
+    if (res.code !== 200) {
+      throw new Error(res.message || '权限加载失败，请重新登录')
+    }
+    menuList.value = res.data.menus || []
+    buttonPermissions.value = res.data.buttonPermissions || []
     hasLoadedPermissions.value = true
   }
 

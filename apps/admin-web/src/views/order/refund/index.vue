@@ -2,17 +2,45 @@
   <div class="refund-page">
     <el-form :inline="true" :model="searchForm" class="search-bar">
       <el-form-item>
-        <el-input v-model="searchForm.orderNo" placeholder="订单号" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input
+          v-model="searchForm.orderNo"
+          placeholder="订单号"
+          clearable
+          @clear="handleSearch"
+          @keyup.enter="handleSearch"
+        />
       </el-form-item>
       <el-form-item>
-        <el-input v-model="searchForm.userId" placeholder="用户ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input
+          v-model="searchForm.userId"
+          placeholder="用户ID"
+          clearable
+          @clear="handleSearch"
+          @keyup.enter="handleSearch"
+        />
       </el-form-item>
       <el-form-item>
-        <el-input v-model="searchForm.merchantId" placeholder="商户ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input
+          v-model="searchForm.merchantId"
+          placeholder="商户ID"
+          clearable
+          @clear="handleSearch"
+          @keyup.enter="handleSearch"
+        />
       </el-form-item>
       <el-form-item>
-        <el-select v-model="searchForm.refundStatus" placeholder="退款状态" clearable @change="handleSearch">
-          <el-option v-for="o in REFUND_STATUS_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
+        <el-select
+          v-model="searchForm.refundStatus"
+          placeholder="退款状态"
+          clearable
+          @change="handleSearch"
+        >
+          <el-option
+            v-for="o in REFUND_STATUS_OPTIONS"
+            :key="o.value"
+            :label="o.label"
+            :value="o.value"
+          />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -49,9 +77,29 @@
       <el-table-column prop="createdAt" label="创建时间" width="180" />
       <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" v-permission="'refund:view'" @click="openDetail(row.orderId)">详情</el-button>
-          <el-button link type="success" v-if="row.refundStatus === 'REQUESTED'" v-permission="'refund:approve'" @click="handleApprove(row)">通过</el-button>
-          <el-button link type="danger" v-if="row.refundStatus === 'REQUESTED'" v-permission="'refund:reject'" @click="openReject(row)">拒绝</el-button>
+          <el-button
+            link
+            type="primary"
+            v-permission="'refund:view'"
+            @click="openDetail(row.orderId)"
+            >详情</el-button
+          >
+          <el-button
+            link
+            type="success"
+            v-if="row.refundStatus === 'REQUESTED'"
+            v-permission="'refund:approve'"
+            @click="handleApprove(row)"
+            >通过</el-button
+          >
+          <el-button
+            link
+            type="danger"
+            v-if="row.refundStatus === 'REQUESTED'"
+            v-permission="'refund:reject'"
+            @click="openReject(row)"
+            >拒绝</el-button
+          >
         </template>
       </el-table-column>
     </el-table>
@@ -79,17 +127,28 @@
           </el-descriptions-item>
           <el-descriptions-item label="退款金额">${{ detail.refundAmount }}</el-descriptions-item>
           <el-descriptions-item label="支付金额">${{ detail.payAmount }}</el-descriptions-item>
-          <el-descriptions-item label="退款原因">{{ detail.refundReason || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="拒绝原因">{{ detail.rejectReason || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="退款原因">{{
+            detail.refundReason || '-'
+          }}</el-descriptions-item>
+          <el-descriptions-item label="拒绝原因">{{
+            detail.rejectReason || '-'
+          }}</el-descriptions-item>
           <el-descriptions-item label="创建时间">{{ detail.createdAt }}</el-descriptions-item>
-          <el-descriptions-item label="审核时间">{{ detail.reviewedAt || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="审核时间">{{
+            detail.reviewedAt || '-'
+          }}</el-descriptions-item>
         </el-descriptions>
 
         <el-divider>订单商品</el-divider>
         <el-table :data="detail.items" border size="small">
           <el-table-column label="图片" width="80">
             <template #default="{ row: item }">
-              <el-image v-if="item.productImage" :src="item.productImage" style="width:50px;height:50px;border-radius:4px" fit="cover" />
+              <el-image
+                v-if="item.productImage"
+                :src="item.productImage"
+                style="width: 50px; height: 50px; border-radius: 4px"
+                fit="cover"
+              />
               <span v-else>-</span>
             </template>
           </el-table-column>
@@ -97,7 +156,9 @@
           <el-table-column prop="price" label="价格" width="100" />
           <el-table-column prop="quantity" label="数量" width="60" />
           <el-table-column label="小计" width="100">
-            <template #default="{ row: item }">${{ (item.price * item.quantity).toFixed(2) }}</template>
+            <template #default="{ row: item }"
+              >${{ (item.price * item.quantity).toFixed(2) }}</template
+            >
           </el-table-column>
         </el-table>
 
@@ -105,7 +166,7 @@
         <div v-if="detail.payment" class="info-box">
           <p><strong>Method:</strong> {{ detail.payment.method || '-' }}</p>
           <p><strong>Transaction No:</strong> {{ detail.payment.transactionNo || '-' }}</p>
-          <p><strong>Paid At:</strong> {{ detail.payment.paidAt || '-' }}</p>
+          <p><strong>已支付 At:</strong> {{ detail.payment.paidAt || '-' }}</p>
         </div>
         <span v-else>暂无支付信息</span>
       </div>
@@ -117,7 +178,12 @@
     <el-dialog v-model="rejectVisible" title="拒绝退款" width="480px">
       <el-form :model="rejectForm" label-width="110px">
         <el-form-item label="拒绝原因" required>
-          <el-input v-model="rejectForm.rejectReason" type="textarea" :rows="4" placeholder="请输入拒绝原因" />
+          <el-input
+            v-model="rejectForm.rejectReason"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入拒绝原因"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -129,18 +195,18 @@
 </template>
 
 <script setup lang="ts">
-import { refundApi, type IAdminRefund } from '@/api/refund'
+import { refundApi, type I管理员退款 } from '@/api/refund'
 import { REFUND_STATUS_OPTIONS, getLabelByValue, getColorByValue } from '@/constants/dict'
 
-defineOptions({ name: 'AdminRefundView' })
+defineOptions({ name: '管理员退款View' })
 
 const loading = ref(false)
 const actionLoading = ref(false)
-const tableData = ref<IAdminRefund[]>([])
+const tableData = ref<I管理员退款[]>([])
 const total = ref(0)
 
 const detailVisible = ref(false)
-const detail = ref<IAdminRefund | null>(null)
+const detail = ref<I管理员退款 | null>(null)
 
 const rejectVisible = ref(false)
 const rejectingId = ref<number | null>(null)
@@ -171,7 +237,7 @@ async function fetchData() {
       params.startDate = searchForm.dateRange[0]
       params.endDate = searchForm.dateRange[1]
     }
-    const { data: res } = await refundApi.getRefunds(params)
+    const { data: res } = await refundApi.get退款s(params)
     if (res.code !== 200) return
     tableData.value = res.data?.list || []
     total.value = res.data?.total || 0
@@ -186,21 +252,21 @@ function handleSearch() {
 }
 
 async function openDetail(orderId: number) {
-  const { data: res } = await refundApi.getRefundDetail(orderId)
+  const { data: res } = await refundApi.get退款Detail(orderId)
   if (res.code !== 200) return
   detail.value = res.data || null
   detailVisible.value = true
 }
 
-async function handleApprove(row: IAdminRefund) {
+async function handleApprove(row: I管理员退款) {
   try {
-    await ElMessageBox.confirm(`Approve refund for order "${row.orderNo}"?`, 'Confirm', { type: 'warning' })
+    await ElMessageBox.confirm(`确认通过订单退款 "${row.orderNo}"?`, '确认', { type: 'warning' })
   } catch {
     return
   }
   actionLoading.value = true
   try {
-    const { data: res } = await refundApi.approveRefund(row.orderId)
+    const { data: res } = await refundApi.approve退款(row.orderId)
     if (res.code !== 200) return
     ElMessage.success('退款已通过')
     fetchData()
@@ -209,7 +275,7 @@ async function handleApprove(row: IAdminRefund) {
   }
 }
 
-function openReject(row: IAdminRefund) {
+function openReject(row: I管理员退款) {
   rejectingId.value = row.orderId
   rejectForm.rejectReason = ''
   rejectVisible.value = true
@@ -222,7 +288,7 @@ async function handleReject() {
   }
   actionLoading.value = true
   try {
-    const { data: res } = await refundApi.rejectRefund(rejectingId.value, rejectForm.rejectReason)
+    const { data: res } = await refundApi.reject退款(rejectingId.value, rejectForm.rejectReason)
     if (res.code !== 200) return
     ElMessage.success('退款已拒绝')
     rejectVisible.value = false
@@ -238,8 +304,21 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.refund-page { padding: 20px; }
-.search-bar { margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
-.refund-detail p { margin: 4px 0; }
-.info-box { background: #f5f7fa; padding: 12px; border-radius: 6px; }
+.refund-page {
+  padding: 20px;
+}
+.search-bar {
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.refund-detail p {
+  margin: 4px 0;
+}
+.info-box {
+  background: #f5f7fa;
+  padding: 12px;
+  border-radius: 6px;
+}
 </style>

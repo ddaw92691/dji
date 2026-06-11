@@ -10,28 +10,48 @@
       @refresh="fetchData"
     >
       <template #tableOperationLeft>
-        <el-button type="primary" :icon="menuStore.iconComponents.Plus" v-permission="['admin:add']" @click="openCreate">
-          Create Admin
+        <el-button
+          type="primary"
+          :icon="menuStore.iconComponents.Plus"
+          v-permission="['admin:add']"
+          @click="openCreate"
+        >
+          新增管理员
         </el-button>
       </template>
       <template #role="{ row }">
         <BaseTag :type="row.role === 'SUPER_ADMIN' ? 'danger' : 'warning'" :text="row.role" />
       </template>
       <template #status="{ row }">
-        <BaseTag :type="getColorByValue(ADMIN_STATUS_OPTIONS, row.status)" :text="getLabelByValue(ADMIN_STATUS_OPTIONS, row.status)" />
+        <BaseTag
+          :type="getColorByValue(ADMIN_STATUS_OPTIONS, row.status)"
+          :text="getLabelByValue(ADMIN_STATUS_OPTIONS, row.status)"
+        />
       </template>
       <template #operation="{ row }">
-        <el-button type="primary" link v-permission="['admin:edit']" @click="openEdit(row)">编辑</el-button>
-        <el-button type="warning" link v-permission="['admin:password']" @click="openResetPassword(row)">重置密码</el-button>
+        <el-button type="primary" link v-permission="['admin:edit']" @click="openEdit(row)"
+          >编辑</el-button
+        >
+        <el-button
+          type="warning"
+          link
+          v-permission="['admin:password']"
+          @click="openResetPassword(row)"
+          >重置密码</el-button
+        >
         <el-popconfirm
-          :title="row.status === 1 ? 'Disable this admin?' : 'Enable this admin?'"
+          :title="row.status === 1 ? '确定要禁用该管理员吗？' : '确定要启用该管理员吗？'"
           :placement="POPCONFIRM_CONFIG.placement"
           :width="POPCONFIRM_CONFIG.width"
-          @confirm="handleToggleStatus(row)"
+          @confirm="handleToggle状态(row)"
         >
           <template #reference>
-            <el-button link :type="row.status === 1 ? 'danger' : 'success'" v-permission="['admin:edit']">
-              {{ row.status === 1 ? 'Disable' : 'Enable' }}
+            <el-button
+              link
+              :type="row.status === 1 ? 'danger' : 'success'"
+              v-permission="['admin:edit']"
+            >
+              {{ row.status === 1 ? '禁用' : '启用' }}
             </el-button>
           </template>
         </el-popconfirm>
@@ -48,7 +68,12 @@
       </template>
     </BasePage>
 
-    <BaseDialog v-model="dialogVisible" :title="editForm.id ? 'Edit Admin' : 'Create Admin'" width="550" @close="dialogVisible = false">
+    <BaseDialog
+      v-model="dialogVisible"
+      :title="editForm.id ? '编辑管理员' : '新增管理员'"
+      width="550"
+      @close="dialogVisible = false"
+    >
       <el-form ref="formRef" :model="editForm" :rules="formRules" label-width="120px">
         <el-form-item label="邮箱" prop="email"><el-input v-model="editForm.email" /></el-form-item>
         <el-form-item label="密码" prop="password" v-if="!editForm.id">
@@ -56,7 +81,7 @@
         </el-form-item>
         <el-form-item label="昵称"><el-input v-model="editForm.nickname" /></el-form-item>
         <el-form-item label="角色" prop="role">
-          <el-select v-model="editForm.role" style="width:100%">
+          <el-select v-model="editForm.role" style="width: 100%">
             <el-option label="ADMIN" value="ADMIN" />
             <el-option label="SUPER_ADMIN" value="SUPER_ADMIN" />
           </el-select>
@@ -70,8 +95,18 @@
       </template>
     </BaseDialog>
 
-    <BaseDialog v-model="passwordVisible" title="重置密码" width="450" @close="passwordVisible = false">
-      <el-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules" label-width="130px">
+    <BaseDialog
+      v-model="passwordVisible"
+      title="重置密码"
+      width="450"
+      @close="passwordVisible = false"
+    >
+      <el-form
+        ref="passwordFormRef"
+        :model="passwordForm"
+        :rules="passwordRules"
+        label-width="130px"
+      >
         <el-form-item label="新密码" prop="newPassword">
           <el-input v-model="passwordForm.newPassword" type="password" show-password />
         </el-form-item>
@@ -81,7 +116,9 @@
       </el-form>
       <template #footer>
         <el-button @click="passwordVisible = false">取消</el-button>
-        <el-button type="primary" :loading="passwordSubmitLoading" @click="handleResetPassword">确认</el-button>
+        <el-button type="primary" :loading="passwordSubmitLoading" @click="handleResetPassword"
+          >确认</el-button
+        >
       </template>
     </BaseDialog>
   </div>
@@ -126,18 +163,18 @@ const passwordForm = reactive({
 })
 
 const formRules: FormRules = {
-  email: [{ required: true, message: 'Email is required', trigger: 'blur' }],
-  password: [{ required: true, message: 'Password is required', trigger: 'blur' }],
-  role: [{ required: true, message: 'Role is required', trigger: 'change' }],
+  email: [{ required: true, message: '邮箱 is required', trigger: 'blur' }],
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+  role: [{ required: true, message: '请选择角色', trigger: 'change' }],
 }
 
 const passwordRules: FormRules = {
-  newPassword: [{ required: true, message: 'New password is required', trigger: 'blur' }],
+  newPassword: [{ required: true, message: '请输入新密码', trigger: 'blur' }],
   confirmPassword: [
-    { required: true, message: 'Please confirm password', trigger: 'blur' },
+    { required: true, message: '请确认密码', trigger: 'blur' },
     {
       validator: (_rule, value, callback) => {
-        if (value !== passwordForm.newPassword) callback(new Error('Passwords do not match'))
+        if (value !== passwordForm.newPassword) callback(new Error('两次密码不一致'))
         else callback()
       },
       trigger: 'blur',
@@ -146,37 +183,66 @@ const passwordRules: FormRules = {
 }
 
 const ADMIN_STATUS_OPTIONS: DictItem<number>[] = [
-  { label: 'Enabled', value: 1, color: 'success' },
-  { label: 'Disabled', value: 0, color: 'danger' },
+  { label: '启用d', value: 1, color: 'success' },
+  { label: '禁用d', value: 0, color: 'danger' },
 ]
 
 const searchFormConfig = ref<IFormConfig[]>([
-  { label: 'Keyword', prop: 'keyword', type: 'elInput', attrs: { placeholder: 'Search email/nickname...', clearable: true } },
-  { label: 'Role', prop: 'role', type: 'elSelect', attrs: { placeholder: 'Select role', options: [{ label: 'ADMIN', value: 'ADMIN' }, { label: 'SUPER_ADMIN', value: 'SUPER_ADMIN' }], clearable: true } },
-  { label: 'Status', prop: 'status', type: 'elSelect', attrs: { placeholder: 'Select status', options: ADMIN_STATUS_OPTIONS, clearable: true } },
+  {
+    label: '关键词',
+    prop: 'keyword',
+    type: 'elInput',
+    attrs: { placeholder: '搜索邮箱/昵称', clearable: true },
+  },
+  {
+    label: '角色',
+    prop: 'role',
+    type: 'elSelect',
+    attrs: {
+      placeholder: '请选择角色',
+      options: [
+        { label: 'ADMIN', value: 'ADMIN' },
+        { label: 'SUPER_ADMIN', value: 'SUPER_ADMIN' },
+      ],
+      clearable: true,
+    },
+  },
+  {
+    label: '状态',
+    prop: 'status',
+    type: 'elSelect',
+    attrs: { placeholder: '请选择状态', options: ADMIN_STATUS_OPTIONS, clearable: true },
+  },
 ])
 
 const columns = ref([
   { type: 'index', label: '#', width: 55, fixed: 'left' },
   { prop: 'id', label: 'ID', minWidth: 80 },
-  { prop: 'email', label: 'Email', minWidth: 180 },
-  { prop: 'phone', label: 'Phone', minWidth: 130 },
-  { prop: 'nickname', label: 'Nickname', minWidth: 120 },
-  { prop: 'role', label: 'Role', width: 120 },
-  { prop: 'country', label: 'Country', width: 90 },
-  { prop: 'language', label: 'Language', width: 90 },
-  { prop: 'status', label: 'Status', width: 100 },
-  { prop: 'lastLoginAt', label: 'Last Login', minWidth: 160 },
-  { prop: 'createdAt', label: 'Created', minWidth: 160 },
-  { prop: 'operation', label: 'Actions', width: 260, fixed: 'right' },
+  { prop: 'email', label: '邮箱', minWidth: 180 },
+  { prop: 'phone', label: '手机号', minWidth: 130 },
+  { prop: 'nickname', label: '昵称', minWidth: 120 },
+  { prop: 'role', label: '角色', width: 120 },
+  { prop: 'country', label: '国家', width: 90 },
+  { prop: 'language', label: '语言', width: 90 },
+  { prop: 'status', label: '状态', width: 100 },
+  { prop: 'lastLoginAt', label: '最后登录', minWidth: 160 },
+  { prop: 'createdAt', label: '创建时间', minWidth: 160 },
+  { prop: 'operation', label: '操作', width: 260, fixed: 'right' },
 ])
 
 const fetchData = async (queryForm: Record<string, unknown>, page: number, pageSize: number) => {
   loading.value = true
   try {
     const { data: res } = await adminUserApi.getAdminUsers({ ...queryForm, page, pageSize })
-    if (res.code === 200) { tableData.value = res.data?.list || []; total.value = res.data?.total || 0 }
-  } catch { /* ignore */ } finally { loading.value = false }
+    if (res.code === 200) {
+      tableData.value = res.data?.list || []
+      total.value = res.data?.total || 0
+    }
+  } catch {
+    /* ignore */
+  } finally {
+    loading.value = false
+  }
 }
 
 const resetForm = () => {
@@ -190,7 +256,10 @@ const resetForm = () => {
   formRef.value?.resetFields()
 }
 
-const openCreate = () => { resetForm(); dialogVisible.value = true }
+const openCreate = () => {
+  resetForm()
+  dialogVisible.value = true
+}
 
 const openEdit = async (row: any) => {
   try {
@@ -207,8 +276,12 @@ const openEdit = async (row: any) => {
     dialogVisible.value = true
   } catch {
     Object.assign(editForm, {
-      id: row.id, email: row.email || '', nickname: row.nickname || '',
-      role: row.role || 'ADMIN', country: row.country || '', language: row.language || '',
+      id: row.id,
+      email: row.email || '',
+      nickname: row.nickname || '',
+      role: row.role || 'ADMIN',
+      country: row.country || '',
+      language: row.language || '',
     })
     dialogVisible.value = true
   }
@@ -218,7 +291,13 @@ const handleSubmit = async () => {
   await formRef.value?.validate()
   submitLoading.value = true
   try {
-    const payload = { email: editForm.email, nickname: editForm.nickname, role: editForm.role, country: editForm.country, language: editForm.language }
+    const payload = {
+      email: editForm.email,
+      nickname: editForm.nickname,
+      role: editForm.role,
+      country: editForm.country,
+      language: editForm.language,
+    }
     let res
     if (editForm.id) {
       res = await adminUserApi.updateAdminUser(editForm.id, payload)
@@ -228,26 +307,46 @@ const handleSubmit = async () => {
     if (res.data.code === 200) {
       ElMessage.success(editForm.id ? 'Admin updated' : 'Admin created')
       dialogVisible.value = false
-      editForm.id ? basePageRef.value?.refreshCurrentPage() : basePageRef.value?.refreshToFirstPage()
-    } else { ElMessage.error(res.data.message || '操作失败') }
-  } catch { ElMessage.error('操作失败') } finally { submitLoading.value = false }
+      editForm.id
+        ? basePageRef.value?.refreshCurrentPage()
+        : basePageRef.value?.refreshToFirstPage()
+    } else {
+      ElMessage.error(res.data.message || '操作失败')
+    }
+  } catch {
+    ElMessage.error('操作失败')
+  } finally {
+    submitLoading.value = false
+  }
 }
 
-const handleToggleStatus = async (row: any) => {
-  const newStatus = row.status === 1 ? 0 : 1
+const handleToggle状态 = async (row: any) => {
+  const new状态 = row.status === 1 ? 0 : 1
   try {
-    const { data: res } = await adminUserApi.updateAdminUserStatus(row.id, newStatus)
-    if (res.code === 200) { ElMessage.success('状态已更新'); basePageRef.value?.refreshCurrentPage() }
-    else { ElMessage.error(res.message || '状态更新失败') }
-  } catch { ElMessage.error('状态更新失败') }
+    const { data: res } = await adminUserApi.updateAdminUser状态(row.id, new状态)
+    if (res.code === 200) {
+      ElMessage.success('状态已更新')
+      basePageRef.value?.refreshCurrentPage()
+    } else {
+      ElMessage.error(res.message || '状态更新失败')
+    }
+  } catch {
+    ElMessage.error('状态更新失败')
+  }
 }
 
 const handleDelete = async (id: string | number) => {
   try {
     const { data: res } = await adminUserApi.deleteAdminUser(id)
-    if (res.code === 200) { ElMessage.success('管理员已删除'); basePageRef.value?.refreshAfterDelete(1) }
-    else { ElMessage.error(res.message || '删除失败') }
-  } catch { ElMessage.error('删除失败') }
+    if (res.code === 200) {
+      ElMessage.success('管理员已删除')
+      basePageRef.value?.refreshAfterDelete(1)
+    } else {
+      ElMessage.error(res.message || '删除失败')
+    }
+  } catch {
+    ElMessage.error('删除失败')
+  }
 }
 
 const openResetPassword = (row: any) => {
@@ -262,11 +361,20 @@ const handleResetPassword = async () => {
   await passwordFormRef.value?.validate()
   passwordSubmitLoading.value = true
   try {
-    const resp = await adminUserApi.resetAdminUserPassword(passwordForm.adminId, passwordForm.newPassword)
+    const resp = await adminUserApi.resetAdminUserPassword(
+      passwordForm.adminId,
+      passwordForm.newPassword,
+    )
     if (resp.data.code === 200) {
       ElMessage.success('密码重置成功')
       passwordVisible.value = false
-    } else { ElMessage.error(resp.data.message || '重置失败') }
-  } catch { ElMessage.error('重置失败') } finally { passwordSubmitLoading.value = false }
+    } else {
+      ElMessage.error(resp.data.message || '重置失败')
+    }
+  } catch {
+    ElMessage.error('重置失败')
+  } finally {
+    passwordSubmitLoading.value = false
+  }
 }
 </script>

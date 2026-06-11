@@ -10,16 +10,26 @@
       <el-table-column prop="merchantName" label="商户" width="120" show-overflow-tooltip />
       <el-table-column prop="fakeCustomerName" label="虚拟客户" width="120" show-overflow-tooltip />
       <el-table-column label="问题" min-width="180" show-overflow-tooltip>
-        <template #default="{ row }">{{ row.question?.length > 50 ? row.question.slice(0, 50) + '...' : row.question }}</template>
+        <template #default="{ row }">{{
+          row.question?.length > 50 ? row.question.slice(0, 50) + '...' : row.question
+        }}</template>
       </el-table-column>
       <el-table-column label="状态" width="90" align="center">
         <template #default="{ row }">
-          <el-tag :type="row.status === 'OPEN' ? 'success' : 'info'" size="small">{{ row.status }}</el-tag>
+          <el-tag :type="row.status === 'OPEN' ? 'success' : 'info'" size="small">{{
+            row.status
+          }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="优先级" width="80" align="center">
         <template #default="{ row }">
-          <el-tag :type="row.priority === 'HIGH' ? 'danger' : row.priority === 'MEDIUM' ? 'warning' : 'info'" size="small">{{ row.priority }}</el-tag>
+          <el-tag
+            :type="
+              row.priority === 'HIGH' ? 'danger' : row.priority === 'MEDIUM' ? 'warning' : 'info'
+            "
+            size="small"
+            >{{ row.priority }}</el-tag
+          >
         </template>
       </el-table-column>
       <el-table-column label="回复" width="100" align="center">
@@ -55,12 +65,17 @@
     <el-dialog v-model="createVisible" title="新建质检" width="550px" @closed="resetCreateForm">
       <el-form :model="createForm" label-width="140px">
         <el-form-item label="商户" required>
-          <el-select v-model="createForm.merchantId" filterable placeholder="请选择商户" style="width: 100%">
+          <el-select
+            v-model="createForm.merchantId"
+            filterable
+            placeholder="请选择商户"
+            style="width: 100%"
+          >
             <el-option v-for="m in merchantOptions" :key="m.id" :label="m.name" :value="m.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="虚拟客户名称" required>
-          <el-input v-model="createForm.fakeCustomerName" placeholder="e.g. Mystery Shopper" />
+          <el-input v-model="createForm.fakeCustomerName" placeholder="例如：神秘顾客" />
         </el-form-item>
         <el-form-item label="客户用户ID">
           <el-input v-model="createForm.customerUserId" placeholder="选填" />
@@ -72,7 +87,12 @@
           <el-input v-model="createForm.title" placeholder="质检标题" />
         </el-form-item>
         <el-form-item label="问题" required>
-          <el-input v-model="createForm.question" type="textarea" :rows="4" placeholder="向商户提出的问题…" />
+          <el-input
+            v-model="createForm.question"
+            type="textarea"
+            :rows="4"
+            placeholder="向商户提出的问题…"
+          />
         </el-form-item>
         <el-form-item label="优先级">
           <el-select v-model="createForm.priority" style="width: 100%">
@@ -91,12 +111,17 @@
     <el-dialog v-model="detailVisible" title="质检消息" width="700px">
       <div v-if="detailMessages.length" class="msg-list" ref="detailMsgRef">
         <div v-for="msg in detailMessages" :key="msg.id" class="msg-item">
-          <span class="msg-side" :class="msg.senderSide === 'CUSTOMER' ? 'side-customer' : 'side-merchant'">
+          <span
+            class="msg-side"
+            :class="msg.senderSide === 'CUSTOMER' ? 'side-customer' : 'side-merchant'"
+          >
             [{{ msg.senderSide }}]
           </span>
           <span class="msg-name">{{ msg.senderDisplayName }}:</span>
           <span class="msg-content">{{ msg.content }}</span>
-          <span class="msg-time">{{ msg.createdAt ? new Date(msg.createdAt).toLocaleString() : '' }}</span>
+          <span class="msg-time">{{
+            msg.createdAt ? new Date(msg.createdAt).toLocaleString() : ''
+          }}</span>
         </div>
       </div>
       <div v-else class="msg-empty">暂无消息</div>
@@ -108,7 +133,12 @@
           <el-rate v-model="scoreForm.qualityScore" :max="5" show-score />
         </el-form-item>
         <el-form-item label="备注">
-          <el-input v-model="scoreForm.qualityRemark" type="textarea" :rows="3" placeholder="备注（选填）" />
+          <el-input
+            v-model="scoreForm.qualityRemark"
+            type="textarea"
+            :rows="3"
+            placeholder="备注（选填）"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -137,7 +167,7 @@ const scoring = ref(false)
 const detailMessages = ref<ISupportMessage[]>([])
 const detailMsgRef = ref<HTMLElement>()
 const scoringId = ref<number | null>(null)
-const merchantOptions = ref<{id:number;name:string}[]>([])
+const merchantOptions = ref<{ id: number; name: string }[]>([])
 
 const searchForm = reactive({
   page: 1,
@@ -162,12 +192,19 @@ const scoreForm = reactive({
 async function fetchData() {
   loading.value = true
   try {
-    const { data: res } = await inspectionApi.getList({ page: searchForm.page, pageSize: searchForm.pageSize })
+    const { data: res } = await inspectionApi.getList({
+      page: searchForm.page,
+      pageSize: searchForm.pageSize,
+    })
     if (res.code === 200) {
       tableData.value = res.data.list || []
       total.value = res.data.total || 0
     }
-  } catch { /* ignore */ } finally { loading.value = false }
+  } catch {
+    /* ignore */
+  } finally {
+    loading.value = false
+  }
 }
 
 function openCreate() {
@@ -179,23 +216,35 @@ function openCreate() {
   createForm.question = ''
   createForm.priority = 'MEDIUM'
   createVisible.value = true
-  loadMerchants()
+  load商家()
 }
 
-async function loadMerchants() {
+async function load商家() {
   try {
     const { default: request } = await import('@/utils/request')
-    const { data: res } = await request.get('/admin/merchants', { params: { page: 1, pageSize: 200 } })
+    const { data: res } = await request.get('/admin/merchants', {
+      params: { page: 1, pageSize: 200 },
+    })
     if (res.code === 200) {
-      merchantOptions.value = (res.data.list || []).map((m: any) => ({ id: m.id, name: m.nickname || m.shopName || `ID:${m.id}` }))
+      merchantOptions.value = (res.data.list || []).map((m: any) => ({
+        id: m.id,
+        name: m.nickname || m.shopName || `ID:${m.id}`,
+      }))
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 function resetCreateForm() {}
 
 async function handleCreate() {
-  if (!createForm.merchantId || !createForm.fakeCustomerName.trim() || !createForm.title.trim() || !createForm.question.trim()) {
+  if (
+    !createForm.merchantId ||
+    !createForm.fakeCustomerName.trim() ||
+    !createForm.title.trim() ||
+    !createForm.question.trim()
+  ) {
     ElMessage.warning('请填写必填项')
     return
   }
@@ -204,7 +253,9 @@ async function handleCreate() {
     const { data: res } = await inspectionApi.create({
       merchantId: createForm.merchantId,
       fakeCustomerName: createForm.fakeCustomerName,
-      inspectionCustomerUserId: createForm.customerUserId ? Number(createForm.customerUserId) : undefined,
+      inspectionCustomerUserId: createForm.customerUserId
+        ? Number(createForm.customerUserId)
+        : undefined,
       relatedProductId: createForm.productId ? Number(createForm.productId) : undefined,
       title: createForm.title,
       question: createForm.question,
@@ -217,7 +268,11 @@ async function handleCreate() {
     } else {
       ElMessage.error(res.message || '创建失败')
     }
-  } catch { ElMessage.error('创建失败') } finally { creating.value = false }
+  } catch {
+    ElMessage.error('创建失败')
+  } finally {
+    creating.value = false
+  }
 }
 
 async function openDetail(row: IInspectionSession) {
@@ -227,7 +282,9 @@ async function openDetail(row: IInspectionSession) {
     if (res.code === 200) {
       detailMessages.value = res.data || []
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 function openScore(row: IInspectionSession) {
@@ -256,24 +313,75 @@ async function handleScore() {
     } else {
       ElMessage.error(res.message || '评分失败')
     }
-  } catch { ElMessage.error('评分失败') } finally { scoring.value = false }
+  } catch {
+    ElMessage.error('评分失败')
+  } finally {
+    scoring.value = false
+  }
 }
 
-onMounted(() => { fetchData() })
+onMounted(() => {
+  fetchData()
+})
 </script>
 
 <style scoped>
-.inspection-page { padding: 20px; }
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.page-header h3 { margin: 0; font-size: 16px; }
-.msg-list { max-height: 400px; overflow-y: auto; padding: 8px; background: #f5f7fa; border-radius: 8px; }
-.msg-item { padding: 6px 0; border-bottom: 1px solid #ebeef5; font-size: 13px; line-height: 1.6; }
-.msg-item:last-child { border-bottom: none; }
-.msg-side { font-weight: 600; margin-right: 4px; font-size: 11px; }
-.side-customer { color: #409eff; }
-.side-merchant { color: #67c23a; }
-.msg-name { color: #909399; margin-right: 8px; }
-.msg-content { color: #303133; word-break: break-word; }
-.msg-time { color: #c0c4cc; margin-left: 12px; font-size: 11px; }
-.msg-empty { text-align: center; color: #909399; padding: 40px; }
+.inspection-page {
+  padding: 20px;
+}
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.page-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.msg-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 8px;
+  background: #f5f7fa;
+  border-radius: 8px;
+}
+.msg-item {
+  padding: 6px 0;
+  border-bottom: 1px solid #ebeef5;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.msg-item:last-child {
+  border-bottom: none;
+}
+.msg-side {
+  font-weight: 600;
+  margin-right: 4px;
+  font-size: 11px;
+}
+.side-customer {
+  color: #409eff;
+}
+.side-merchant {
+  color: #67c23a;
+}
+.msg-name {
+  color: #909399;
+  margin-right: 8px;
+}
+.msg-content {
+  color: #303133;
+  word-break: break-word;
+}
+.msg-time {
+  color: #c0c4cc;
+  margin-left: 12px;
+  font-size: 11px;
+}
+.msg-empty {
+  text-align: center;
+  color: #909399;
+  padding: 40px;
+}
 </style>

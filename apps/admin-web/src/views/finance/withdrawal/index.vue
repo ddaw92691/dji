@@ -2,7 +2,13 @@
   <div class="withdrawal-page">
     <el-form :inline="true" :model="searchForm" class="search-bar">
       <el-form-item>
-        <el-input v-model="searchForm.keyword" placeholder="关键词" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input
+          v-model="searchForm.keyword"
+          placeholder="关键词"
+          clearable
+          @clear="handleSearch"
+          @keyup.enter="handleSearch"
+        />
       </el-form-item>
       <el-form-item>
         <el-select v-model="searchForm.role" placeholder="角色" clearable @change="handleSearch">
@@ -18,7 +24,12 @@
       </el-form-item>
       <el-form-item>
         <el-select v-model="searchForm.status" placeholder="状态" clearable @change="handleSearch">
-          <el-option v-for="o in WITHDRAWAL_STATUS_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
+          <el-option
+            v-for="o in WITHDRAWAL_STATUS_OPTIONS"
+            :key="o.value"
+            :label="o.label"
+            :value="o.value"
+          />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -64,9 +75,29 @@
       <el-table-column prop="createdAt" label="创建时间" width="180" />
       <el-table-column label="操作" width="240" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" v-permission="'finance:withdrawal:view'" @click="openDetail(row.id)">详情</el-button>
-          <el-button v-if="row.status === 'PENDING'" link type="success" v-permission="'finance:withdrawal:approve'" @click="handleApprove(row)">通过</el-button>
-          <el-button v-if="row.status === 'PENDING'" link type="danger" v-permission="'finance:withdrawal:reject'" @click="openRejectDialog(row)">拒绝</el-button>
+          <el-button
+            link
+            type="primary"
+            v-permission="'finance:withdrawal:view'"
+            @click="openDetail(row.id)"
+            >详情</el-button
+          >
+          <el-button
+            v-if="row.status === 'PENDING'"
+            link
+            type="success"
+            v-permission="'finance:withdrawal:approve'"
+            @click="handleApprove(row)"
+            >通过</el-button
+          >
+          <el-button
+            v-if="row.status === 'PENDING'"
+            link
+            type="danger"
+            v-permission="'finance:withdrawal:reject'"
+            @click="openRejectDialog(row)"
+            >拒绝</el-button
+          >
         </template>
       </el-table-column>
     </el-table>
@@ -86,17 +117,23 @@
         <el-descriptions-item label="用户">{{ detail.userName }}</el-descriptions-item>
         <el-descriptions-item label="角色">{{ detail.role }}</el-descriptions-item>
         <el-descriptions-item label="类型">{{ detail.type }}</el-descriptions-item>
-        <el-descriptions-item label="金额">${{ (detail.amount ?? 0).toFixed(2) }}</el-descriptions-item>
+        <el-descriptions-item label="金额"
+          >${{ (detail.amount ?? 0).toFixed(2) }}</el-descriptions-item
+        >
         <el-descriptions-item label="状态">
           <el-tag :type="getColorByValue(WITHDRAWAL_STATUS_OPTIONS, detail.status)">
             {{ getLabelByValue(WITHDRAWAL_STATUS_OPTIONS, detail.status) }}
           </el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="银行名称">{{ detail.bankName || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="银行账号">{{ detail.bankAccount || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="银行账号">{{
+          detail.bankAccount || '-'
+        }}</el-descriptions-item>
         <el-descriptions-item label="账户名">{{ detail.accountName || '-' }}</el-descriptions-item>
         <el-descriptions-item label="备注">{{ detail.remark || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="拒绝原因" :span="2">{{ detail.rejectReason || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="拒绝原因" :span="2">{{
+          detail.rejectReason || '-'
+        }}</el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ detail.createdAt }}</el-descriptions-item>
         <el-descriptions-item label="审核时间">{{ detail.reviewedAt || '-' }}</el-descriptions-item>
       </el-descriptions>
@@ -108,7 +145,12 @@
     <el-dialog v-model="rejectVisible" title="拒绝提现" width="480px">
       <el-form :model="rejectForm">
         <el-form-item label="拒绝原因" required>
-          <el-input v-model="rejectForm.rejectReason" type="textarea" :rows="4" placeholder="请输入拒绝原因" />
+          <el-input
+            v-model="rejectForm.rejectReason"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入拒绝原因"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -122,18 +164,18 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { financeApi, type IAdminWithdrawal } from '@/api/finance'
+import { financeApi, type I管理员Withdrawal } from '@/api/finance'
 import { WITHDRAWAL_STATUS_OPTIONS, getLabelByValue, getColorByValue } from '@/constants/dict'
 
 defineOptions({ name: 'FinanceWithdrawalView' })
 
 const loading = ref(false)
 const rejectLoading = ref(false)
-const tableData = ref<IAdminWithdrawal[]>([])
+const tableData = ref<I管理员Withdrawal[]>([])
 const total = ref(0)
 
 const detailVisible = ref(false)
-const detail = ref<IAdminWithdrawal | null>(null)
+const detail = ref<I管理员Withdrawal | null>(null)
 
 const rejectVisible = ref(false)
 const rejectingId = ref<number | null>(null)
@@ -185,17 +227,23 @@ async function openDetail(id: number) {
   detailVisible.value = true
 }
 
-async function handleApprove(row: IAdminWithdrawal) {
+async function handleApprove(row: I管理员Withdrawal) {
   try {
-    await ElMessageBox.confirm(`Approve withdrawal #${row.id} ($${(row.amount ?? 0).toFixed(2)})?`, 'Confirm', { type: 'warning' })
-  } catch { return }
+    await ElMessageBox.confirm(
+      `确定要通过提现 #${row.id}（$${(row.amount ?? 0).toFixed(2)}）吗？`,
+      '确认',
+      { type: 'warning' },
+    )
+  } catch {
+    return
+  }
   const { data: res } = await financeApi.approveWithdrawal(row.id)
   if (res.code !== 200) return
   ElMessage.success('提现已通过')
   fetchData()
 }
 
-function openRejectDialog(row: IAdminWithdrawal) {
+function openRejectDialog(row: I管理员Withdrawal) {
   rejectingId.value = row.id
   rejectForm.rejectReason = ''
   rejectVisible.value = true
@@ -205,7 +253,10 @@ async function handleReject() {
   if (!rejectingId.value || !rejectForm.rejectReason.trim()) return
   rejectLoading.value = true
   try {
-    const { data: res } = await financeApi.rejectWithdrawal(rejectingId.value, rejectForm.rejectReason)
+    const { data: res } = await financeApi.rejectWithdrawal(
+      rejectingId.value,
+      rejectForm.rejectReason,
+    )
     if (res.code !== 200) return
     ElMessage.success('提现已拒绝')
     rejectVisible.value = false
@@ -221,6 +272,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.withdrawal-page { padding: 20px; }
-.search-bar { margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+.withdrawal-page {
+  padding: 20px;
+}
+.search-bar {
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 </style>

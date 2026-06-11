@@ -2,7 +2,13 @@
   <div class="product-page">
     <el-form :inline="true" :model="searchForm" class="search-bar">
       <el-form-item>
-        <el-input v-model="searchForm.keyword" placeholder="关键词" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input
+          v-model="searchForm.keyword"
+          placeholder="关键词"
+          clearable
+          @clear="handleSearch"
+          @keyup.enter="handleSearch"
+        />
       </el-form-item>
       <el-form-item>
         <el-select v-model="searchForm.status" placeholder="状态" clearable @change="handleSearch">
@@ -14,7 +20,9 @@
         <el-button type="primary" @click="handleSearch">搜索</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" v-permission="'category:add'" @click="handleCreate">新增</el-button>
+        <el-button type="primary" v-permission="'category:add'" @click="handleCreate"
+          >新增</el-button
+        >
       </el-form-item>
     </el-form>
 
@@ -28,18 +36,33 @@
       </el-table-column>
       <el-table-column prop="status" label="状态" width="100" align="center">
         <template #default="{ row }">
-          <el-tag :type="row.status === 'ENABLE' ? 'success' : 'danger'">{{ row.status === 'ENABLE' ? 'Enabled' : 'Disabled' }}</el-tag>
+          <el-tag :type="row.status === 'ENABLE' ? 'success' : 'danger'">{{
+            row.status === 'ENABLE' ? '已启用' : '已禁用'
+          }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="sort" label="排序" width="70" align="center" />
       <el-table-column prop="createdAt" label="创建时间" width="180" />
       <el-table-column label="操作" width="280" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" v-permission="'category:edit'" @click="handleEdit(row)">编辑</el-button>
-          <el-button link :type="row.status === 'ENABLE' ? 'warning' : 'success'" v-permission="'category:edit'" @click="handleToggleStatus(row)">
-            {{ row.status === 'ENABLE' ? 'Disable' : 'Enable' }}
+          <el-button link type="primary" v-permission="'category:edit'" @click="handleEdit(row)"
+            >编辑</el-button
+          >
+          <el-button
+            link
+            :type="row.status === 'ENABLE' ? 'warning' : 'success'"
+            v-permission="'category:edit'"
+            @click="handleToggleStatus(row)"
+          >
+            {{ row.status === 'ENABLE' ? '禁用' : '启用' }}
           </el-button>
-          <el-button link type="info" v-permission="'category:edit'" @click="handleOpenTranslations(row)">翻译</el-button>
+          <el-button
+            link
+            type="info"
+            v-permission="'category:edit'"
+            @click="handleOpenTranslations(row)"
+            >翻译</el-button
+          >
           <el-popconfirm title="确定要删除吗？" @confirm="handleDelete(row)">
             <template #reference>
               <el-button link type="danger" v-permission="'category:delete'">删除</el-button>
@@ -58,28 +81,44 @@
       @change="fetchData"
     />
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? 'Edit Category' : 'Create Category'" width="650px" @close="resetForm">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="isEdit ? '编辑分类' : '新增分类'"
+      width="650px"
+      @close="resetForm"
+    >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="130px">
         <el-form-item label="名称" prop="name">
           <el-input v-model="form.name" placeholder="分类名称" />
         </el-form-item>
         <el-form-item label="上级" prop="parentId">
-          <el-select v-model="form.parentId" placeholder="上级分类（选填）" filterable clearable style="width: 100%">
+          <el-select
+            v-model="form.parentId"
+            placeholder="上级分类（选填）"
+            filterable
+            clearable
+            style="width: 100%"
+          >
             <el-option v-for="c in parentOptions" :key="c.id" :label="c.name" :value="c.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="图标" prop="icon">
           <div class="upload-wrap">
-            <el-input v-model="form.icon" placeholder="图标 emoji 或图片地址" class="input-with-upload" />
-            <el-upload
-              :show-file-list="false"
-              :http-request="handleIconUpload"
-              accept="image/*"
-            >
+            <el-input
+              v-model="form.icon"
+              placeholder="图标 emoji 或图片地址"
+              class="input-with-upload"
+            />
+            <el-upload :show-file-list="false" :http-request="handleIconUpload" accept="image/*">
               <el-button type="primary" :loading="uploading">上传</el-button>
             </el-upload>
           </div>
-          <el-image v-if="form.icon && form.icon.startsWith('http')" :src="form.icon" style="width: 60px; height: 60px; margin-top: 8px; border-radius: 4px" fit="cover" />
+          <el-image
+            v-if="form.icon && form.icon.startsWith('http')"
+            :src="form.icon"
+            style="width: 60px; height: 60px; margin-top: 8px; border-radius: 4px"
+            fit="cover"
+          />
         </el-form-item>
         <el-form-item label="排序" prop="sort">
           <el-input-number v-model="form.sort" :min="0" style="width: 100%" />
@@ -111,7 +150,9 @@
       </el-form>
       <template #footer>
         <el-button @click="transDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="transLoading" @click="handleSaveTranslations">保存</el-button>
+        <el-button type="primary" :loading="transLoading" @click="handleSaveTranslations"
+          >保存</el-button
+        >
       </template>
     </el-dialog>
   </div>
@@ -173,9 +214,15 @@ function getCategoryName(id: number): string {
 
 async function loadParentOptions() {
   try {
-    const { data: res } = await categoryApi.getCategories({ page: 1, pageSize: 999, status: 'ENABLE' })
+    const { data: res } = await categoryApi.getCategories({
+      page: 1,
+      pageSize: 999,
+      status: 'ENABLE',
+    })
     if (res.code === 200) parentOptions.value = res.data.list || []
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 async function fetchData() {
@@ -356,8 +403,21 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.product-page { padding: 20px; }
-.search-bar { margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
-.upload-wrap { display: flex; gap: 8px; width: 100%; }
-.input-with-upload { flex: 1; }
+.product-page {
+  padding: 20px;
+}
+.search-bar {
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.upload-wrap {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.input-with-upload {
+  flex: 1;
+}
 </style>

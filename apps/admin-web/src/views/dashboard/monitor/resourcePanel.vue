@@ -24,7 +24,7 @@
                 "
                 >{{ item.trend }}</span
               >
-              <span class="text-(--el-text-color-secondary)">vs last hour</span>
+              <span class="text-(--el-text-color-secondary)">较上一小时</span>
             </div>
           </div>
           <div class="h-23 w-23">
