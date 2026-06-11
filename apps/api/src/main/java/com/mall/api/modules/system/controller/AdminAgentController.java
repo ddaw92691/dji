@@ -52,6 +52,7 @@ public class AdminAgentController {
 
     @GetMapping
     @Operation(summary = "代理列表")
+    @PreAuthorize("@perm.has('admin:user:agent:view')")
     public ApiResponse<Map<String, Object>> list(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long agentId,
@@ -121,6 +122,7 @@ public class AdminAgentController {
 
     @PostMapping
     @Operation(summary = "创建代理")
+    @PreAuthorize("@perm.has('admin:user:agent:add')")
     @Transactional
     public ApiResponse<Map<String, Object>> create(@RequestBody Map<String, Object> body) {
         String email = (String) body.get("email");
@@ -185,6 +187,7 @@ public class AdminAgentController {
 
     @PutMapping("/{id}")
     @Operation(summary = "编辑代理")
+    @PreAuthorize("@perm.has('admin:user:agent:edit')")
     public ApiResponse<Void> update(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         Agent agent = agentMapper.selectById(id);
         if (agent == null || Boolean.TRUE.equals(agent.getDeleted())) {
@@ -210,6 +213,7 @@ public class AdminAgentController {
 
     @PutMapping("/{id}/status")
     @Operation(summary = "启用/禁用代理")
+    @PreAuthorize("@perm.has('admin:user:agent:disable')")
     public ApiResponse<Void> updateStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         Agent agent = agentMapper.selectById(id);
         if (agent == null || Boolean.TRUE.equals(agent.getDeleted())) {
@@ -231,6 +235,7 @@ public class AdminAgentController {
 
     @GetMapping("/{id}/customers")
     @Operation(summary = "代理邀请的客户")
+    @PreAuthorize("@perm.has('admin:user:agent:view')")
     public ApiResponse<Map<String, Object>> customers(
             @PathVariable Long id,
             @RequestParam(defaultValue = "1") int page,
@@ -250,6 +255,7 @@ public class AdminAgentController {
 
     @GetMapping("/{id}/commissions")
     @Operation(summary = "代理佣金记录")
+    @PreAuthorize("@perm.has('admin:user:agent:view')")
     public ApiResponse<Map<String, Object>> commissions(
             @PathVariable Long id,
             @RequestParam(defaultValue = "1") int page,

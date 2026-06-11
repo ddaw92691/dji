@@ -26,6 +26,7 @@ public class AdminBannerController {
 
     @GetMapping
     @Operation(summary = "Banner列表")
+    @PreAuthorize("@perm.has('product:view')")
     public ApiResponse<Map<String, Object>> getBanners(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String position,
@@ -37,18 +38,21 @@ public class AdminBannerController {
 
     @PostMapping
     @Operation(summary = "新增Banner")
+    @PreAuthorize("@perm.has('product:banner:add')")
     public ApiResponse<Banner> createBanner(@RequestBody Banner banner) {
         return ApiResponse.success(bannerService.createBanner(banner));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "编辑Banner")
+    @PreAuthorize("@perm.has('product:banner:edit')")
     public ApiResponse<Banner> updateBanner(@PathVariable Long id, @RequestBody Banner banner) {
         return ApiResponse.success(bannerService.updateBanner(id, banner));
     }
 
     @PutMapping("/{id}/status")
     @Operation(summary = "启用/禁用Banner")
+    @PreAuthorize("@perm.has('product:banner:edit')")
     public ApiResponse<Void> updateBannerStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         bannerService.updateBannerStatus(id, body.get("status"));
         return ApiResponse.success();
@@ -56,6 +60,7 @@ public class AdminBannerController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除Banner")
+    @PreAuthorize("@perm.has('product:banner:delete')")
     public ApiResponse<Void> deleteBanner(@PathVariable Long id) {
         bannerService.deleteBanner(id);
         return ApiResponse.success();
@@ -63,6 +68,7 @@ public class AdminBannerController {
 
     @PutMapping("/{id}/translations")
     @Operation(summary = "保存Banner翻译")
+    @PreAuthorize("@perm.has('product:banner:edit')")
     public ApiResponse<Void> saveTranslations(@PathVariable Long id,
                                                @RequestBody List<Map<String, String>> translations) {
         bannerService.saveTranslations(id, translations);

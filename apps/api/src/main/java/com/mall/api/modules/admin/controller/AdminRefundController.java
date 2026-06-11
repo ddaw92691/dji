@@ -23,6 +23,7 @@ public class AdminRefundController {
 
     @GetMapping
     @Operation(summary = "退款列表")
+    @PreAuthorize("@perm.has('order:view')")
     public ApiResponse<Map<String, Object>> list(
             @RequestParam(required = false) String orderNo,
             @RequestParam(required = false) Long userId,
@@ -38,12 +39,14 @@ public class AdminRefundController {
 
     @GetMapping("/{orderId}")
     @Operation(summary = "退款详情")
+    @PreAuthorize("@perm.has('order:view')")
     public ApiResponse<Map<String, Object>> detail(@PathVariable Long orderId) {
         return ApiResponse.success(refundService.getRefundDetail(orderId));
     }
 
     @PutMapping("/{orderId}/approve")
     @Operation(summary = "批准退款")
+    @PreAuthorize("@perm.has('order:cancel')")
     public ApiResponse<Void> approve(@PathVariable Long orderId) {
         refundService.approveRefund(orderId);
         return ApiResponse.success();
@@ -51,6 +54,7 @@ public class AdminRefundController {
 
     @PutMapping("/{orderId}/reject")
     @Operation(summary = "拒绝退款")
+    @PreAuthorize("@perm.has('order:cancel')")
     public ApiResponse<Void> reject(@PathVariable Long orderId,
                                     @RequestParam(required = false) String reason,
                                     @RequestBody(required = false) Map<String, String> body) {

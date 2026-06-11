@@ -15,6 +15,7 @@ import com.mall.api.security.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -29,16 +30,19 @@ public class AdminCustomerController {
     private final UserMapper userMapper;
     private final CustomerProfileMapper customerProfileMapper;
     private final MallOrderMapper mallOrderMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public AdminCustomerController(UserMapper userMapper, CustomerProfileMapper customerProfileMapper,
-                                   MallOrderMapper mallOrderMapper) {
+                                   MallOrderMapper mallOrderMapper, PasswordEncoder passwordEncoder) {
         this.userMapper = userMapper;
         this.customerProfileMapper = customerProfileMapper;
         this.mallOrderMapper = mallOrderMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping
     @Operation(summary = "客户列表")
+    @PreAuthorize("@perm.has('admin:user:customer:view')")
     public ApiResponse<Map<String, Object>> list(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer status,
@@ -105,6 +109,7 @@ public class AdminCustomerController {
 
     @GetMapping("/{id}")
     @Operation(summary = "客户详情")
+    @PreAuthorize("@perm.has('admin:user:customer:view')")
     public ApiResponse<Map<String, Object>> detail(@PathVariable Long id) {
         User user = userMapper.selectById(id);
         if (user == null || Boolean.TRUE.equals(user.getDeleted())) {
@@ -154,6 +159,7 @@ public class AdminCustomerController {
 
     @PutMapping("/{id}")
     @Operation(summary = "编辑客户")
+    @PreAuthorize("@perm.has('admin:user:customer:edit')")
     public ApiResponse<Void> update(@PathVariable Long id, @RequestBody User body) {
         User user = userMapper.selectById(id);
         if (user == null || Boolean.TRUE.equals(user.getDeleted())) {
@@ -174,6 +180,7 @@ public class AdminCustomerController {
 
     @PutMapping("/{id}/status")
     @Operation(summary = "启用/禁用客户")
+    @PreAuthorize("@perm.has('admin:user:customer:disable')")
     public ApiResponse<Void> updateStatus(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
         User user = userMapper.selectById(id);
         if (user == null || Boolean.TRUE.equals(user.getDeleted())) {
@@ -186,6 +193,7 @@ public class AdminCustomerController {
 
     @PostMapping("/virtual")
     @Operation(summary = "创建虚拟客户")
+    @PreAuthorize("@perm.has('admin:user:customer:add')")
     public ApiResponse<User> createVirtualCustomer(@RequestBody Map<String, Object> body) {
         String nickname = (String) body.getOrDefault("nickname", "Virtual Customer");
         String email = (String) body.get("email");
@@ -198,6 +206,8 @@ public class AdminCustomerController {
         User user = new User();
         user.setUsername(username);
         user.setEmail(email);
+        // 虚拟客户不用于登录，但 sys_user.password 为非空列，写入一段随机不可用密码占位
+        user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
         user.setNickname(nickname);
         user.setRole("CUSTOMER");
         user.setStatus(1);

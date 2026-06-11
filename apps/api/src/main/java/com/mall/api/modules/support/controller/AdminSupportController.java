@@ -42,6 +42,7 @@ public class AdminSupportController {
 
     @GetMapping("/customer-merchant-sessions")
     @Operation(summary = "所有客户-商家会话(含内部字段)")
+    @PreAuthorize("@perm.has('support:customerMerchant:view')")
     public ApiResponse<Map<String, Object>> getCustomerMerchantSessions(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String keyword,
@@ -54,6 +55,7 @@ public class AdminSupportController {
 
     @GetMapping("/customer-merchant-sessions/{id}")
     @Operation(summary = "客户-商家会话详情(含内部字段)")
+    @PreAuthorize("@perm.has('support:customerMerchant:view')")
     public ApiResponse<Map<String, Object>> getCustomerMerchantSessionDetail(@PathVariable Long id) {
         Long userId = SecurityUtils.getCurrentUserId();
         User user = userMapper.selectById(userId);
@@ -62,6 +64,7 @@ public class AdminSupportController {
     }
 
     @PutMapping("/customer-merchant-sessions/{id}/close")
+    @PreAuthorize("@perm.has('support:customerMerchant:close')")
     public ApiResponse<Void> closeCustomerMerchantSession(@PathVariable Long id,
                                                            @RequestBody(required = false) CloseSessionRequest request) {
         Long userId = SecurityUtils.getCurrentUserId();
@@ -73,6 +76,7 @@ public class AdminSupportController {
 
     @GetMapping("/platform-sessions")
     @Operation(summary = "所有平台会话")
+    @PreAuthorize("@perm.has('support:platform:view')")
     public ApiResponse<Map<String, Object>> getPlatformSessions(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String keyword,
@@ -84,6 +88,7 @@ public class AdminSupportController {
 
     @GetMapping("/platform-sessions/{id}")
     @Operation(summary = "平台会话详情")
+    @PreAuthorize("@perm.has('support:platform:view')")
     public ApiResponse<Map<String, Object>> getPlatformSessionDetail(@PathVariable Long id) {
         Long userId = SecurityUtils.getCurrentUserId();
         User user = userMapper.selectById(userId);
@@ -93,6 +98,7 @@ public class AdminSupportController {
 
     @PostMapping("/platform-sessions/{id}/messages")
     @Operation(summary = "管理员回复平台会话")
+    @PreAuthorize("@perm.has('support:platform:reply')")
     public ApiResponse<SupportMessage> replyPlatformSession(@PathVariable Long id,
                                                              @RequestBody SendMessageRequest request) {
         Long userId = SecurityUtils.getCurrentUserId();
@@ -113,6 +119,7 @@ public class AdminSupportController {
 
     @PutMapping("/platform-sessions/{id}/close")
     @Operation(summary = "关闭平台会话")
+    @PreAuthorize("@perm.has('support:platform:close')")
     public ApiResponse<Void> closePlatformSession(@PathVariable Long id,
                                                    @RequestBody(required = false) CloseSessionRequest request) {
         Long userId = SecurityUtils.getCurrentUserId();
@@ -124,6 +131,7 @@ public class AdminSupportController {
 
     @PostMapping("/inspection-sessions")
     @Operation(summary = "创建巡检会话")
+    @PreAuthorize("@perm.has('support:inspection:create')")
     public ApiResponse<SupportSession> createInspectionSession(@RequestBody CreateInspectionRequest request) {
         Long userId = SecurityUtils.getCurrentUserId();
         SupportSession session = supportService.createInspectionSession(
@@ -142,6 +150,7 @@ public class AdminSupportController {
 
     @PutMapping("/inspection-sessions/{id}/score")
     @Operation(summary = "巡检评分")
+    @PreAuthorize("@perm.has('support:inspection:score')")
     public ApiResponse<Void> scoreInspection(@PathVariable Long id,
                                               @RequestBody ScoreInspectionRequest request) {
         supportService.scoreInspection(id, request.getQualityScore(), request.getQualityRemark());
@@ -150,6 +159,7 @@ public class AdminSupportController {
 
     @GetMapping("/inspection-sessions")
     @Operation(summary = "巡检会话列表")
+    @PreAuthorize("@perm.has('support:inspection:view')")
     public ApiResponse<Map<String, Object>> getInspectionSessions(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long merchantId,
@@ -160,6 +170,7 @@ public class AdminSupportController {
     }
 
     @GetMapping("/inspection-sessions/{id}")
+    @PreAuthorize("@perm.has('support:inspection:view')")
     public ApiResponse<Map<String, Object>> getInspectionSessionDetail(@PathVariable Long id) {
         Long userId = SecurityUtils.getCurrentUserId();
         User user = userMapper.selectById(userId);
@@ -168,6 +179,7 @@ public class AdminSupportController {
     }
 
     @GetMapping("/sessions/{id}/messages")
+    @PreAuthorize("@perm.hasAny('support:platform:view','support:inspection:view','support:customerMerchant:view')")
     public ApiResponse<List<SupportMessage>> getMessages(@PathVariable Long id) {
         Long userId = SecurityUtils.getCurrentUserId();
         User user = userMapper.selectById(userId);
@@ -177,6 +189,7 @@ public class AdminSupportController {
 
     @GetMapping("/inspection-logs")
     @Operation(summary = "巡检日志列表")
+    @PreAuthorize("@perm.has('support:inspection:view')")
     public ApiResponse<Map<String, Object>> getInspectionLogs(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long merchantId,
@@ -187,6 +200,7 @@ public class AdminSupportController {
 
     @PutMapping("/sessions/{id}/read")
     @Operation(summary = "标记已读")
+    @PreAuthorize("@perm.hasAny('support:platform:view','support:inspection:view','support:customerMerchant:view')")
     public ApiResponse<Void> markAsRead(@PathVariable Long id) {
         Long userId = SecurityUtils.getCurrentUserId();
         supportService.markAsRead(id, userId);
@@ -195,6 +209,7 @@ public class AdminSupportController {
 
     @GetMapping("/quick-replies")
     @Operation(summary = "获取平台快捷回复列表")
+    @PreAuthorize("@perm.has('support:quickReply:view')")
     public ApiResponse<Map<String, Object>> getQuickReplies() {
         User user = userMapper.selectById(SecurityUtils.getCurrentUserId());
         List<SupportQuickReply> replies = quickReplyService.getQuickReplies("PLATFORM", null,
@@ -204,6 +219,7 @@ public class AdminSupportController {
 
     @PostMapping("/quick-replies")
     @Operation(summary = "创建平台快捷回复")
+    @PreAuthorize("@perm.has('support:quickReply:add')")
     public ApiResponse<SupportQuickReply> createQuickReply(@RequestBody QuickReplyRequest request) {
         User user = userMapper.selectById(SecurityUtils.getCurrentUserId());
         SupportQuickReply qr = new SupportQuickReply();
@@ -220,6 +236,7 @@ public class AdminSupportController {
 
     @PutMapping("/quick-replies/{id}")
     @Operation(summary = "更新平台快捷回复")
+    @PreAuthorize("@perm.has('support:quickReply:edit')")
     public ApiResponse<SupportQuickReply> updateQuickReply(@PathVariable Long id,
                                                             @RequestBody QuickReplyRequest request) {
         SupportQuickReply update = new SupportQuickReply();
@@ -233,6 +250,7 @@ public class AdminSupportController {
 
     @DeleteMapping("/quick-replies/{id}")
     @Operation(summary = "删除平台快捷回复")
+    @PreAuthorize("@perm.has('support:quickReply:delete')")
     public ApiResponse<Void> deleteQuickReply(@PathVariable Long id) {
         quickReplyService.deleteQuickReply(id);
         return ApiResponse.success();

@@ -1,5 +1,6 @@
 package com.mall.api.security;
 
+import com.mall.api.modules.system.PermissionService;
 import com.mall.api.modules.user.entity.User;
 import com.mall.api.modules.user.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private static final long CACHE_TTL_MILLIS = 60_000L;
 
     private final UserMapper userMapper;
+    private final PermissionService permissionService;
 
     /** 轻量级 TTL 缓存，避免每次鉴权都查库（禁用/改密后最长 60 秒生效）。 */
     private final ConcurrentHashMap<String, CacheEntry> cache = new ConcurrentHashMap<>();
@@ -55,6 +57,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if (user.getStatus() != null && user.getStatus() == 0) {   // ← 顺手修了这里的拆箱 NPE
             throw new UsernameNotFoundException("User disabled: " + username);
         }
-        return new UserPrincipal(user.getId(), user.getUsername(), user.getPassword(), user.getRole());
+        java.util.Set<String> permissions;
+        try {
+            permissions = permissionService.getGrantedPermissionCodes(user.getRole());
+        } catch (Exception e) {
+            permissions = java.util.Collections.emptySet();
+        }
+        return new UserPrincipal(user.getId(), user.getUsername(), user.getPassword(),
+                user.getRole(), permissions);
     }
 }

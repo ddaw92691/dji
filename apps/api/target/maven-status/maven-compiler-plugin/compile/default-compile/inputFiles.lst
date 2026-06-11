@@ -222,6 +222,7 @@ C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\mo
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\security\JwtAuthenticationEntryPoint.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\security\JwtAuthenticationFilter.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\security\JwtTokenProvider.java
+C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\security\PermissionChecker.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\security\SecurityConfig.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\security\SecurityUtils.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\security\UserDetailsServiceImpl.java

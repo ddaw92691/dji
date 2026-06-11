@@ -29,6 +29,7 @@ public class AdminV1I18nController {
 
     @GetMapping("/languages")
     @Operation(summary = "语言列表")
+    @PreAuthorize("@perm.has('i18n:language:view')")
     public ApiResponse<Map<String, Object>> getLanguages(@RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "1") int page,
@@ -45,18 +46,21 @@ public class AdminV1I18nController {
 
     @PostMapping("/languages")
     @Operation(summary = "新增语言")
+    @PreAuthorize("@perm.has('i18n:language:add')")
     public ApiResponse<Language> createLanguage(@RequestBody Language language) {
         return ApiResponse.success(service.createLanguage(language));
     }
 
     @PutMapping("/languages/{id}")
     @Operation(summary = "编辑语言")
+    @PreAuthorize("@perm.has('i18n:language:edit')")
     public ApiResponse<Language> updateLanguage(@PathVariable Long id, @RequestBody Language language) {
         return ApiResponse.success(service.updateLanguage(id, language));
     }
 
     @DeleteMapping("/languages/{id}")
     @Operation(summary = "禁用语言")
+    @PreAuthorize("@perm.has('i18n:language:edit')")
     public ApiResponse<Void> deleteLanguage(@PathVariable Long id) {
         service.updateLanguageStatus(id, "DISABLE");
         return ApiResponse.success();
@@ -64,6 +68,7 @@ public class AdminV1I18nController {
 
     @GetMapping("/translations")
     @Operation(summary = "翻译列表")
+    @PreAuthorize("@perm.has('i18n:translation:view')")
     public ApiResponse<Map<String, Object>> getTranslations(
             @RequestParam(required = false) String locale,
             @RequestParam(required = false, name = "module") String module,
@@ -88,18 +93,21 @@ public class AdminV1I18nController {
 
     @PostMapping("/translations")
     @Operation(summary = "新增翻译")
+    @PreAuthorize("@perm.has('i18n:translation:add')")
     public ApiResponse<I18nTranslation> createTranslation(@RequestBody Map<String, Object> body) {
         return ApiResponse.success(service.createTranslation(fromBody(body)));
     }
 
     @PutMapping("/translations/{id}")
     @Operation(summary = "修改翻译")
+    @PreAuthorize("@perm.has('i18n:translation:edit')")
     public ApiResponse<I18nTranslation> updateTranslation(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         return ApiResponse.success(service.updateTranslation(id, fromBody(body)));
     }
 
     @DeleteMapping("/translations/{id}")
     @Operation(summary = "删除翻译")
+    @PreAuthorize("@perm.has('i18n:translation:delete')")
     public ApiResponse<Void> deleteTranslation(@PathVariable Long id) {
         service.deleteTranslation(id);
         return ApiResponse.success();
@@ -107,12 +115,14 @@ public class AdminV1I18nController {
 
     @PostMapping("/translations/batch")
     @Operation(summary = "批量保存翻译")
+    @PreAuthorize("@perm.has('i18n:translation:edit')")
     public ApiResponse<Map<String, Integer>> batchSaveTranslations(@RequestBody Map<String, Object> body) {
         return ApiResponse.success(service.batchSaveTranslations(body));
     }
 
     @PostMapping("/translations/import")
     @Operation(summary = "导入翻译")
+    @PreAuthorize("@perm.has('i18n:translation:add')")
     public ApiResponse<Map<String, Integer>> importTranslations(@RequestBody Map<String, Object> body) {
         String locale = str(body.get("locale"));
         PublicLocale l = LocaleCatalog.resolve(locale);
@@ -125,6 +135,7 @@ public class AdminV1I18nController {
 
     @GetMapping("/translations/export")
     @Operation(summary = "导出翻译")
+    @PreAuthorize("@perm.has('i18n:translation:view')")
     public ApiResponse<Map<String, Object>> exportTranslations(@RequestParam String locale,
                                                                @RequestParam(required = false, name = "module") String module) {
         PublicLocale l = LocaleCatalog.resolve(locale);

@@ -136,6 +136,38 @@ public class PermissionService {
         return tree;
     }
 
+    /**
+     * 返回该角色被授权的全部菜单/按钮权限码（sys_role_menu → sys_menu.permission，去重）。
+     * 供后端方法级鉴权 @perm.has(...) 使用，确保「未勾选的菜单/权限，接口也不可访问」。
+     */
+    public Set<String> getGrantedPermissionCodes(String role) {
+        if (role == null || role.isBlank()) {
+            return Collections.emptySet();
+        }
+        SysRole sysRole = sysRoleMapper.selectOne(
+                new LambdaQueryWrapper<SysRole>().eq(SysRole::getCode, role));
+        if (sysRole == null) {
+            return Collections.emptySet();
+        }
+        List<SysRoleMenu> roleMenus = sysRoleMenuMapper.selectList(
+                new LambdaQueryWrapper<SysRoleMenu>().eq(SysRoleMenu::getRoleId, sysRole.getId()));
+        Set<Long> roleMenuIds = roleMenus.stream()
+                .map(SysRoleMenu::getMenuId)
+                .collect(Collectors.toSet());
+        if (roleMenuIds.isEmpty()) {
+            return Collections.emptySet();
+        }
+        List<SysMenu> menus = sysMenuMapper.selectList(
+                new LambdaQueryWrapper<SysMenu>()
+                        .in(SysMenu::getId, roleMenuIds)
+                        .eq(SysMenu::getDeleted, false)
+                        .eq(SysMenu::getStatus, "ENABLE"));
+        return menus.stream()
+                .map(SysMenu::getPermission)
+                .filter(p -> p != null && !p.isBlank())
+                .collect(Collectors.toSet());
+    }
+
     public List<Long> getRoleMenus(Long roleId) {
         List<SysRoleMenu> roleMenus = sysRoleMenuMapper.selectList(
                 new LambdaQueryWrapper<SysRoleMenu>().eq(SysRoleMenu::getRoleId, roleId));

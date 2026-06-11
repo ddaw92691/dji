@@ -62,6 +62,8 @@ public class SupportMessage implements Serializable {
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 
+    // support_message 为追加型消息表，库表无 updated_at 列；标记为非持久化字段，避免 INSERT 报列不存在
+    @TableField(exist = false)
     @Schema(description = "更新时间")
     private LocalDateTime updatedAt;
 }

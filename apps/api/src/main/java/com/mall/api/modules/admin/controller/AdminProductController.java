@@ -28,6 +28,7 @@ public class AdminProductController {
 
     @GetMapping
     @Operation(summary = "商品列表")
+    @PreAuthorize("@perm.has('product:view')")
     public ApiResponse<Map<String, Object>> getProducts(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long categoryId,
@@ -43,6 +44,7 @@ public class AdminProductController {
 
     @GetMapping("/{id}")
     @Operation(summary = "商品详情")
+    @PreAuthorize("@perm.has('product:view')")
     public ApiResponse<Map<String, Object>> getProductDetail(@PathVariable Long id) {
         Map<String, Object> detail = productService.getProductDetail(id, null, null);
         if (detail == null) {
@@ -53,6 +55,7 @@ public class AdminProductController {
 
     @PutMapping("/{id}/status")
     @Operation(summary = "上架/下架商品")
+    @PreAuthorize("@perm.has('product:edit')")
     public ApiResponse<Void> updateProductStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         productService.updateProductStatus(id, body.get("status"));
         return ApiResponse.success();
@@ -60,6 +63,7 @@ public class AdminProductController {
 
     @GetMapping("/audit")
     @Operation(summary = "待审核商品列表")
+    @PreAuthorize("@perm.has('product:audit')")
     public ApiResponse<Map<String, Object>> getPendingAudit(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize) {
@@ -69,6 +73,7 @@ public class AdminProductController {
 
     @PutMapping("/{id}/audit")
     @Operation(summary = "审核商品")
+    @PreAuthorize("@perm.hasAny('product:audit:approve','product:audit:reject')")
     public ApiResponse<Void> auditProduct(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         String auditStatus = (String) body.get("auditStatus");
         String auditRemark = (String) body.get("auditRemark");

@@ -28,6 +28,7 @@ public class AdminCatalogController {
 
     @GetMapping
     @Operation(summary = "平台商品列表")
+    @PreAuthorize("@perm.has('admin:catalog:view')")
     public ApiResponse<Map<String, Object>> getProducts(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long categoryId,
@@ -39,12 +40,14 @@ public class AdminCatalogController {
 
     @GetMapping("/{id}")
     @Operation(summary = "平台商品详情")
+    @PreAuthorize("@perm.has('admin:catalog:view')")
     public ApiResponse<Map<String, Object>> getProductDetail(@PathVariable Long id) {
         return ApiResponse.success(platformProductService.getProductDetail(id));
     }
 
     @PostMapping
     @Operation(summary = "创建平台商品")
+    @PreAuthorize("@perm.has('admin:catalog:add')")
     public ApiResponse<PlatformProduct> createProduct(@RequestBody Map<String, Object> body) {
         PlatformProduct pp = buildProductFromBody(body);
         Long createdBy = SecurityUtils.getCurrentUserId();
@@ -78,6 +81,7 @@ public class AdminCatalogController {
 
     @PutMapping("/{id}")
     @Operation(summary = "更新平台商品")
+    @PreAuthorize("@perm.has('admin:catalog:edit')")
     public ApiResponse<PlatformProduct> updateProduct(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         PlatformProduct pp = buildProductFromBody(body);
         Long updatedBy = SecurityUtils.getCurrentUserId();
@@ -115,6 +119,7 @@ public class AdminCatalogController {
 
     @PutMapping("/{id}/status")
     @Operation(summary = "更新平台商品状态")
+    @PreAuthorize("@perm.has('admin:catalog:edit')")
     public ApiResponse<Void> updateStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         platformProductService.updateStatus(id, body.get("status"));
         return ApiResponse.success();
@@ -122,6 +127,7 @@ public class AdminCatalogController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除平台商品")
+    @PreAuthorize("@perm.has('admin:catalog:disable')")
     public ApiResponse<Void> deleteProduct(@PathVariable Long id) {
         platformProductService.deleteProduct(id);
         return ApiResponse.success();

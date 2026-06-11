@@ -130,6 +130,39 @@ public class DataInitializer implements CommandLineRunner {
         } catch (Exception e) {
             log.warn("patch merchant.withdraw_password failed: {}", e.getMessage());
         }
+        // 商家入驻申请（schema.sql 不会自动执行，此处幂等补建，dev/prod 通用）
+        try {
+            jdbcTemplate.execute(
+                "CREATE TABLE IF NOT EXISTS merchant_application (" +
+                "  id                          BIGINT          PRIMARY KEY," +
+                "  email                       VARCHAR(100)    NOT NULL," +
+                "  phone                       VARCHAR(50)     NOT NULL," +
+                "  password_hash               VARCHAR(255)    NOT NULL," +
+                "  full_name                   VARCHAR(100)    NOT NULL," +
+                "  age                         INTEGER         NOT NULL," +
+                "  home_address                VARCHAR(500)    NOT NULL," +
+                "  document_type               VARCHAR(30)     NOT NULL DEFAULT 'id_card'," +
+                "  id_card_front_url           VARCHAR(500)," +
+                "  id_card_back_url            VARCHAR(500)," +
+                "  passport_page_url           VARCHAR(500)," +
+                "  driver_license_url          VARCHAR(500)," +
+                "  handheld_document_video_url VARCHAR(500)," +
+                "  status                      VARCHAR(30)     NOT NULL DEFAULT 'PENDING'," +
+                "  review_remark               VARCHAR(500)," +
+                "  reviewed_by                 BIGINT," +
+                "  reviewed_at                 TIMESTAMP," +
+                "  user_id                     BIGINT," +
+                "  merchant_id                 BIGINT," +
+                "  deleted                     BOOLEAN         NOT NULL DEFAULT FALSE," +
+                "  created_at                  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                "  updated_at                  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP" +
+                ")");
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_merchant_application_email ON merchant_application(email)");
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_merchant_application_status ON merchant_application(status)");
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_merchant_application_merchant ON merchant_application(merchant_id)");
+        } catch (Exception e) {
+            log.warn("patch merchant_application failed: {}", e.getMessage());
+        }
         // 商家资金流水
         try {
             jdbcTemplate.execute(

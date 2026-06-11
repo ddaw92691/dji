@@ -80,6 +80,7 @@ public class AdminMerchantApplicationController {
 
     @GetMapping
     @Operation(summary = "Merchant application list")
+    @PreAuthorize("@perm.has('admin:merchantApplication:view')")
     public ApiResponse<Map<String, Object>> list(@RequestParam(required = false) String keyword,
                                                  @RequestParam(required = false) String status,
                                                  @RequestParam(defaultValue = "1") int page,
@@ -114,6 +115,7 @@ public class AdminMerchantApplicationController {
 
     @GetMapping("/pending-count")
     @Operation(summary = "Pending merchant application count")
+    @PreAuthorize("@perm.has('admin:merchantApplication:view')")
     public ApiResponse<Map<String, Object>> pendingCount() {
         Long count = applicationMapper.selectCount(new LambdaQueryWrapper<MerchantApplication>()
                 .eq(MerchantApplication::getDeleted, false)
@@ -123,12 +125,14 @@ public class AdminMerchantApplicationController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Merchant application detail")
+    @PreAuthorize("@perm.has('admin:merchantApplication:view')")
     public ApiResponse<Map<String, Object>> detail(@PathVariable Long id) {
         return ApiResponse.success(toMap(requireApplication(id), true));
     }
 
     @GetMapping("/by-merchant/{merchantId}")
     @Operation(summary = "Merchant application by merchant id")
+    @PreAuthorize("@perm.hasAny('admin:merchantApplication:view','admin:user:merchant:view')")
     public ApiResponse<Map<String, Object>> byMerchant(@PathVariable Long merchantId) {
         MerchantApplication application = applicationMapper.selectOne(
                 new LambdaQueryWrapper<MerchantApplication>()
@@ -141,6 +145,7 @@ public class AdminMerchantApplicationController {
 
     @GetMapping("/{id}/files/{fileId}")
     @Operation(summary = "Download merchant application sensitive file by file id")
+    @PreAuthorize("@perm.has('admin:merchantApplication:view')")
     public ResponseEntity<Resource> downloadFileById(@PathVariable Long id,
                                                      @PathVariable Long fileId,
                                                      HttpServletRequest request) {
@@ -155,6 +160,7 @@ public class AdminMerchantApplicationController {
 
     @GetMapping("/{id}/file/{field}")
     @Operation(summary = "鉴权下载商家申请敏感证件（图片/视频）")
+    @PreAuthorize("@perm.has('admin:merchantApplication:view')")
     public ResponseEntity<Resource> downloadFile(@PathVariable Long id,
                                                  @PathVariable String field,
                                                  HttpServletRequest request) {
@@ -232,6 +238,7 @@ public class AdminMerchantApplicationController {
 
     @PostMapping("/{id}/approve")
     @Operation(summary = "Approve merchant application")
+    @PreAuthorize("@perm.has('admin:merchantApplication:approve')")
     @Audit(module = "Merchant Application", action = "Approve", description = "Approve merchant application")
     @Transactional
     public ApiResponse<Map<String, Object>> approve(@PathVariable Long id,
@@ -308,6 +315,7 @@ public class AdminMerchantApplicationController {
 
     @PostMapping("/{id}/reject")
     @Operation(summary = "Reject merchant application")
+    @PreAuthorize("@perm.has('admin:merchantApplication:reject')")
     @Audit(module = "Merchant Application", action = "Reject", description = "Reject merchant application")
     @Transactional
     public ApiResponse<Void> reject(@PathVariable Long id,

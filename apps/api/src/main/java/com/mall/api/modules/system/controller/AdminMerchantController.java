@@ -71,6 +71,7 @@ public class AdminMerchantController {
 
     @GetMapping
     @Operation(summary = "商家列表")
+    @PreAuthorize("@perm.has('admin:user:merchant:view')")
     public ApiResponse<Map<String, Object>> list(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long merchantId,
@@ -144,6 +145,7 @@ public class AdminMerchantController {
 
     @PostMapping
     @Operation(summary = "创建商家")
+    @PreAuthorize("@perm.has('admin:user:merchant:add')")
     @Transactional
     public ApiResponse<Map<String, Object>> create(@RequestBody Map<String, Object> body) {
         String email = (String) body.get("email");
@@ -216,6 +218,7 @@ public class AdminMerchantController {
 
     @PutMapping("/{id}")
     @Operation(summary = "编辑商家")
+    @PreAuthorize("@perm.has('admin:user:merchant:edit')")
     public ApiResponse<Void> update(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         Merchant merchant = merchantMapper.selectById(id);
         if (merchant == null || Boolean.TRUE.equals(merchant.getDeleted())) {
@@ -256,6 +259,7 @@ public class AdminMerchantController {
 
     @PutMapping("/{id}/status")
     @Operation(summary = "启用/禁用商家")
+    @PreAuthorize("@perm.has('admin:user:merchant:disable')")
     public ApiResponse<Void> updateStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         Merchant merchant = merchantMapper.selectById(id);
         if (merchant == null || Boolean.TRUE.equals(merchant.getDeleted())) {
@@ -277,6 +281,7 @@ public class AdminMerchantController {
 
     @GetMapping("/{id}/fund-logs")
     @Operation(summary = "商家资金流水")
+    @PreAuthorize("@perm.has('admin:user:merchant:fund')")
     public ApiResponse<Map<String, Object>> fundLogs(@PathVariable Long id,
                                                      @RequestParam(defaultValue = "1") int page,
                                                      @RequestParam(defaultValue = "10") int pageSize) {
@@ -298,6 +303,7 @@ public class AdminMerchantController {
 
     @PostMapping("/{id}/fund-adjust")
     @Operation(summary = "调整商家资金（增加/扣减）")
+    @PreAuthorize("@perm.has('admin:user:merchant:fund')")
     @Audit(module = "商家管理", action = "调整资金", description = "总后台手动调整商家可用余额")
     public ApiResponse<MerchantFundLog> fundAdjust(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         BigDecimal amount = normalizeAdminFundAmount(id, body);
@@ -312,6 +318,7 @@ public class AdminMerchantController {
 
     @GetMapping("/{id}/wallet")
     @Operation(summary = "Wallet summary")
+    @PreAuthorize("@perm.has('admin:user:merchant:fund')")
     public ApiResponse<Map<String, Object>> wallet(@PathVariable Long id) {
         Map<String, Object> summary = merchantFundService.walletSummary(id);
         summary.putAll(currencyInfo(id));
@@ -320,6 +327,7 @@ public class AdminMerchantController {
 
     @PostMapping("/{id}/wallet/add")
     @Operation(summary = "Admin add merchant funds")
+    @PreAuthorize("@perm.has('admin:user:merchant:fund')")
     @Audit(module = "Merchant", action = "Add funds", description = "Admin adds available balance to merchant")
     public ApiResponse<MerchantFundLog> addWallet(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         MerchantFundLog log = merchantFundService.adjust(id, normalizeAdminFundAmount(id, body), true,
@@ -329,6 +337,7 @@ public class AdminMerchantController {
 
     @PostMapping("/{id}/wallet/subtract")
     @Operation(summary = "Admin subtract merchant funds")
+    @PreAuthorize("@perm.has('admin:user:merchant:fund')")
     @Audit(module = "Merchant", action = "Subtract funds", description = "Admin subtracts available balance from merchant")
     public ApiResponse<MerchantFundLog> subtractWallet(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         MerchantFundLog log = merchantFundService.adjust(id, normalizeAdminFundAmount(id, body), false,
@@ -338,6 +347,7 @@ public class AdminMerchantController {
 
     @PostMapping("/{id}/wallet/freeze")
     @Operation(summary = "Admin freeze merchant funds")
+    @PreAuthorize("@perm.has('admin:user:merchant:fund')")
     @Audit(module = "Merchant", action = "Freeze funds", description = "Admin freezes merchant available balance")
     public ApiResponse<MerchantFundLog> freezeWallet(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         MerchantFundLog log = merchantFundService.freeze(id, normalizeAdminFundAmount(id, body),
@@ -347,6 +357,7 @@ public class AdminMerchantController {
 
     @PostMapping("/{id}/wallet/unfreeze")
     @Operation(summary = "Admin unfreeze merchant funds")
+    @PreAuthorize("@perm.has('admin:user:merchant:fund')")
     @Audit(module = "Merchant", action = "Unfreeze funds", description = "Admin unfreezes merchant frozen balance")
     public ApiResponse<MerchantFundLog> unfreezeWallet(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         MerchantFundLog log = merchantFundService.unfreeze(id, normalizeAdminFundAmount(id, body),
@@ -356,6 +367,7 @@ public class AdminMerchantController {
 
     @PutMapping("/{id}/login-password")
     @Operation(summary = "重置商家登录密码")
+    @PreAuthorize("@perm.has('admin:user:merchant:resetPwd')")
     @Audit(module = "商家管理", action = "重置登录密码", description = "总后台重置商家登录密码")
     public ApiResponse<Void> resetLoginPassword(@PathVariable Long id, @RequestBody Map<String, String> body) {
         String password = body.get("password");
@@ -378,6 +390,7 @@ public class AdminMerchantController {
 
     @PutMapping("/{id}/withdraw-password")
     @Operation(summary = "重置商家提现密码")
+    @PreAuthorize("@perm.has('admin:user:merchant:resetPwd')")
     @Audit(module = "商家管理", action = "重置提现密码", description = "总后台重置商家提现密码")
     public ApiResponse<Void> resetWithdrawPassword(@PathVariable Long id, @RequestBody Map<String, String> body) {
         String password = body.get("password");
@@ -396,6 +409,7 @@ public class AdminMerchantController {
 
     @GetMapping("/{id}/withdraw-accounts")
     @Operation(summary = "商家提款账户（只读）")
+    @PreAuthorize("@perm.has('admin:user:merchant:fund')")
     public ApiResponse<List<Map<String, Object>>> withdrawAccounts(@PathVariable Long id) {
         Merchant merchant = merchantMapper.selectById(id);
         if (merchant == null || Boolean.TRUE.equals(merchant.getDeleted())) {

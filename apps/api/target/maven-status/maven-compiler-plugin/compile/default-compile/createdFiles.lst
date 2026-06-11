@@ -192,6 +192,7 @@ com\mall\api\modules\i18n\entity\I18nTranslation.class
 com\mall\api\modules\cart\CartService.class
 com\mall\api\modules\agent\controller\AgentController.class
 com\mall\api\modules\finance\controller\MerchantFinanceController.class
+com\mall\api\security\PermissionChecker.class
 com\mall\api\modules\dashboard\controller\DashboardController.class
 com\mall\api\config\RateLimitInterceptor.class
 com\mall\api\modules\auth\dto\LoginRequest.class

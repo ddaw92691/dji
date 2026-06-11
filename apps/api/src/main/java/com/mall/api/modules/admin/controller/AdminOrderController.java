@@ -33,6 +33,7 @@ public class AdminOrderController {
 
     @GetMapping
     @Operation(summary = "订单列表")
+    @PreAuthorize("@perm.has('order:view')")
     public ApiResponse<Map<String, Object>> getOrders(
             @RequestParam(required = false) String orderNo,
             @RequestParam(required = false) Long userId,
@@ -45,12 +46,14 @@ public class AdminOrderController {
 
     @GetMapping("/{id}")
     @Operation(summary = "订单详情")
+    @PreAuthorize("@perm.has('order:detail')")
     public ApiResponse<OrderResponse> getOrderDetail(@PathVariable Long id) {
         return ApiResponse.success(orderService.getOrderDetailAdmin(id));
     }
 
     @PutMapping("/{id}/status")
     @Operation(summary = "更新订单状态")
+    @PreAuthorize("@perm.hasAny('order:ship','order:cancel')")
     public ApiResponse<Void> updateOrderStatus(@PathVariable Long id,
                                                 @RequestParam(required = false) String status,
                                                 @RequestParam(required = false) String remark,
@@ -67,6 +70,7 @@ public class AdminOrderController {
 
     @PostMapping("/{id}/settle-merchant")
     @Operation(summary = "结算货款+利润给商家（垫付单到货后）")
+    @PreAuthorize("@perm.has('order:ship')")
     @Audit(module = "订单管理", action = "结算货款", description = "到货后结算货款+利润给商家")
     public ApiResponse<Void> settleMerchant(@PathVariable Long id) {
         orderService.settleToMerchant(id, SecurityUtils.getCurrentUserId(), null);
@@ -75,6 +79,7 @@ public class AdminOrderController {
 
     @PostMapping("/{id}/set-estimated-arrival")
     @Operation(summary = "Set estimated arrival time")
+    @PreAuthorize("@perm.has('order:ship')")
     @Audit(module = "Order", action = "Set estimated arrival", description = "Admin sets estimated arrival time")
     public ApiResponse<Void> setEstimatedArrival(@PathVariable Long id,
                                                  @RequestBody Map<String, Object> body) {
@@ -91,6 +96,7 @@ public class AdminOrderController {
 
     @PostMapping("/{id}/mark-arrived")
     @Operation(summary = "Mark order arrived")
+    @PreAuthorize("@perm.has('order:ship')")
     @Audit(module = "Order", action = "Mark arrived", description = "Admin marks merchant advance order arrived")
     public ApiResponse<Void> markArrived(@PathVariable Long id) {
         orderService.markArrived(id);
@@ -99,6 +105,7 @@ public class AdminOrderController {
 
     @PostMapping("/{id}/settle")
     @Operation(summary = "Settle goods cost and profit")
+    @PreAuthorize("@perm.has('order:ship')")
     @Audit(module = "Order", action = "Settle merchant order", description = "Admin settles goods cost and profit to merchant")
     public ApiResponse<Void> settle(@PathVariable Long id,
                                     @RequestBody(required = false) Map<String, Object> body) {
@@ -109,12 +116,14 @@ public class AdminOrderController {
 
     @GetMapping("/{id}/settlement-records")
     @Operation(summary = "Order settlement records")
+    @PreAuthorize("@perm.has('order:view')")
     public ApiResponse<List<?>> settlementRecords(@PathVariable Long id) {
         return ApiResponse.success(orderService.getSettlementRecords(id));
     }
 
     @GetMapping("/export")
     @Operation(summary = "导出订单CSV")
+    @PreAuthorize("@perm.has('order:view')")
     public void exportOrders(
             @RequestParam(required = false) String orderNo,
             @RequestParam(required = false) Long userId,
@@ -126,6 +135,7 @@ public class AdminOrderController {
 
     @PostMapping("/create-for-merchant")
     @Operation(summary = "管理员为商家创建订单")
+    @PreAuthorize("@perm.has('admin:order:create')")
     public ApiResponse<OrderResponse> createForMerchant(@RequestBody Map<String, Object> body) {
         Long adminId = SecurityUtils.getCurrentUserId();
         Long customerId = ((Number) body.get("customerId")).longValue();

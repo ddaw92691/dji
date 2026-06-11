@@ -26,6 +26,7 @@ public class AdminCategoryController {
 
     @GetMapping
     @Operation(summary = "分类列表")
+    @PreAuthorize("@perm.has('product:view')")
     public ApiResponse<Map<String, Object>> getCategories(
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "1") int page,
@@ -36,18 +37,21 @@ public class AdminCategoryController {
 
     @PostMapping
     @Operation(summary = "新增分类")
+    @PreAuthorize("@perm.has('product:category:add')")
     public ApiResponse<Category> createCategory(@RequestBody Category category) {
         return ApiResponse.success(categoryService.createCategory(category));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "编辑分类")
+    @PreAuthorize("@perm.has('product:category:edit')")
     public ApiResponse<Category> updateCategory(@PathVariable Long id, @RequestBody Category category) {
         return ApiResponse.success(categoryService.updateCategory(id, category));
     }
 
     @PutMapping("/{id}/status")
     @Operation(summary = "启用/禁用分类")
+    @PreAuthorize("@perm.has('product:category:edit')")
     public ApiResponse<Void> updateCategoryStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         categoryService.updateCategoryStatus(id, body.get("status"));
         return ApiResponse.success();
@@ -55,6 +59,7 @@ public class AdminCategoryController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除分类")
+    @PreAuthorize("@perm.has('product:category:delete')")
     public ApiResponse<Void> deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);
         return ApiResponse.success();
@@ -62,6 +67,7 @@ public class AdminCategoryController {
 
     @PutMapping("/{id}/translations")
     @Operation(summary = "保存分类翻译")
+    @PreAuthorize("@perm.has('product:category:edit')")
     public ApiResponse<Void> saveTranslations(@PathVariable Long id,
                                                @RequestBody List<Map<String, String>> translations) {
         categoryService.saveTranslations(id, translations);

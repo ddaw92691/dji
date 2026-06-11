@@ -32,6 +32,7 @@ public class AuditLogController {
 
     @GetMapping
     @Operation(summary = "操作日志列表")
+    @PreAuthorize("@perm.has('sys:audit:view')")
     public ApiResponse<Map<String, Object>> list(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String action,

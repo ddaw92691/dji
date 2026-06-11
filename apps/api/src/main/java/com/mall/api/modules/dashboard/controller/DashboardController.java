@@ -58,6 +58,7 @@ public class DashboardController {
 
     @GetMapping
     @Operation(summary = "管理员仪表盘概览")
+    @PreAuthorize("@perm.has('admin:dashboard:view')")
     public ApiResponse<Map<String, Object>> overview() {
         Map<String, Object> data = new HashMap<>();
 
@@ -121,6 +122,7 @@ public class DashboardController {
 
     @GetMapping("/charts")
     @Operation(summary = "管理员图表数据")
+    @PreAuthorize("@perm.has('admin:dashboard:view')")
     public ApiResponse<Map<String, Object>> charts() {
         Map<String, Object> data = new HashMap<>();
 

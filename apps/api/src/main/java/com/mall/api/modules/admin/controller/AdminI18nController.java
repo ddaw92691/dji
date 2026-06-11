@@ -30,6 +30,7 @@ public class AdminI18nController {
 
     @GetMapping("/countries")
     @Operation(summary = "国家列表")
+    @PreAuthorize("@perm.has('i18n:country:view')")
     public ApiResponse<Map<String, Object>> getCountries(@RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int pageSize) {
@@ -39,18 +40,21 @@ public class AdminI18nController {
 
     @PostMapping("/countries")
     @Operation(summary = "新增国家")
+    @PreAuthorize("@perm.has('i18n:country:add')")
     public ApiResponse<Country> createCountry(@RequestBody Country country) {
         return ApiResponse.success(service.createCountry(country));
     }
 
     @PutMapping("/countries/{id}")
     @Operation(summary = "编辑国家")
+    @PreAuthorize("@perm.has('i18n:country:edit')")
     public ApiResponse<Country> updateCountry(@PathVariable Long id, @RequestBody Country country) {
         return ApiResponse.success(service.updateCountry(id, country));
     }
 
     @PutMapping("/countries/{id}/status")
     @Operation(summary = "启用/禁用国家")
+    @PreAuthorize("@perm.has('i18n:country:edit')")
     public ApiResponse<Void> updateCountryStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         service.updateCountryStatus(id, body.get("status"));
         return ApiResponse.success();
@@ -68,6 +72,7 @@ public class AdminI18nController {
 
     @GetMapping("/languages")
     @Operation(summary = "语言列表")
+    @PreAuthorize("@perm.has('i18n:language:view')")
     public ApiResponse<Map<String, Object>> getLanguages(@RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int pageSize) {
@@ -77,18 +82,21 @@ public class AdminI18nController {
 
     @PostMapping("/languages")
     @Operation(summary = "新增语言")
+    @PreAuthorize("@perm.has('i18n:language:add')")
     public ApiResponse<Language> createLanguage(@RequestBody Language language) {
         return ApiResponse.success(service.createLanguage(language));
     }
 
     @PutMapping("/languages/{id}")
     @Operation(summary = "编辑语言")
+    @PreAuthorize("@perm.has('i18n:language:edit')")
     public ApiResponse<Language> updateLanguage(@PathVariable Long id, @RequestBody Language language) {
         return ApiResponse.success(service.updateLanguage(id, language));
     }
 
     @PutMapping("/languages/{id}/status")
     @Operation(summary = "启用/禁用语言")
+    @PreAuthorize("@perm.has('i18n:language:edit')")
     public ApiResponse<Void> updateLanguageStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         service.updateLanguageStatus(id, body.get("status"));
         return ApiResponse.success();
@@ -106,12 +114,14 @@ public class AdminI18nController {
 
     @GetMapping("/country-languages")
     @Operation(summary = "国家语言配置")
+    @PreAuthorize("@perm.has('i18n:countryLanguage:view')")
     public ApiResponse<List<Map<String, Object>>> getCountryLanguages(@RequestParam(required = false) String countryCode) {
         return ApiResponse.success(service.getCountryLanguages(countryCode));
     }
 
     @PostMapping("/country-languages")
     @Operation(summary = "绑定国家语言")
+    @PreAuthorize("@perm.has('i18n:countryLanguage:add')")
     public ApiResponse<CountryLanguage> bindCountryLanguage(@RequestBody Map<String, Object> body) {
         Long countryId = Long.valueOf(body.get("countryId").toString());
         Long languageId = Long.valueOf(body.get("languageId").toString());
@@ -121,6 +131,7 @@ public class AdminI18nController {
 
     @PutMapping("/country-languages/{id}/default")
     @Operation(summary = "设为默认语言")
+    @PreAuthorize("@perm.has('i18n:countryLanguage:edit')")
     public ApiResponse<Void> setDefaultCountryLanguage(@PathVariable Long id) {
         service.setDefaultCountryLanguage(id);
         return ApiResponse.success();
@@ -128,6 +139,7 @@ public class AdminI18nController {
 
     @DeleteMapping("/country-languages/{id}")
     @Operation(summary = "删除国家语言绑定")
+    @PreAuthorize("@perm.has('i18n:countryLanguage:delete')")
     public ApiResponse<Void> deleteCountryLanguage(@PathVariable Long id) {
         service.deleteCountryLanguage(id);
         return ApiResponse.success();
@@ -137,6 +149,7 @@ public class AdminI18nController {
 
     @GetMapping("/namespaces")
     @Operation(summary = "命名空间列表")
+    @PreAuthorize("@perm.has('i18n:namespace:view')")
     public ApiResponse<Map<String, Object>> getNamespaces(@RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "20") int pageSize) {
@@ -146,18 +159,21 @@ public class AdminI18nController {
 
     @PostMapping("/namespaces")
     @Operation(summary = "新增命名空间")
+    @PreAuthorize("@perm.has('i18n:namespace:add')")
     public ApiResponse<I18nNamespace> createNamespace(@RequestBody I18nNamespace ns) {
         return ApiResponse.success(service.createNamespace(ns));
     }
 
     @PutMapping("/namespaces/{id}")
     @Operation(summary = "编辑命名空间")
+    @PreAuthorize("@perm.has('i18n:namespace:edit')")
     public ApiResponse<I18nNamespace> updateNamespace(@PathVariable Long id, @RequestBody I18nNamespace ns) {
         return ApiResponse.success(service.updateNamespace(id, ns));
     }
 
     @PutMapping("/namespaces/{id}/status")
     @Operation(summary = "启用/禁用命名空间")
+    @PreAuthorize("@perm.has('i18n:namespace:edit')")
     public ApiResponse<Void> updateNamespaceStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         service.updateNamespaceStatus(id, body.get("status"));
         return ApiResponse.success();
@@ -165,6 +181,7 @@ public class AdminI18nController {
 
     @DeleteMapping("/namespaces/{id}")
     @Operation(summary = "删除命名空间")
+    @PreAuthorize("@perm.has('i18n:namespace:delete')")
     public ApiResponse<Void> deleteNamespace(@PathVariable Long id) {
         service.deleteNamespace(id);
         return ApiResponse.success();
@@ -174,6 +191,7 @@ public class AdminI18nController {
 
     @GetMapping("/translations")
     @Operation(summary = "翻译列表")
+    @PreAuthorize("@perm.has('i18n:translation:view')")
     public ApiResponse<Map<String, Object>> getTranslations(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String countryCode,
@@ -187,18 +205,21 @@ public class AdminI18nController {
 
     @PostMapping("/translations")
     @Operation(summary = "新增翻译")
+    @PreAuthorize("@perm.has('i18n:translation:add')")
     public ApiResponse<I18nTranslation> createTranslation(@RequestBody I18nTranslation t) {
         return ApiResponse.success(service.createTranslation(t));
     }
 
     @PutMapping("/translations/{id}")
     @Operation(summary = "编辑翻译")
+    @PreAuthorize("@perm.has('i18n:translation:edit')")
     public ApiResponse<I18nTranslation> updateTranslation(@PathVariable Long id, @RequestBody I18nTranslation t) {
         return ApiResponse.success(service.updateTranslation(id, t));
     }
 
     @PutMapping("/translations/{id}/status")
     @Operation(summary = "启用/禁用翻译")
+    @PreAuthorize("@perm.has('i18n:translation:edit')")
     public ApiResponse<Void> updateTranslationStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         service.updateTranslationStatus(id, body.get("status"));
         return ApiResponse.success();
@@ -206,6 +227,7 @@ public class AdminI18nController {
 
     @DeleteMapping("/translations/{id}")
     @Operation(summary = "删除翻译")
+    @PreAuthorize("@perm.has('i18n:translation:delete')")
     public ApiResponse<Void> deleteTranslation(@PathVariable Long id) {
         service.deleteTranslation(id);
         return ApiResponse.success();
@@ -213,6 +235,7 @@ public class AdminI18nController {
 
     @PostMapping("/translations/import")
     @Operation(summary = "批量导入翻译")
+    @PreAuthorize("@perm.has('i18n:translation:add')")
     public ApiResponse<Map<String, Integer>> importTranslations(@RequestBody Map<String, Object> body) {
         String countryCode = (String) body.getOrDefault("countryCode", "");
         String languageCode = (String) body.get("languageCode");
@@ -226,6 +249,7 @@ public class AdminI18nController {
 
     @GetMapping("/translations/export")
     @Operation(summary = "导出翻译")
+    @PreAuthorize("@perm.has('i18n:translation:view')")
     public ApiResponse<Map<String, Object>> exportTranslations(
             @RequestParam(required = false) String countryCode,
             @RequestParam String languageCode,
@@ -235,6 +259,7 @@ public class AdminI18nController {
 
     @GetMapping("/translations/grouped")
     @Operation(summary = "翻译矩阵（按 模块+Key 分组，一行多语言）")
+    @PreAuthorize("@perm.has('i18n:translation:view')")
     public ApiResponse<Map<String, Object>> getGroupedTranslations(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String countryCode,
@@ -246,6 +271,7 @@ public class AdminI18nController {
 
     @PostMapping("/translations/batch")
     @Operation(summary = "批量保存翻译（一个 Key 多语言一次提交）")
+    @PreAuthorize("@perm.has('i18n:translation:edit')")
     public ApiResponse<Map<String, Integer>> batchSaveTranslations(@RequestBody Map<String, Object> body) {
         return ApiResponse.success(service.batchSaveTranslations(body));
     }

@@ -26,6 +26,7 @@ public class AdminCatalogListingController {
     }
 
     @GetMapping
+    @PreAuthorize("@perm.has('admin:catalog:view')")
     public ApiResponse<Map<String, Object>> getListings(
             @RequestParam(required = false) Long merchantId,
             @RequestParam(required = false) Long platformProductId,
@@ -40,6 +41,7 @@ public class AdminCatalogListingController {
     }
 
     @PutMapping("/{id}/disable")
+    @PreAuthorize("@perm.has('admin:catalog:disable')")
     public ApiResponse<Void> disableListing(@PathVariable Long id) {
         platformProductService.adminDisableListing(id);
         return ApiResponse.success();

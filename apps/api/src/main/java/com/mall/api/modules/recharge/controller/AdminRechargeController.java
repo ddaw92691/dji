@@ -47,6 +47,7 @@ public class AdminRechargeController {
 
     @GetMapping
     @Operation(summary = "充值记录列表")
+    @PreAuthorize("@perm.has('finance:recharge:view')")
     public ApiResponse<Map<String, Object>> list(@RequestParam(required = false) String status,
                                                  @RequestParam(required = false) Long merchantId,
                                                  @RequestParam(defaultValue = "1") int page,
@@ -92,6 +93,7 @@ public class AdminRechargeController {
 
     @PostMapping("/{id}/approve")
     @Operation(summary = "通过充值（货款入账）")
+    @PreAuthorize("@perm.has('finance:recharge:approve')")
     @Audit(module = "充值记录", action = "通过充值", description = "充值审核通过并入账商家余额")
     @Transactional
     public ApiResponse<Void> approve(@PathVariable Long id, @RequestBody(required = false) Map<String, Object> body) {
@@ -114,6 +116,7 @@ public class AdminRechargeController {
 
     @PostMapping("/{id}/reject")
     @Operation(summary = "拒绝充值")
+    @PreAuthorize("@perm.has('finance:recharge:reject')")
     @Audit(module = "充值记录", action = "拒绝充值", description = "充值审核拒绝")
     public ApiResponse<Void> reject(@PathVariable Long id, @RequestBody(required = false) Map<String, Object> body) {
         RechargeOrder order = requireOrder(id);

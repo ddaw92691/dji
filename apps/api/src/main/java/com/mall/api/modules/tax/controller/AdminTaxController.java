@@ -25,6 +25,7 @@ public class AdminTaxController {
 
     @GetMapping
     @Operation(summary = "税务通知列表")
+    @PreAuthorize("@perm.has('admin:tax:view')")
     public ApiResponse<Map<String, Object>> getNotices(
             @RequestParam(required = false) Long merchantId,
             @RequestParam(required = false) String status,
@@ -36,6 +37,7 @@ public class AdminTaxController {
 
     @PostMapping
     @Operation(summary = "创建税务通知")
+    @PreAuthorize("@perm.has('admin:tax:create')")
     public ApiResponse<MerchantTaxNotice> createNotice(@RequestBody Map<String, Object> body) {
         MerchantTaxNotice notice = buildNoticeFromBody(body);
         Long createdBy = SecurityUtils.getCurrentUserId();
@@ -44,12 +46,14 @@ public class AdminTaxController {
 
     @PutMapping("/{id}")
     @Operation(summary = "更新税务通知")
+    @PreAuthorize("@perm.has('admin:tax:create')")
     public ApiResponse<MerchantTaxNotice> updateNotice(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         return ApiResponse.success(taxService.updateTaxNotice(id, buildNoticeFromBody(body)));
     }
 
     @PutMapping("/{id}/cancel")
     @Operation(summary = "取消税务通知")
+    @PreAuthorize("@perm.has('admin:tax:create')")
     public ApiResponse<Void> cancelNotice(@PathVariable Long id) {
         taxService.cancelTaxNotice(id);
         return ApiResponse.success();
@@ -57,6 +61,7 @@ public class AdminTaxController {
 
     @PutMapping("/{id}/review")
     @Operation(summary = "审核税务通知支付")
+    @PreAuthorize("@perm.has('admin:tax:review')")
     public ApiResponse<Void> reviewNotice(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         boolean approved = Boolean.TRUE.equals(body.get("approved"));
         String rejectReason = (String) body.get("rejectReason");

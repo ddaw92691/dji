@@ -60,12 +60,14 @@ public class AdminFinanceController {
 
     @GetMapping("/finance/overview")
     @Operation(summary = "平台财务概览")
+    @PreAuthorize("@perm.has('finance:view')")
     public ApiResponse<Map<String, Object>> getOverview() {
         return ApiResponse.success(financeService.getAdminOverview());
     }
 
     @GetMapping("/finance/fund-logs")
     @Operation(summary = "对账：商家资金流水（全局）")
+    @PreAuthorize("@perm.has('finance:reconcile:view')")
     public ApiResponse<Map<String, Object>> getFundLogs(
             @RequestParam(required = false) Long merchantId,
             @RequestParam(required = false) String type,
@@ -114,6 +116,7 @@ public class AdminFinanceController {
 
     @GetMapping("/withdrawals")
     @Operation(summary = "提现列表")
+    @PreAuthorize("@perm.has('finance:view')")
     public ApiResponse<Map<String, Object>> getWithdrawals(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String role,
@@ -129,12 +132,14 @@ public class AdminFinanceController {
 
     @GetMapping("/withdrawals/{id}")
     @Operation(summary = "提现详情")
+    @PreAuthorize("@perm.has('finance:view')")
     public ApiResponse<Withdrawal> getWithdrawalDetail(@PathVariable Long id) {
         return ApiResponse.success(withdrawalService.getWithdrawalDetail(id));
     }
 
     @PutMapping("/withdrawals/{id}/approve")
     @Operation(summary = "审批通过提现")
+    @PreAuthorize("@perm.has('finance:withdrawal:approve')")
     public ApiResponse<Withdrawal> approveWithdrawal(@PathVariable Long id) {
         Long reviewerUserId = SecurityUtils.getCurrentUserId();
         return ApiResponse.success(withdrawalService.approveWithdrawal(id, reviewerUserId));
@@ -142,6 +147,7 @@ public class AdminFinanceController {
 
     @PutMapping("/withdrawals/{id}/reject")
     @Operation(summary = "拒绝提现")
+    @PreAuthorize("@perm.has('finance:withdrawal:reject')")
     public ApiResponse<Withdrawal> rejectWithdrawal(@PathVariable Long id,
                                                      @RequestBody Map<String, String> body) {
         Long reviewerUserId = SecurityUtils.getCurrentUserId();
@@ -151,6 +157,7 @@ public class AdminFinanceController {
 
     @GetMapping("/commissions")
     @Operation(summary = "佣金列表")
+    @PreAuthorize("@perm.has('finance:commission:view')")
     public ApiResponse<Map<String, Object>> getCommissions(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long agentId,
@@ -165,6 +172,7 @@ public class AdminFinanceController {
 
     @GetMapping("/payments")
     @Operation(summary = "支付记录列表")
+    @PreAuthorize("@perm.has('finance:payment:view')")
     public ApiResponse<Map<String, Object>> getPayments(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long userId,
@@ -197,6 +205,7 @@ public class AdminFinanceController {
 
     @GetMapping("/payments/export")
     @Operation(summary = "导出支付记录CSV")
+    @PreAuthorize("@perm.has('finance:payment:view')")
     public void exportPayments(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String status,
@@ -208,6 +217,7 @@ public class AdminFinanceController {
 
     @GetMapping("/withdrawals/export")
     @Operation(summary = "导出提现记录CSV")
+    @PreAuthorize("@perm.has('finance:view')")
     public void exportWithdrawals(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String role,
@@ -221,6 +231,7 @@ public class AdminFinanceController {
 
     @GetMapping("/commissions/export")
     @Operation(summary = "导出佣金记录CSV")
+    @PreAuthorize("@perm.has('finance:commission:view')")
     public void exportCommissions(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long agentId,

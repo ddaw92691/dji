@@ -37,6 +37,7 @@ public class AdminMerchantWithdrawAccountController {
     }
 
     @GetMapping
+    @PreAuthorize("@perm.has('admin:user:merchant:fund')")
     public ApiResponse<List<Map<String, Object>>> list(@RequestParam Long merchantId) {
         requireMerchant(merchantId);
         List<WithdrawAccount> accounts = accountMapper.selectList(new LambdaQueryWrapper<WithdrawAccount>()
@@ -48,6 +49,7 @@ public class AdminMerchantWithdrawAccountController {
     }
 
     @PostMapping
+    @PreAuthorize("@perm.has('admin:user:merchant:fund')")
     @Audit(module = "Merchant", action = "Create withdraw account", description = "Admin creates merchant withdraw account")
     @Transactional
     public ApiResponse<Map<String, Object>> create(@RequestParam Long merchantId,
@@ -72,6 +74,7 @@ public class AdminMerchantWithdrawAccountController {
     }
 
     @PutMapping("/{accountId}")
+    @PreAuthorize("@perm.has('admin:user:merchant:fund')")
     @Audit(module = "Merchant", action = "Update withdraw account", description = "Admin updates merchant withdraw account")
     @Transactional
     public ApiResponse<Map<String, Object>> update(@PathVariable Long accountId,
@@ -94,6 +97,7 @@ public class AdminMerchantWithdrawAccountController {
     }
 
     @DeleteMapping("/{accountId}")
+    @PreAuthorize("@perm.has('admin:user:merchant:fund')")
     @Audit(module = "Merchant", action = "Disable withdraw account", description = "Admin disables merchant withdraw account")
     public ApiResponse<Void> delete(@PathVariable Long accountId) {
         WithdrawAccount account = requireAccount(accountId);
