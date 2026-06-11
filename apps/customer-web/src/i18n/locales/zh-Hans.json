@@ -1,0 +1,21 @@
+{
+  "common.loading": "加载中…",
+  "common.empty": "暂无内容",
+  "common.error": "出错了",
+  "common.retry": "重试",
+  "common.confirm": "确认",
+  "common.cancel": "取消",
+  "common.search": "搜索",
+  "common.viewMore": "查看更多",
+  "mall.nav.searchAria": "搜索",
+  "mall.nav.cartAria": "购物车",
+  "mall.nav.accountAria": "账户",
+  "mall.nav.menuAria": "菜单",
+  "mall.cart.title": "购物车",
+  "mall.cart.empty": "购物车还是空的",
+  "mall.checkout.title": "结算",
+  "mall.product.buyNow": "立即购买",
+  "mall.product.addToCart": "加入购物车",
+  "mall.order.title": "订单",
+  "mall.search.placeholder": "搜索商品"
+}

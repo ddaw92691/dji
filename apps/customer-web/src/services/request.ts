@@ -11,9 +11,11 @@ service.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
-  config.headers['X-Country-Code'] = localStorage.getItem('countryCode') || 'JP'
-  config.headers['X-Language-Code'] = localStorage.getItem('languageCode') || 'ja'
-  config.headers['Accept-Language'] = localStorage.getItem('languageCode') || 'ja'
+  const cc = localStorage.getItem('mall_countryCode') || localStorage.getItem('countryCode') || 'US'
+  const lc = localStorage.getItem('mall_languageCode') || localStorage.getItem('languageCode') || 'en'
+  config.headers['X-Country-Code'] = cc
+  config.headers['X-Language-Code'] = lc
+  config.headers['Accept-Language'] = lc
   return config
 })
 

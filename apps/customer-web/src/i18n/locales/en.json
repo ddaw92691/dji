@@ -1,0 +1,21 @@
+{
+  "common.loading": "Loading…",
+  "common.empty": "Nothing here yet",
+  "common.error": "Something went wrong",
+  "common.retry": "Retry",
+  "common.confirm": "Confirm",
+  "common.cancel": "Cancel",
+  "common.search": "Search",
+  "common.viewMore": "View More",
+  "mall.nav.searchAria": "Search",
+  "mall.nav.cartAria": "Cart",
+  "mall.nav.accountAria": "Account",
+  "mall.nav.menuAria": "Menu",
+  "mall.cart.title": "Cart",
+  "mall.cart.empty": "Your cart is empty",
+  "mall.checkout.title": "Checkout",
+  "mall.product.buyNow": "Buy Now",
+  "mall.product.addToCart": "Add to Cart",
+  "mall.order.title": "Orders",
+  "mall.search.placeholder": "Search products"
+}

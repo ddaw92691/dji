@@ -1,0 +1,21 @@
+{
+  "common.loading": "載入中…",
+  "common.empty": "暫無內容",
+  "common.error": "發生錯誤",
+  "common.retry": "重試",
+  "common.confirm": "確認",
+  "common.cancel": "取消",
+  "common.search": "搜尋",
+  "common.viewMore": "查看更多",
+  "mall.nav.searchAria": "搜尋",
+  "mall.nav.cartAria": "購物車",
+  "mall.nav.accountAria": "帳戶",
+  "mall.nav.menuAria": "選單",
+  "mall.cart.title": "購物車",
+  "mall.cart.empty": "購物車還是空的",
+  "mall.checkout.title": "結帳",
+  "mall.product.buyNow": "立即購買",
+  "mall.product.addToCart": "加入購物車",
+  "mall.order.title": "訂單",
+  "mall.search.placeholder": "搜尋商品"
+}

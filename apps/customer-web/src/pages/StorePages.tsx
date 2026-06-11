@@ -1,6 +1,7 @@
 import { type CSSProperties, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
+import LanguageSelector from '../components/LanguageSelector'
 import './StorePages.css'
 
 type StoreSection = 'store-day' | 'camera-drones' | 'handheld' | 'robot-vacuum' | 'services' | 'accessories' | 'education' | 'refurbished'
@@ -768,7 +769,7 @@ function StoreNav({ home }: { home: boolean }) {
           <button onClick={() => setMoreOpen((value) => !value)}>More v</button>
           <span>Virtual Flight is now available - A must-try for beginners! Download the <b>DJI Store app</b> and experience the thrill of flying.</span>
         </div>
-        <div className="store-locale"><GlobeIcon /> Singapore (English / $ USD)</div>
+        <div className="store-locale"><LanguageSelector /></div>
       </div>
       <header className={`store-nav ${home ? 'official-nav' : ''} ${transparent ? 'is-transparent' : ''} ${scrolled ? 'is-scrolled' : ''} ${mobileMenuOpen ? 'has-mobile-menu' : ''}`}>
         <button
@@ -833,7 +834,7 @@ function StoreNav({ home }: { home: boolean }) {
           <div className="mobile-nav-secondary">
             {['dji.com', 'DJI Store APP', 'Guides', 'DJI Credit'].map((item) => <Link key={item} to="/">{item} <span>&gt;</span></Link>)}
           </div>
-          <Link className="mobile-locale" to="/">Singapore / English <span>&gt;</span></Link>
+          <div className="mobile-locale"><LanguageSelector onChanged={() => setMobileMenuOpen(false)} /></div>
         </section>
       )}
       {openPanel && <MegaPanel panelKey={openPanel} onClose={() => setOpenPanel(null)} />}
