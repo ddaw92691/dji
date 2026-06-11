@@ -232,4 +232,21 @@ public class AdminI18nController {
             @RequestParam(required = false) String namespaceCode) {
         return ApiResponse.success(service.exportTranslations(countryCode, languageCode, namespaceCode));
     }
+
+    @GetMapping("/translations/grouped")
+    @Operation(summary = "翻译矩阵（按 模块+Key 分组，一行多语言）")
+    public ApiResponse<Map<String, Object>> getGroupedTranslations(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String countryCode,
+            @RequestParam(required = false) String namespaceCode,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "20") int pageSize) {
+        return ApiResponse.success(service.getGroupedTranslations(keyword, countryCode, namespaceCode, status, page, pageSize));
+    }
+
+    @PostMapping("/translations/batch")
+    @Operation(summary = "批量保存翻译（一个 Key 多语言一次提交）")
+    public ApiResponse<Map<String, Integer>> batchSaveTranslations(@RequestBody Map<String, Object> body) {
+        return ApiResponse.success(service.batchSaveTranslations(body));
+    }
 }

@@ -22,13 +22,17 @@ const router = createRouter({
   routes: staticRoutes,
 })
 
+const publicPaths = ['/login', '/merchant-apply']
+
 router.beforeEach(async (to) => {
   NProgress.start()
   const token = storage.get<string>(STORAGE_KEYS.TOKEN)
 
   // 未登录：跳转到登录页面
   if (!token) {
-    if (to.path !== '/login') return { name: 'login' }
+    if (!publicPaths.includes(to.path)) {
+      return { name: 'login', query: { redirect: to.fullPath } }
+    }
     return true
   }
 
@@ -43,7 +47,9 @@ router.beforeEach(async (to) => {
       // 避免守卫 reject 导致 router.isReady() 永不完成、页面卡在加载动画。
       storage.remove(STORAGE_KEYS.TOKEN)
       menuStore.clearUserPermissions()
-      if (to.path !== '/login') return { name: 'login' }
+      if (!publicPaths.includes(to.path)) {
+        return { name: 'login', query: { redirect: to.fullPath } }
+      }
       return true
     }
     const dynamicRoutes = menuToRoute(menuStore.menuList)

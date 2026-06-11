@@ -1,5 +1,13 @@
 <template>
   <div class="i18n-page">
+    <div class="mode-bar">
+      <el-radio-group v-model="viewMode" @change="handleSwitchMode">
+        <el-radio-button label="matrix">矩阵编辑（按 Key 多语言）</el-radio-button>
+        <el-radio-button label="list">明细列表</el-radio-button>
+      </el-radio-group>
+      <span class="mode-hint" v-if="viewMode === 'matrix'">每行一个「模块 + Key」，各语言为一列，可一次配置并批量保存。建议先按「模块」筛选。</span>
+    </div>
+
     <el-form :inline="true" :model="searchForm" class="search-bar">
       <el-form-item>
         <el-input v-model="searchForm.keyword" placeholder="翻译 Key / 内容" clearable @clear="handleSearch" @keyup.enter="handleSearch" style="width: 180px" />
@@ -9,7 +17,7 @@
           <el-option v-for="c in countryOptions" :key="c.code" :label="`${c.name} (${c.code})`" :value="c.code" />
         </el-select>
       </el-form-item>
-      <el-form-item>
+      <el-form-item v-if="viewMode === 'list'">
         <el-select v-model="searchForm.languageCode" placeholder="语言" clearable @change="handleSearch" style="width: 140px">
           <el-option v-for="l in languageOptions" :key="l.code" :label="`${l.name} (${l.code})`" :value="l.code" />
         </el-select>
@@ -32,11 +40,11 @@
         <el-button @click="handleReset">重置</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" v-permission="'i18n:add'" @click="handleCreate">新增翻译</el-button>
+        <el-button type="primary" v-permission="'i18n:add'" @click="onCreate">新增翻译</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="success" :disabled="dirtyCount === 0" :loading="batchLoading" v-permission="'i18n:edit'" @click="handleBatchSave">
-          批量保存{{ dirtyCount ? `（${dirtyCount}）` : '' }}
+        <el-button type="success" :disabled="currentDirty === 0" :loading="batchLoading" v-permission="'i18n:edit'" @click="onBatchSave">
+          批量保存{{ currentDirty ? `（${currentDirty}）` : '' }}
         </el-button>
       </el-form-item>
       <el-form-item>
@@ -51,15 +59,53 @@
     </el-form>
 
     <el-alert
-      v-if="dirtyCount > 0"
+      v-if="currentDirty > 0"
       type="warning"
       :closable="false"
       show-icon
-      :title="`有 ${dirtyCount} 条翻译内容已修改但未保存，点击「批量保存」提交`"
+      :title="`有 ${currentDirty} 处翻译内容已修改但未保存，点击「批量保存」提交`"
       style="margin-bottom: 12px"
     />
 
-    <el-table :data="tableData" border stripe v-loading="loading">
+    <!-- ============ 矩阵编辑：一行一个 Key，多语言列 ============ -->
+    <el-table v-if="viewMode === 'matrix'" :data="groupData" border stripe v-loading="loading" max-height="62vh" size="small">
+      <el-table-column prop="namespaceCode" label="模块" width="120" fixed show-overflow-tooltip />
+      <el-table-column label="翻译 Key" width="210" fixed show-overflow-tooltip>
+        <template #default="{ row }">
+          <div class="key-cell">{{ row.translationKey }}</div>
+          <el-tag v-if="row.countryCode" size="small" type="info" effect="plain">{{ row.countryCode }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column v-for="l in languageOptions" :key="l.code" :label="`${l.nativeName || l.name} · ${l.code}`" min-width="200">
+        <template #default="{ row }">
+          <el-input
+            v-model="matrixEdit[cellKey(row, l.code)]"
+            type="textarea"
+            :autosize="{ minRows: 1, maxRows: 4 }"
+            :placeholder="row.values && row.values[l.code] ? '' : '缺失'"
+            :class="{
+              'dirty-cell': matrixEdit[cellKey(row, l.code)] !== matrixOriginal[cellKey(row, l.code)],
+              'missing-cell': !matrixEdit[cellKey(row, l.code)],
+            }"
+          />
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="80" fixed="right" align="center">
+        <template #default="{ row }">
+          <el-popconfirm title="删除该 Key 的全部语言翻译？" confirm-button-text="确认" cancel-button-text="取消" @confirm="handleMatrixDelete(row)">
+            <template #reference>
+              <el-button link type="danger" v-permission="'i18n:delete'">删除</el-button>
+            </template>
+          </el-popconfirm>
+        </template>
+      </el-table-column>
+      <template #empty>
+        <el-empty description="暂无数据" />
+      </template>
+    </el-table>
+
+    <!-- ============ 明细列表（保留原有单条编辑/状态/删除） ============ -->
+    <el-table v-else :data="tableData" border stripe v-loading="loading">
       <el-table-column prop="countryCode" label="国家" width="90">
         <template #default="{ row }">{{ row.countryCode || '通用' }}</template>
       </el-table-column>
@@ -73,7 +119,6 @@
             type="textarea"
             :autosize="{ minRows: 1, maxRows: 4 }"
             :class="{ 'dirty-cell': isDirty(row) }"
-            @input="markDirty(row)"
           />
         </template>
       </el-table-column>
@@ -110,7 +155,36 @@
       @change="fetchData"
     />
 
-    <!-- 新增 / 编辑翻译 -->
+    <!-- 矩阵：新增 Key（一次配多语言） -->
+    <el-dialog v-model="matrixCreateVisible" title="新增翻译 Key（一次配置多语言）" width="720px">
+      <el-form :model="matrixForm" label-width="90px">
+        <el-form-item label="模块" required>
+          <el-select v-model="matrixForm.namespaceCode" placeholder="请选择模块" filterable style="width: 100%">
+            <el-option v-for="n in namespaceOptions" :key="n.code" :label="n.code" :value="n.code" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="翻译 Key" required>
+          <el-input v-model="matrixForm.translationKey" placeholder="如 address.add" />
+        </el-form-item>
+        <el-form-item label="国家">
+          <el-select v-model="matrixForm.countryCode" placeholder="留空表示通用（所有国家）" clearable filterable style="width: 100%">
+            <el-option v-for="c in countryOptions" :key="c.code" :label="`${c.name} (${c.code})`" :value="c.code" />
+          </el-select>
+        </el-form-item>
+        <el-divider content-position="left">各语言翻译（可只填部分，留空则不创建该语言）</el-divider>
+        <el-form-item v-for="l in languageOptions" :key="l.code" :label="l.code">
+          <el-input v-model="matrixValues[l.code]" :placeholder="`${l.nativeName || l.name}`">
+            <template #prepend>{{ l.nativeName || l.name }}</template>
+          </el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="matrixCreateVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="handleMatrixCreate">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 明细：新增 / 编辑翻译 -->
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑翻译' : '新增翻译'" width="650px" @close="resetForm">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="110px">
         <el-form-item label="国家" prop="countryCode">
@@ -245,17 +319,28 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { useClipboard } from '@vueuse/core'
-import { i18nApi, type I18nTranslation, type I18nCountry, type I18nLanguage, type I18nNamespace, type PageData } from '@/api/i18n'
+import {
+  i18nApi,
+  type I18nTranslation,
+  type I18nTranslationGroup,
+  type I18nBatchEntry,
+  type I18nCountry,
+  type I18nLanguage,
+  type I18nNamespace,
+  type PageData,
+} from '@/api/i18n'
 
 defineOptions({ name: 'I18nTranslationView' })
 
 const { copy } = useClipboard()
 
+const viewMode = ref<'matrix' | 'list'>('matrix')
 const loading = ref(false)
 const submitLoading = ref(false)
 const importLoading = ref(false)
 const batchLoading = ref(false)
 const tableData = ref<I18nTranslation[]>([])
+const groupData = ref<I18nTranslationGroup[]>([])
 const total = ref(0)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
@@ -267,9 +352,13 @@ const countryOptions = ref<I18nCountry[]>([])
 const languageOptions = ref<I18nLanguage[]>([])
 const namespaceOptions = ref<I18nNamespace[]>([])
 
-// 行内编辑：id -> 当前编辑值
+// 明细列表行内编辑：id -> 当前编辑值
 const editValues = reactive<Record<number, string>>({})
 const originalValues = reactive<Record<number, string>>({})
+
+// 矩阵编辑：cellKey -> 当前编辑值
+const matrixEdit = reactive<Record<string, string>>({})
+const matrixOriginal = reactive<Record<string, string>>({})
 
 const searchForm = reactive({
   keyword: '',
@@ -319,14 +408,24 @@ const importRules: FormRules = {
 const exportDialogVisible = ref(false)
 const exportJsonText = ref('')
 
+/* ============ 矩阵：dirty 跟踪 ============ */
+function gk(g: I18nTranslationGroup) {
+  return `${g.namespaceCode}|${g.translationKey}|${g.countryCode || ''}`
+}
+function cellKey(g: I18nTranslationGroup, lang: string) {
+  return `${gk(g)}|${lang}`
+}
+const matrixDirtyCount = computed(() =>
+  Object.keys(matrixEdit).filter((k) => matrixEdit[k] !== matrixOriginal[k]).length,
+)
+
+/* ============ 明细：dirty 跟踪 ============ */
 function isDirty(row: I18nTranslation) {
   return editValues[row.id] !== originalValues[row.id]
 }
 const dirtyCount = computed(() => tableData.value.filter((r) => editValues[r.id] !== originalValues[r.id]).length)
 
-function markDirty(_row: I18nTranslation) {
-  // v-model 已更新 editValues，dirtyCount 为 computed 自动刷新
-}
+const currentDirty = computed(() => (viewMode.value === 'matrix' ? matrixDirtyCount.value : dirtyCount.value))
 
 async function loadCountries() {
   try {
@@ -349,7 +448,11 @@ async function loadNamespaces() {
   } catch { /* ignore */ }
 }
 
-async function fetchData() {
+function fetchData() {
+  return viewMode.value === 'matrix' ? fetchGrouped() : fetchList()
+}
+
+async function fetchList() {
   loading.value = true
   try {
     const { data: res } = await i18nApi.getTranslations({
@@ -365,7 +468,6 @@ async function fetchData() {
       const pageData = res.data as PageData<I18nTranslation>
       tableData.value = pageData.list
       total.value = pageData.total
-      // 重置行内编辑缓存
       for (const k of Object.keys(editValues)) delete editValues[Number(k)]
       for (const k of Object.keys(originalValues)) delete originalValues[Number(k)]
       pageData.list.forEach((row) => {
@@ -382,6 +484,46 @@ async function fetchData() {
   }
 }
 
+async function fetchGrouped() {
+  loading.value = true
+  try {
+    const { data: res } = await i18nApi.getGroupedTranslations({
+      keyword: searchForm.keyword || undefined,
+      countryCode: searchForm.countryCode || undefined,
+      namespaceCode: searchForm.namespaceCode || undefined,
+      status: searchForm.status || undefined,
+      page: searchForm.page,
+      pageSize: searchForm.pageSize,
+    })
+    if (res.code === 200) {
+      const pageData = res.data as PageData<I18nTranslationGroup>
+      groupData.value = pageData.list || []
+      total.value = pageData.total
+      for (const k of Object.keys(matrixEdit)) delete matrixEdit[k]
+      for (const k of Object.keys(matrixOriginal)) delete matrixOriginal[k]
+      groupData.value.forEach((g) => {
+        languageOptions.value.forEach((l) => {
+          const ck = cellKey(g, l.code)
+          const v = g.values?.[l.code]?.textValue ?? ''
+          matrixEdit[ck] = v
+          matrixOriginal[ck] = v
+        })
+      })
+    } else {
+      ElMessage.error(res.message || '获取数据失败')
+    }
+  } catch {
+    ElMessage.error('获取数据失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+function handleSwitchMode() {
+  searchForm.page = 1
+  fetchData()
+}
+
 function handleSearch() {
   searchForm.page = 1
   fetchData()
@@ -392,6 +534,118 @@ function handleReset() {
   handleSearch()
 }
 
+function onCreate() {
+  if (viewMode.value === 'matrix') openMatrixCreate()
+  else handleCreate()
+}
+
+function onBatchSave() {
+  if (viewMode.value === 'matrix') handleMatrixSave()
+  else handleBatchSave()
+}
+
+/* ============ 矩阵：批量保存 ============ */
+async function handleMatrixSave() {
+  const entries: I18nBatchEntry[] = []
+  groupData.value.forEach((g) => {
+    languageOptions.value.forEach((l) => {
+      const ck = cellKey(g, l.code)
+      if (matrixEdit[ck] !== matrixOriginal[ck]) {
+        entries.push({
+          namespaceCode: g.namespaceCode,
+          translationKey: g.translationKey,
+          countryCode: g.countryCode || null,
+          languageCode: l.code,
+          textValue: matrixEdit[ck] ?? '',
+        })
+      }
+    })
+  })
+  if (entries.length === 0) return
+  batchLoading.value = true
+  try {
+    const { data: res } = await i18nApi.batchSaveTranslations(entries)
+    if (res.code === 200) {
+      const r = res.data || ({} as any)
+      ElMessage.success(`批量保存成功：新增 ${r.created ?? 0}，更新 ${r.updated ?? 0}${r.failed ? `，失败 ${r.failed}` : ''}`)
+      fetchGrouped()
+    } else {
+      ElMessage.error(res.message || '批量保存失败')
+    }
+  } catch {
+    ElMessage.error('批量保存失败')
+  } finally {
+    batchLoading.value = false
+  }
+}
+
+/* ============ 矩阵：新增 Key（多语言一次提交） ============ */
+const matrixCreateVisible = ref(false)
+const matrixForm = reactive({ namespaceCode: '', translationKey: '', countryCode: '' })
+const matrixValues = reactive<Record<string, string>>({})
+
+function openMatrixCreate() {
+  matrixForm.namespaceCode = searchForm.namespaceCode || ''
+  matrixForm.translationKey = ''
+  matrixForm.countryCode = searchForm.countryCode || ''
+  for (const k of Object.keys(matrixValues)) delete matrixValues[k]
+  languageOptions.value.forEach((l) => { matrixValues[l.code] = '' })
+  matrixCreateVisible.value = true
+}
+
+async function handleMatrixCreate() {
+  if (!matrixForm.namespaceCode) { ElMessage.warning('请选择模块'); return }
+  if (!matrixForm.translationKey.trim()) { ElMessage.warning('翻译 Key 不能为空'); return }
+  const entries: I18nBatchEntry[] = []
+  languageOptions.value.forEach((l) => {
+    const v = matrixValues[l.code]
+    if (v && v.trim()) {
+      entries.push({
+        namespaceCode: matrixForm.namespaceCode,
+        translationKey: matrixForm.translationKey.trim(),
+        countryCode: matrixForm.countryCode || null,
+        languageCode: l.code,
+        textValue: v,
+      })
+    }
+  })
+  if (entries.length === 0) { ElMessage.warning('请至少填写一个语言的翻译'); return }
+  submitLoading.value = true
+  try {
+    const { data: res } = await i18nApi.batchSaveTranslations(entries)
+    if (res.code === 200) {
+      ElMessage.success('新增成功')
+      matrixCreateVisible.value = false
+      fetchGrouped()
+    } else {
+      ElMessage.error(res.message || '新增失败')
+    }
+  } catch {
+    ElMessage.error('新增失败')
+  } finally {
+    submitLoading.value = false
+  }
+}
+
+/* ============ 矩阵：删除整个 Key（全部语言） ============ */
+async function handleMatrixDelete(g: I18nTranslationGroup) {
+  const ids = Object.values(g.values || {}).map((c) => c.id).filter(Boolean)
+  if (ids.length === 0) return
+  let fail = 0
+  for (const id of ids) {
+    try {
+      const { data: res } = await i18nApi.deleteTranslation(id)
+      if (res.code !== 200) fail++
+    } catch {
+      fail++
+    }
+  }
+  if (fail === 0) ElMessage.success('删除成功')
+  else ElMessage.warning(`部分删除失败（${fail} 条）`)
+  fetchGrouped()
+}
+
+/* ============ 明细列表：批量保存（逐条更新） ============ */
 async function handleBatchSave() {
   const dirtyRows = tableData.value.filter((r) => editValues[r.id] !== originalValues[r.id])
   if (dirtyRows.length === 0) return
@@ -414,7 +668,7 @@ async function handleBatchSave() {
   batchLoading.value = false
   if (fail === 0) ElMessage.success(`批量保存成功，共 ${ok} 条`)
   else ElMessage.warning(`保存完成：成功 ${ok} 条，失败 ${fail} 条`)
-  fetchData()
+  fetchList()
 }
 
 function handleCreate() {
@@ -447,7 +701,6 @@ async function handleSubmit() {
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid) return
 
-  // 国家留空表示「通用」，转为 null 以匹配后端通用翻译查找逻辑
   const payload = { ...form, countryCode: form.countryCode ? form.countryCode : null }
   submitLoading.value = true
   try {
@@ -483,7 +736,7 @@ async function handleToggleStatus(row: I18nTranslation) {
     const { data: res } = await i18nApi.updateTranslationStatus(row.id, newStatus)
     if (res.code === 200) {
       ElMessage.success('状态已更新')
-      fetchData()
+      fetchList()
     } else {
       ElMessage.error(res.message || '状态更新失败')
     }
@@ -497,7 +750,7 @@ async function handleDelete(row: I18nTranslation) {
     const { data: res } = await i18nApi.deleteTranslation(row.id)
     if (res.code === 200) {
       ElMessage.success('删除成功')
-      fetchData()
+      fetchList()
     } else {
       ElMessage.error(res.message || '删除失败')
     }
@@ -563,7 +816,7 @@ function resetImportForm() {
 
 async function handleOpenExport() {
   if (!searchForm.languageCode) {
-    ElMessage.warning('请先在上方筛选选择「语言」再导出')
+    ElMessage.warning('请先在上方筛选选择「语言」再导出（明细列表模式可选语言）')
     return
   }
   try {
@@ -675,7 +928,11 @@ onMounted(async () => {
 
 <style scoped>
 .i18n-page { padding: 20px; }
+.mode-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.mode-hint { color: #909399; font-size: 12px; }
 .search-bar { margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
 .hint { margin-left: 8px; color: #909399; font-size: 12px; }
+.key-cell { font-family: var(--el-font-family, monospace); font-size: 12px; word-break: break-all; margin-bottom: 2px; }
 :deep(.dirty-cell .el-textarea__inner) { background-color: #fdf6ec; }
+:deep(.missing-cell .el-textarea__inner) { background-color: #fef0f0; }
 </style>

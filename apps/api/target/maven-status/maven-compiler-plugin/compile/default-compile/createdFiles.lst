@@ -31,6 +31,7 @@ com\mall\api\modules\export\ExportService.class
 com\mall\api\modules\customer\controller\OrderController.class
 com\mall\api\modules\product\mapper\ProductMapper.class
 com\mall\api\modules\banner\BannerService.class
+com\mall\api\modules\publicapi\controller\PublicV1I18nController.class
 com\mall\api\config\RateLimitInterceptor$RateLimitBucket.class
 com\mall\api\modules\i18n\service\AdminI18nService.class
 com\mall\api\modules\product\entity\ProductTranslation.class
@@ -73,6 +74,7 @@ com\mall\api\modules\category\entity\CategoryTranslation.class
 com\mall\api\modules\agent\mapper\AgentMapper.class
 com\mall\api\common\enums\UserRole.class
 com\mall\api\modules\support\mapper\SupportReadStateMapper.class
+com\mall\api\modules\publicapi\dto\PublicLocale.class
 com\mall\api\modules\system\mapper\SysUserRoleMapper.class
 com\mall\api\modules\category\mapper\CategoryTranslationMapper.class
 com\mall\api\modules\i18n\service\I18nService.class
@@ -87,6 +89,7 @@ com\mall\api\security\UserPrincipal.class
 com\mall\api\modules\admin\controller\AdminI18nController.class
 com\mall\api\modules\auth\service\AuthService.class
 com\mall\api\security\UserDetailsServiceImpl$CacheEntry.class
+com\mall\api\modules\admin\controller\AdminV1I18nController.class
 com\mall\api\modules\system\controller\AdminMerchantController.class
 com\mall\api\modules\support\dto\QuickReplyRequest.class
 com\mall\api\modules\order\OrderService.class
@@ -113,6 +116,7 @@ com\mall\api\modules\merchant\entity\Merchant.class
 com\mall\api\modules\catalog\PlatformProductService.class
 com\mall\api\modules\upload\entity\FileResource.class
 com\mall\api\modules\support\service\SupportService.class
+com\mall\api\modules\publicapi\dto\LocaleCatalog.class
 com\mall\api\modules\auth\dto\MenuItem.class
 com\mall\api\modules\catalog\mapper\PlatformProductTranslationMapper.class
 com\mall\api\modules\order\dto\CreateOrderRequest.class

@@ -12,6 +12,12 @@ export const staticRoutes = [
     component: () => import('@/views/login/index.vue'),
     meta: { keepAlive: false },
   },
+  {
+    path: '/merchant-apply',
+    name: 'merchantApply',
+    component: () => import('@/views/login/apply.vue'),
+    meta: { keepAlive: false },
+  },
   // 重定向路由(暂时注释掉，因为redirect路由会导致加载缓慢)
   // {
   //   path: '/redirect/:path(.*)',

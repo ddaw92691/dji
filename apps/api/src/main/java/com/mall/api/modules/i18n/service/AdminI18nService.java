@@ -367,6 +367,60 @@ public class AdminI18nService {
         return translationMapper.selectPage(new Page<>(page, pageSize), qw);
     }
 
+    /**
+     * 按 (模块 + key + 国家) 透视分组的翻译列表：一行一个 key，values 里按语言聚合所有翻译。
+     * 用于总后台「矩阵编辑」视图，一次配置多语言。注意不按 languageCode 过滤（需要拿到该 key 的全部语言）。
+     */
+    public Map<String, Object> getGroupedTranslations(String keyword, String countryCode, String namespaceCode,
+                                                      String status, int page, int pageSize) {
+        LambdaQueryWrapper<I18nTranslation> qw = new LambdaQueryWrapper<>();
+        qw.eq(I18nTranslation::getDeleted, false);
+        if (keyword != null && !keyword.isEmpty())
+            qw.and(w -> w.like(I18nTranslation::getTranslationKey, keyword).or().like(I18nTranslation::getTextValue, keyword));
+        if (countryCode != null && !countryCode.isEmpty()) qw.eq(I18nTranslation::getCountryCode, countryCode);
+        if (namespaceCode != null && !namespaceCode.isEmpty()) qw.eq(I18nTranslation::getNamespaceCode, namespaceCode);
+        if (status != null && !status.isEmpty()) qw.eq(I18nTranslation::getStatus, status);
+        qw.orderByAsc(I18nTranslation::getNamespaceCode, I18nTranslation::getTranslationKey);
+        List<I18nTranslation> rows = translationMapper.selectList(qw);
+
+        LinkedHashMap<String, Map<String, Object>> groups = new LinkedHashMap<>();
+        for (I18nTranslation t : rows) {
+            String cc = t.getCountryCode() == null ? "" : t.getCountryCode();
+            String gk = t.getNamespaceCode() + " " + t.getTranslationKey() + " " + cc;
+            Map<String, Object> g = groups.computeIfAbsent(gk, k -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("namespaceCode", t.getNamespaceCode());
+                m.put("translationKey", t.getTranslationKey());
+                m.put("countryCode", t.getCountryCode());
+                m.put("description", t.getDescription());
+                m.put("updatedAt", t.getUpdatedAt());
+                m.put("values", new LinkedHashMap<String, Object>());
+                return m;
+            });
+            @SuppressWarnings("unchecked")
+            Map<String, Object> values = (Map<String, Object>) g.get("values");
+            Map<String, Object> cell = new LinkedHashMap<>();
+            cell.put("id", t.getId());
+            cell.put("textValue", t.getTextValue());
+            cell.put("status", t.getStatus());
+            values.put(t.getLanguageCode(), cell);
+            if (t.getDescription() != null && !t.getDescription().isBlank()) g.put("description", t.getDescription());
+        }
+
+        List<Map<String, Object>> all = new ArrayList<>(groups.values());
+        int total = all.size();
+        int from = Math.max(0, (page - 1) * pageSize);
+        int to = Math.min(total, from + pageSize);
+        List<Map<String, Object>> pageList = from >= total ? Collections.emptyList() : new ArrayList<>(all.subList(from, to));
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("list", pageList);
+        result.put("total", total);
+        result.put("page", page);
+        result.put("pageSize", pageSize);
+        return result;
+    }
+
     @Transactional
     public I18nTranslation createTranslation(I18nTranslation t) {
         if (t.getNamespaceCode() == null || t.getNamespaceCode().isBlank()) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "模块不能为空");

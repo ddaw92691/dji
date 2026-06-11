@@ -10,8 +10,8 @@ export default function LoginPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'login'
   const [mode, setMode] = useState<AuthMode>(initialMode)
-  const [account, setAccount] = useState('customer@example.com')
-  const [password, setPassword] = useState('customer123456')
+  const [account, setAccount] = useState('')
+  const [password, setPassword] = useState('')
   const [registerEmail, setRegisterEmail] = useState('')
   const [registerPhone, setRegisterPhone] = useState('')
   const [registerPassword, setRegisterPassword] = useState('')
@@ -215,6 +215,7 @@ function LoginForm({
             type="text"
             value={account}
             onChange={(e) => onAccountChange(e.target.value)}
+            autoComplete="off"
             className="h-10 w-full border border-[#d8d8d8] px-3 text-[14px] outline-none transition focus:border-[#111]"
             placeholder={t('auth.placeholder.emailOrPhone', 'Email or phone')}
             required
@@ -225,6 +226,7 @@ function LoginForm({
             type="password"
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
+            autoComplete="new-password"
             className="h-10 w-full border border-[#d8d8d8] px-3 text-[14px] outline-none transition focus:border-[#111]"
             placeholder={t('auth.field.password', 'Password')}
             required
@@ -313,6 +315,7 @@ function RegisterForm({
             type="email"
             value={email}
             onChange={(e) => onEmailChange(e.target.value)}
+            autoComplete="off"
             className="h-10 w-full border border-[#d8d8d8] px-3 text-[14px] outline-none transition focus:border-[#111]"
             placeholder={t('auth.placeholder.email', 'your@email.com')}
             required
@@ -323,6 +326,7 @@ function RegisterForm({
             type="tel"
             value={phone}
             onChange={(e) => onPhoneChange(e.target.value)}
+            autoComplete="off"
             className="h-10 w-full border border-[#d8d8d8] px-3 text-[14px] outline-none transition focus:border-[#111]"
             placeholder="+81 90 0000 0000"
           />
@@ -332,6 +336,7 @@ function RegisterForm({
             type="password"
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
+            autoComplete="new-password"
             className="h-10 w-full border border-[#d8d8d8] px-3 text-[14px] outline-none transition focus:border-[#111]"
             placeholder={t('auth.placeholder.passwordMin', 'Min 6 characters')}
             required

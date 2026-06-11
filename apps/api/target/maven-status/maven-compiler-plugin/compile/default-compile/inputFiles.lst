@@ -26,6 +26,7 @@ C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\mo
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\admin\controller\AdminProductController.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\admin\controller\AdminRefundController.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\admin\controller\AdminSettingController.java
+C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\admin\controller\AdminV1I18nController.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\admin\controller\AuditLogController.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\agent\controller\AgentController.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\agent\entity\Agent.java
@@ -134,6 +135,9 @@ C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\mo
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\product\mapper\ProductTranslationMapper.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\product\ProductService.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\publicapi\controller\PublicController.java
+C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\publicapi\controller\PublicV1I18nController.java
+C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\publicapi\dto\LocaleCatalog.java
+C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\publicapi\dto\PublicLocale.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\realtime\RealtimeEvent.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\realtime\RealtimeService.java
 C:\Users\Administrator\Videos\mall-system\apps\api\src\main\java\com\mall\api\modules\realtime\StompAuthInterceptor.java

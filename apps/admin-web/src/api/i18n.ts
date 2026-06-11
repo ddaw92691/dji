@@ -33,6 +33,20 @@ export interface PageData<T> {
   list: T[]; total: number; page: number; pageSize: number
 }
 
+// 矩阵编辑：一个 (模块 + key + 国家) 一行，values 按语言聚合
+export interface I18nTranslationCell {
+  id: number; textValue: string; status: string
+}
+export interface I18nTranslationGroup {
+  namespaceCode: string; translationKey: string; countryCode: string | null
+  description: string | null; updatedAt: string | null
+  values: Record<string, I18nTranslationCell>
+}
+export interface I18nBatchEntry {
+  namespaceCode: string; translationKey: string; languageCode: string
+  countryCode?: string | null; textValue: string; status?: string
+}
+
 export const i18nApi = {
   getCountries: (params?: any) => request.get<ICommonResponse<PageData<I18nCountry>>>('/admin/i18n/countries', { params }),
   createCountry: (data: any) => request.post<ICommonResponse<I18nCountry>>('/admin/i18n/countries', data),
@@ -58,6 +72,8 @@ export const i18nApi = {
   deleteNamespace: (id: number) => request.delete<ICommonResponse<any>>(`/admin/i18n/namespaces/${id}`),
 
   getTranslations: (params?: any) => request.get<ICommonResponse<PageData<I18nTranslation>>>('/admin/i18n/translations', { params }),
+  getGroupedTranslations: (params?: any) => request.get<ICommonResponse<PageData<I18nTranslationGroup>>>('/admin/i18n/translations/grouped', { params }),
+  batchSaveTranslations: (entries: I18nBatchEntry[]) => request.post<ICommonResponse<{ created: number; updated: number; skipped: number; failed: number }>>('/admin/i18n/translations/batch', { entries }),
   createTranslation: (data: any) => request.post<ICommonResponse<I18nTranslation>>('/admin/i18n/translations', data),
   updateTranslation: (id: number, data: any) => request.put<ICommonResponse<I18nTranslation>>(`/admin/i18n/translations/${id}`, data),
   updateTranslationStatus: (id: number, status: string) => request.put<ICommonResponse<any>>(`/admin/i18n/translations/${id}/status`, { status }),

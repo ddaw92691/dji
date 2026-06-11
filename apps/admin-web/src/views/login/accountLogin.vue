@@ -28,7 +28,7 @@
         </el-select>
       </el-form-item>
       <el-form-item prop="username">
-        <el-input v-model="loginForm.username" :placeholder="$t('login.usernamePlaceholder')" />
+        <el-input v-model="loginForm.username" autocomplete="off" :placeholder="$t('login.usernamePlaceholder')" />
       </el-form-item>
 
       <el-form-item prop="password">
@@ -36,6 +36,7 @@
           v-model="loginForm.password"
           type="password"
           show-password
+          autocomplete="new-password"
           :placeholder="$t('login.passwordPlaceholder')"
         />
       </el-form-item>
@@ -126,7 +127,7 @@ const loginForm = ref({
 type RolePreset = 'super_admin' | 'admin' | 'guest'
 
 // 默认角色
-const rolePreset = ref<RolePreset>('super_admin')
+const rolePreset = ref<RolePreset | ''>('')
 // 角色选项
 const roleOptions: Array<{
   label: string
@@ -136,10 +137,10 @@ const roleOptions: Array<{
   {
     label: 'Super Admin',
     value: 'super_admin',
-    preset: { username: 'admin@example.com', password: 'admin123456' },
+    preset: { username: '', password: '' },
   },
-  { label: 'Admin', value: 'admin', preset: { username: 'merchant@example.com', password: 'merchant123456' } },
-  { label: 'Guest', value: 'guest', preset: { username: 'customer@example.com', password: 'customer123456' } },
+  { label: 'Admin', value: 'admin', preset: { username: '', password: '' } },
+  { label: 'Guest', value: 'guest', preset: { username: '', password: '' } },
 ]
 
 /**
@@ -157,10 +158,9 @@ const getBuiltInRole = (username: string): RolePreset | null => {
  * 自动填充对应角色的用户名和密码
  */
 const applyPreset = (value: RolePreset) => {
-  const target = roleOptions.find((item) => item.value === value)
-  if (!target) return
-  loginForm.value.username = target.preset.username
-  loginForm.value.password = target.preset.password
+  if (!roleOptions.some((item) => item.value === value)) return
+  loginForm.value.username = ''
+  loginForm.value.password = ''
 }
 
 /**
@@ -168,6 +168,13 @@ const applyPreset = (value: RolePreset) => {
  * 包括角色选择和用户名
  */
 const loadRememberedLoginInfo = () => {
+  localStorage.removeItem(REMEMBER_LOGIN_KEY)
+  loginForm.value.username = ''
+  loginForm.value.password = ''
+  loginForm.value.remember = false
+  return
+
+  /*
   const rememberedInfo = localStorage.getItem(REMEMBER_LOGIN_KEY)
   if (!rememberedInfo) return
 
@@ -188,6 +195,7 @@ const loadRememberedLoginInfo = () => {
     console.error('解析记住的登录信息失败:', error)
     localStorage.removeItem(REMEMBER_LOGIN_KEY)
   }
+  */
 }
 
 /**
@@ -261,9 +269,6 @@ const loginRules = reactive<FormRules>({
 onMounted(() => {
   loadRememberedLoginInfo()
   // 如果没有记住的信息，应用默认角色
-  if (!loginForm.value.remember) {
-    applyPreset(rolePreset.value)
-  }
 })
 </script>
 
