@@ -35,7 +35,7 @@
       </el-table-column>
       <el-table-column prop="merchantStock" label="库存" width="80" align="center" />
       <el-table-column prop="salePrice" label="售价" width="100" align="right" />
-      <el-table-column prop="merchantPrice" label="会员价" width="90" align="right" />
+      <el-table-column prop="merchantPrice" label="货款成本" width="100" align="right" />
       <el-table-column prop="profitAmount" label="利润" width="90" align="right" />
       <el-table-column prop="listedAt" label="上架时间" width="160" />
       <el-table-column label="操作" width="120" fixed="right">

@@ -12,11 +12,11 @@
     >
       <template #tableOperationLeft>
         <el-button type="primary" :icon="menuStore.iconComponents.Plus" v-permission="['role:add']" @click="openCreate">
-          Add Role
+          新增角色
         </el-button>
         <el-button type="danger" :icon="menuStore.iconComponents.Delete"
           :disabled="selectedIds.length === 0" v-permission="['role:delete']" @click="batchDelete">
-          Batch Delete
+          批量删除
         </el-button>
       </template>
       <template #status="{ row }">
@@ -26,14 +26,14 @@
         <el-button type="primary" link v-permission="['role:edit']" @click="openEdit(row)">编辑</el-button>
         <el-button type="info" link v-permission="['role:assign']" @click="openAssignMenus(row)">分配菜单</el-button>
         <el-popconfirm
-          :title="row.status === 'active' ? 'Disable this role?' : 'Enable this role?'"
+          :title="row.status === 'ENABLE' ? '确定禁用该角色吗？' : '确定启用该角色吗？'"
           :placement="POPCONFIRM_CONFIG.placement"
           :width="POPCONFIRM_CONFIG.width"
           @confirm="handleToggleStatus(row)"
         >
           <template #reference>
-            <el-button link :type="row.status === 'active' ? 'danger' : 'success'" v-permission="['role:edit']">
-              {{ row.status === 'active' ? 'Disable' : 'Enable' }}
+            <el-button link :type="row.status === 'ENABLE' ? 'danger' : 'success'" v-permission="['role:edit']">
+              {{ row.status === 'ENABLE' ? '禁用' : '启用' }}
             </el-button>
           </template>
         </el-popconfirm>
@@ -50,7 +50,7 @@
       </template>
     </BasePage>
 
-    <BaseDialog v-model="dialogVisible" :title="editForm.id ? 'Edit Role' : 'Create Role'" width="500" @close="dialogVisible = false">
+    <BaseDialog v-model="dialogVisible" :title="editForm.id ? '编辑角色' : '新增角色'" width="500" @close="dialogVisible = false">
       <el-form ref="formRef" :model="editForm" :rules="formRules" label-width="100px">
         <el-form-item label="代码" prop="code"><el-input v-model="editForm.code" :disabled="!!editForm.id" /></el-form-item>
         <el-form-item label="名称" prop="name"><el-input v-model="editForm.name" /></el-form-item>
@@ -67,7 +67,14 @@
       </template>
     </BaseDialog>
 
-    <BaseDialog v-model="menuVisible" title="分配菜单" width="500" @close="menuVisible = false">
+    <BaseDialog v-model="menuVisible" title="分配菜单权限" width="680" @close="menuVisible = false">
+      <el-alert
+        title="勾选代表该角色可访问对应功能；未勾选则该角色管理员不会拥有该菜单权限。"
+        type="info"
+        :closable="false"
+        show-icon
+        style="margin-bottom: 12px"
+      />
       <el-tree
         ref="menuTreeRef"
         :data="menuTreeData"
@@ -75,6 +82,7 @@
         node-key="id"
         :default-checked-keys="checkedMenuIds"
         :props="{ children: 'children', label: 'title' }"
+        check-strictly
         default-expand-all
       />
       <template #footer>
@@ -120,29 +128,29 @@ const editForm = reactive({
   name: '',
   description: '',
   sort: 0,
-  status: 'active' as string,
+  status: 'ENABLE' as string,
 })
 
 const formRules: FormRules = {
-  code: [{ required: true, message: 'Role code is required', trigger: 'blur' }],
-  name: [{ required: true, message: 'Role name is required', trigger: 'blur' }],
+  code: [{ required: true, message: '请输入角色编码', trigger: 'blur' }],
+  name: [{ required: true, message: '请输入角色名称', trigger: 'blur' }],
 }
 
 const searchFormConfig = ref<IFormConfig[]>([
-  { label: 'Code', prop: 'code', type: 'elInput', attrs: { placeholder: 'Search code...', clearable: true } },
-  { label: 'Name', prop: 'name', type: 'elInput', attrs: { placeholder: 'Search name...', clearable: true } },
-  { label: 'Status', prop: 'status', type: 'elSelect', attrs: { placeholder: 'Select', options: STATUS_OPTIONS, clearable: true } },
+  { label: '编码', prop: 'code', type: 'elInput', attrs: { placeholder: '搜索角色编码', clearable: true } },
+  { label: '名称', prop: 'name', type: 'elInput', attrs: { placeholder: '搜索角色名称', clearable: true } },
+  { label: '状态', prop: 'status', type: 'elSelect', attrs: { placeholder: '请选择状态', options: STATUS_OPTIONS, clearable: true } },
 ])
 
 const columns = ref([
   { type: 'selection', width: 55 },
-  { type: 'index', label: '#', width: 55, fixed: 'left' },
-  { prop: 'code', label: 'Code', minWidth: 160 },
-  { prop: 'name', label: 'Name', minWidth: 160 },
-  { prop: 'sort', label: 'Sort', width: 80 },
-  { prop: 'status', label: 'Status', width: 100 },
-  { prop: 'createTime', label: 'Created', minWidth: 160 },
-  { prop: 'operation', label: 'Actions', width: 300, fixed: 'right' },
+  { type: 'index', label: '序号', width: 55, fixed: 'left' },
+  { prop: 'code', label: '角色编码', minWidth: 160 },
+  { prop: 'name', label: '角色名称', minWidth: 160 },
+  { prop: 'sort', label: '排序', width: 80 },
+  { prop: 'status', label: '状态', width: 100 },
+  { prop: 'createdAt', label: '创建时间', minWidth: 160 },
+  { prop: 'operation', label: '操作', width: 300, fixed: 'right' },
 ])
 
 const onSelectionChange = (rows: Record<string, unknown>[]) => {
@@ -154,7 +162,21 @@ const fetchData = async (queryForm: Record<string, unknown>, page: number, pageS
   try {
     const normalizedSortOrder = sortOrder === 'asc' || sortOrder === 'desc' || sortOrder === '' ? sortOrder : undefined
     const { data: res } = await rolePage({ ...queryForm, page, pageSize, sortOrder: normalizedSortOrder })
-    if (res.code === 200) { tableData.value = res.data?.list || []; total.value = res.data?.total || 0 }
+    if (res.code === 200) {
+      const payload = res.data as any
+      const fullList = Array.isArray(payload) ? payload : payload?.list || []
+      const code = String(queryForm.code || '').trim().toLowerCase()
+      const name = String(queryForm.name || '').trim().toLowerCase()
+      const status = String(queryForm.status || '').trim()
+      const filtered = fullList.filter((role: any) => {
+        if (code && !String(role.code || '').toLowerCase().includes(code)) return false
+        if (name && !String(role.name || '').toLowerCase().includes(name)) return false
+        if (status && role.status !== status) return false
+        return true
+      })
+      total.value = Array.isArray(payload) ? filtered.length : payload?.total || filtered.length
+      tableData.value = Array.isArray(payload) ? filtered.slice((page - 1) * pageSize, page * pageSize) : filtered
+    }
   } catch { /* ignore */ } finally { loading.value = false }
 }
 
@@ -164,7 +186,7 @@ const resetForm = () => {
   editForm.name = ''
   editForm.description = ''
   editForm.sort = 0
-  editForm.status = 'active'
+  editForm.status = 'ENABLE'
   formRef.value?.resetFields()
 }
 
@@ -196,7 +218,7 @@ const handleSubmit = async () => {
     const payload = { code: editForm.code, name: editForm.name, description: editForm.description, sort: editForm.sort, status: editForm.status }
     const { data: res } = editForm.id ? await roleApi.updateRole(editForm.id, payload) : await roleApi.createRole(payload)
     if (res.code === 200) {
-      ElMessage.success(editForm.id ? 'Role updated' : 'Role created')
+      ElMessage.success(editForm.id ? '角色已更新' : '角色已创建')
       dialogVisible.value = false
       editForm.id ? basePageRef.value?.refreshCurrentPage() : basePageRef.value?.refreshToFirstPage()
     } else { ElMessage.error(res.message || '操作失败') }
@@ -204,7 +226,7 @@ const handleSubmit = async () => {
 }
 
 const handleToggleStatus = async (row: any) => {
-  const status = row.status === 'active' ? 'inactive' : 'active'
+  const status = row.status === 'ENABLE' ? 'DISABLE' : 'ENABLE'
   try {
     const { data: res } = await roleApi.updateRoleStatus(row.id, status)
     if (res.code === 200) { ElMessage.success('状态已更新'); basePageRef.value?.refreshCurrentPage() }
@@ -222,10 +244,10 @@ const handleDelete = async (id: string) => {
 
 const batchDelete = () => {
   Dialog.confirm({
-    title: 'Delete Roles',
-    content: `Are you sure you want to delete ${selectedIds.value.length} role(s)?`,
-    confirmText: 'Delete',
-    cancelText: 'Cancel',
+    title: '删除角色',
+    content: `确定要删除选中的 ${selectedIds.value.length} 个角色吗？`,
+    confirmText: '删除',
+    cancelText: '取消',
     onConfirm: async () => {
       const responses = await Promise.all(selectedIds.value.map((id) => roleApi.deleteRole(id)))
       const failed = responses.find(({ data }) => data.code !== 200)
@@ -237,20 +259,27 @@ const batchDelete = () => {
 
 const openAssignMenus = async (row: any) => {
   currentRoleId.value = row.id
-  checkedMenuIds.value = row.menuIds || []
   try {
-    const { data: res } = await menuPage()
-    if (res.code === 200) menuTreeData.value = res.data || []
-  } catch { menuTreeData.value = [] }
+    const [{ data: menuRes }, { data: roleMenuRes }] = await Promise.all([
+      menuPage(),
+      roleApi.getRoleMenus(row.id),
+    ])
+    menuTreeData.value = menuRes.code === 200 ? menuRes.data || [] : []
+    checkedMenuIds.value = roleMenuRes.code === 200 ? (roleMenuRes.data || []).map((id: unknown) => String(id)) : []
+  } catch {
+    menuTreeData.value = []
+    checkedMenuIds.value = []
+  }
   menuVisible.value = true
 }
 
 const handleAssignMenus = async () => {
   const checkedKeys = menuTreeRef.value?.getCheckedKeys(false) as string[] || []
   const halfCheckedKeys = menuTreeRef.value?.getHalfCheckedKeys() as string[] || []
+  const menuIds = Array.from(new Set([...checkedKeys, ...halfCheckedKeys])).map((id) => Number(id))
   menuSubmitLoading.value = true
   try {
-    const { data: res } = await roleApi.assignMenus(currentRoleId.value, [...checkedKeys, ...halfCheckedKeys])
+    const { data: res } = await roleApi.assignMenus(currentRoleId.value, menuIds)
     if (res.code === 200) { ElMessage.success('菜单已分配'); menuVisible.value = false }
     else { ElMessage.error(res.message || '分配失败') }
   } catch { ElMessage.error('分配失败') } finally { menuSubmitLoading.value = false }

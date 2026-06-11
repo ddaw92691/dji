@@ -188,6 +188,7 @@ public class AdminCustomerController {
     @Operation(summary = "创建虚拟客户")
     public ApiResponse<User> createVirtualCustomer(@RequestBody Map<String, Object> body) {
         String nickname = (String) body.getOrDefault("nickname", "Virtual Customer");
+        String email = (String) body.get("email");
         String virtualRemark = (String) body.get("virtualRemark");
         String countryCode = (String) body.getOrDefault("countryCode", "US");
         String languageCode = (String) body.getOrDefault("languageCode", "en");
@@ -196,9 +197,10 @@ public class AdminCustomerController {
 
         User user = new User();
         user.setUsername(username);
+        user.setEmail(email);
         user.setNickname(nickname);
         user.setRole("CUSTOMER");
-        user.setStatus(0);
+        user.setStatus(1);
         user.setIsVirtual(true);
         user.setVirtualRemark(virtualRemark);
         user.setCountryCode(countryCode);

@@ -14,13 +14,13 @@
     >
       <template #tableOperationLeft>
         <el-button type="primary" :icon="menuStore.iconComponents.Plus" v-permission="['menu:add']" @click="openCreate">
-          Add Menu
+          新增菜单
         </el-button>
       </template>
       <template #type="{ row }">
-        <BaseTag v-if="row.type === 'DIRECTORY'" type="info" text="Directory" />
-        <BaseTag v-else-if="row.type === 'MENU'" type="primary" text="Menu" />
-        <BaseTag v-else-if="row.type === 'BUTTON'" type="warning" text="Button" />
+        <BaseTag v-if="row.type === 'DIRECTORY'" type="info" text="目录" />
+        <BaseTag v-else-if="row.type === 'MENU'" type="primary" text="菜单" />
+        <BaseTag v-else-if="row.type === 'BUTTON'" type="warning" text="按钮" />
         <span v-else>{{ row.type }}</span>
       </template>
       <template #icon="{ row }">
@@ -32,7 +32,7 @@
         <BaseTag :type="getColorByValue(STATUS_OPTIONS, row.status)" :text="getLabelByValue(STATUS_OPTIONS, row.status)" />
       </template>
       <template #visible="{ row }">
-        <BaseTag :type="row.visible !== false ? 'success' : 'info'" :text="row.visible !== false ? 'Yes' : 'No'" />
+        <BaseTag :type="row.visible !== false ? 'success' : 'info'" :text="row.visible !== false ? '显示' : '隐藏'" />
       </template>
       <template #operation="{ row }">
         <el-button type="primary" link v-permission="['menu:edit']" @click="openEdit(row)">编辑</el-button>
@@ -49,7 +49,7 @@
       </template>
     </BasePage>
 
-    <BaseDialog v-model="dialogVisible" :title="editForm.id ? 'Edit Menu' : 'Create Menu'" width="600" @close="dialogVisible = false">
+    <BaseDialog v-model="dialogVisible" :title="editForm.id ? '编辑菜单' : '新增菜单'" width="600" @close="dialogVisible = false">
       <el-form ref="formRef" :model="editForm" :rules="formRules" label-width="100px">
         <el-form-item label="上级">
           <el-tree-select
@@ -132,46 +132,46 @@ const editForm = reactive({
   permission: '',
   sort: 0,
   visible: true,
-  status: 'active' as string,
+  status: 'ENABLE' as string,
 })
 
 const formRules: FormRules = {
-  appType: [{ required: true, message: 'App type is required', trigger: 'change' }],
-  type: [{ required: true, message: 'Type is required', trigger: 'change' }],
-  title: [{ required: true, message: 'Title is required', trigger: 'blur' }],
+  appType: [{ required: true, message: '请选择应用类型', trigger: 'change' }],
+  type: [{ required: true, message: '请选择菜单类型', trigger: 'change' }],
+  title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
 }
 
 const searchFormConfig = ref<IFormConfig[]>([
-  { label: 'Title', prop: 'title', type: 'elInput', attrs: { placeholder: 'Search...', clearable: true } },
-  { label: 'Path', prop: 'path', type: 'elInput', attrs: { placeholder: 'Path', clearable: true } },
+  { label: '标题', prop: 'title', type: 'elInput', attrs: { placeholder: '搜索标题', clearable: true } },
+  { label: '路径', prop: 'path', type: 'elInput', attrs: { placeholder: '搜索路径', clearable: true } },
   {
-    label: 'App Type', prop: 'appType', type: 'elSelect', attrs: {
-      placeholder: 'Select',
-      options: [{ label: 'ADMIN', value: 'ADMIN' }, { label: 'MERCHANT', value: 'MERCHANT' }],
+    label: '应用类型', prop: 'appType', type: 'elSelect', attrs: {
+      placeholder: '请选择',
+      options: [{ label: '总后台', value: 'ADMIN' }, { label: '商家后台', value: 'MERCHANT' }],
       clearable: true,
     },
   },
   {
-    label: 'Type', prop: 'type', type: 'elSelect', attrs: {
-      placeholder: 'Select',
-      options: [{ label: 'Directory', value: 'DIRECTORY' }, { label: 'Menu', value: 'MENU' }, { label: 'Button', value: 'BUTTON' }],
+    label: '类型', prop: 'type', type: 'elSelect', attrs: {
+      placeholder: '请选择',
+      options: [{ label: '目录', value: 'DIRECTORY' }, { label: '菜单', value: 'MENU' }, { label: '按钮', value: 'BUTTON' }],
       clearable: true,
     },
   },
-  { label: 'Status', prop: 'status', type: 'elSelect', attrs: { placeholder: 'Select', options: STATUS_OPTIONS, clearable: true } },
+  { label: '状态', prop: 'status', type: 'elSelect', attrs: { placeholder: '请选择', options: STATUS_OPTIONS, clearable: true } },
 ])
 
 const columns = ref([
-  { prop: 'title', label: 'Title', minWidth: 200 },
-  { prop: 'type', label: 'Type', width: 100 },
-  { prop: 'path', label: 'Path', minWidth: 200 },
-  { prop: 'icon', label: 'Icon', width: 80 },
-  { prop: 'permission', label: 'Permission', minWidth: 150 },
-  { prop: 'visible', label: 'Visible', width: 80 },
-  { prop: 'status', label: 'Status', width: 100 },
-  { prop: 'sort', label: 'Sort', width: 70 },
-  { prop: 'createTime', label: 'Created', minWidth: 160 },
-  { prop: 'operation', label: 'Actions', width: 150, fixed: 'right' },
+  { prop: 'title', label: '标题', minWidth: 200 },
+  { prop: 'type', label: '类型', width: 100 },
+  { prop: 'path', label: '路径', minWidth: 200 },
+  { prop: 'icon', label: '图标', width: 80 },
+  { prop: 'permission', label: '权限标识', minWidth: 150 },
+  { prop: 'visible', label: '显示', width: 80 },
+  { prop: 'status', label: '状态', width: 100 },
+  { prop: 'sort', label: '排序', width: 70 },
+  { prop: 'createdAt', label: '创建时间', minWidth: 160 },
+  { prop: 'operation', label: '操作', width: 150, fixed: 'right' },
 ])
 
 const fetchData = async (queryForm: Record<string, unknown>) => {
@@ -194,7 +194,7 @@ const resetForm = () => {
   editForm.permission = ''
   editForm.sort = 0
   editForm.visible = true
-  editForm.status = 'active'
+  editForm.status = 'ENABLE'
   formRef.value?.resetFields()
 }
 
@@ -208,7 +208,7 @@ const openEdit = (row: any) => {
   Object.assign(editForm, {
     id: row.id, parentId: row.parentId ?? null, appType: row.appType || 'ADMIN', type: row.type || 'MENU',
     title: row.title, path: row.path || '', component: row.component || '', icon: row.icon || '',
-    permission: row.permission || '', sort: row.sort ?? 0, visible: row.visible !== false, status: row.status || 'active',
+    permission: row.permission || '', sort: row.sort ?? 0, visible: row.visible !== false, status: row.status || 'ENABLE',
   })
   dialogVisible.value = true
 }
@@ -227,7 +227,7 @@ const handleSubmit = async () => {
       ? await menuApi.updateMenu(editForm.id, payload)
       : await menuApi.createMenu(payload)
     if (res.code === 200) {
-      ElMessage.success(editForm.id ? 'Menu updated' : 'Menu created')
+      ElMessage.success(editForm.id ? '菜单已更新' : '菜单已创建')
       dialogVisible.value = false
       basePageRef.value?.refreshCurrentPage()
     } else { ElMessage.error(res.message || '操作失败') }

@@ -26,8 +26,8 @@
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">代理</div>
-          <div class="stat-value">{{ summary.totalAgents }}</div>
+          <div class="stat-label">今日订单</div>
+          <div class="stat-value">{{ summary.todayOrders }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
@@ -151,13 +151,13 @@
     <el-row :gutter="16" class="charts-row">
       <el-col :span="12">
         <el-card shadow="hover" class="section-card">
-          <template #header><span class="section-title">Sales Trend (Last 7 Days)</span></template>
+          <template #header><span class="section-title">近 7 日销售额</span></template>
           <div ref="salesChartRef" class="chart-box" />
         </el-card>
       </el-col>
       <el-col :span="12">
         <el-card shadow="hover" class="section-card">
-          <template #header><span class="section-title">Order Count (Last 7 Days)</span></template>
+          <template #header><span class="section-title">近 7 日订单数</span></template>
           <div ref="orderChartRef" class="chart-box" />
         </el-card>
       </el-col>
@@ -181,7 +181,7 @@
 </template>
 
 <script setup lang="ts">
-import { dashboardApi, type IAdminDashboard } from '@/api/dashboard'
+import { dashboardApi, type IAdminDashboard, type IAdminDashboardCharts } from '@/api/dashboard'
 import * as echarts from 'echarts'
 
 defineOptions({ name: 'AdminDashboardOverviewView' })
@@ -214,6 +214,13 @@ const summary = reactive<IAdminDashboard>({
   recentRefunds: [],
 })
 
+const chartData = reactive<IAdminDashboardCharts>({
+  salesTrend: [],
+  orderTrend: [],
+  orderStatusDistribution: [],
+  userRoleDistribution: [],
+})
+
 let salesChart: echarts.ECharts | null = null
 let orderChart: echarts.ECharts | null = null
 let orderStatusChart: echarts.ECharts | null = null
@@ -225,18 +232,18 @@ function formatAmount(val: number) {
 
 function initSalesChart() {
   if (!salesChartRef.value) return
-  salesChart = echarts.init(salesChartRef.value)
-  const days = getLast7Days()
+  if (!salesChart) salesChart = echarts.init(salesChartRef.value)
+  const days = chartData.salesTrend.map((item) => formatChartDate(item.date))
   salesChart.setOption({
     tooltip: { trigger: 'axis' },
     xAxis: { type: 'category', data: days },
     yAxis: { type: 'value' },
     series: [
       {
-        name: 'Sales',
+        name: '销售额',
         type: 'line',
         smooth: true,
-        data: days.map(() => Math.floor(Math.random() * 5000 + 1000)),
+        data: chartData.salesTrend.map((item) => Number(item.amount || 0)),
         itemStyle: { color: '#409EFF' },
       },
     ],
@@ -245,8 +252,8 @@ function initSalesChart() {
 
 function initOrderChart() {
   if (!orderChartRef.value) return
-  orderChart = echarts.init(orderChartRef.value)
-  const days = getLast7Days()
+  if (!orderChart) orderChart = echarts.init(orderChartRef.value)
+  const days = chartData.orderTrend.map((item) => formatChartDate(item.date))
   orderChart.setOption({
     tooltip: { trigger: 'axis' },
     xAxis: { type: 'category', data: days },
@@ -255,7 +262,7 @@ function initOrderChart() {
       {
         name: '订单',
         type: 'bar',
-        data: days.map(() => Math.floor(Math.random() * 100 + 20)),
+        data: chartData.orderTrend.map((item) => Number(item.count || 0)),
         itemStyle: { color: '#67C23A' },
       },
     ],
@@ -264,18 +271,17 @@ function initOrderChart() {
 
 function initOrderStatusChart() {
   if (!orderStatusChartRef.value) return
-  orderStatusChart = echarts.init(orderStatusChartRef.value)
+  if (!orderStatusChart) orderStatusChart = echarts.init(orderStatusChartRef.value)
   orderStatusChart.setOption({
     tooltip: { trigger: 'item' },
     series: [
       {
         type: 'pie',
         radius: ['40%', '70%'],
-        data: [
-          { value: summary.paidOrders || 10, name: '已支付' },
-          { value: summary.completedOrders || 5, name: '已完成' },
-          { value: summary.refundRequests || summary.pendingRefunds || 2, name: '退款' },
-        ],
+        data: chartData.orderStatusDistribution.map((item) => ({
+          name: translateOrderStatus(item.name),
+          value: Number(item.value || 0),
+        })),
       },
     ],
   })
@@ -283,36 +289,49 @@ function initOrderStatusChart() {
 
 function initUserRoleChart() {
   if (!userRoleChartRef.value) return
-  userRoleChart = echarts.init(userRoleChartRef.value)
+  if (!userRoleChart) userRoleChart = echarts.init(userRoleChartRef.value)
   userRoleChart.setOption({
     tooltip: { trigger: 'item' },
     series: [
       {
         type: 'pie',
         radius: '70%',
-        data: [
-          { value: summary.totalCustomers || 10, name: '客户' },
-          { value: summary.totalMerchants || 3, name: '商家' },
-          { value: summary.totalAgents || 2, name: '代理' },
-          {
-            value:
-              summary.totalUsers - summary.totalCustomers - summary.totalMerchants - summary.totalAgents || 1,
-            name: '管理员',
-          },
-        ],
+        data: chartData.userRoleDistribution
+          .filter((item) => item.name !== 'Agent')
+          .map((item) => ({
+            name: translateUserRole(item.name),
+            value: Number(item.value || 0),
+          })),
       },
     ],
   })
 }
 
-function getLast7Days(): string[] {
-  const days: string[] = []
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    days.push(`${d.getMonth() + 1}/${d.getDate()}`)
+function formatChartDate(date?: string) {
+  if (!date) return ''
+  const parsed = new Date(date)
+  if (Number.isNaN(parsed.getTime())) return date
+  return `${parsed.getMonth() + 1}/${parsed.getDate()}`
+}
+
+function translateOrderStatus(status?: string) {
+  const map: Record<string, string> = {
+    'Pending Payment': '待支付',
+    Paid: '已支付',
+    Shipped: '已发货',
+    Completed: '已完成',
+    Cancelled: '已取消',
   }
-  return days
+  return status ? map[status] || status : '-'
+}
+
+function translateUserRole(role?: string) {
+  const map: Record<string, string> = {
+    Customer: '客户',
+    Merchant: '商家',
+    Admin: '管理员',
+  }
+  return role ? map[role] || role : '-'
 }
 
 function initCharts() {
@@ -334,15 +353,17 @@ window.addEventListener('resize', () => {
 async function fetchData() {
   loading.value = true
   try {
-    const { data: res } = await dashboardApi.getOverview()
-    if (res.code !== 200) return
-    if (res.data) {
-      Object.assign(summary, res.data)
-      nextTick(() => {
-        initOrderStatusChart()
-        initUserRoleChart()
-      })
+    const [{ data: overviewRes }, { data: chartsRes }] = await Promise.all([
+      dashboardApi.getOverview(),
+      dashboardApi.getCharts(),
+    ])
+    if (overviewRes.code === 200 && overviewRes.data) {
+      Object.assign(summary, overviewRes.data)
     }
+    if (chartsRes.code === 200 && chartsRes.data) {
+      Object.assign(chartData, chartsRes.data)
+    }
+    initCharts()
   } finally {
     loading.value = false
   }
@@ -350,7 +371,6 @@ async function fetchData() {
 
 onMounted(() => {
   fetchData()
-  initCharts()
 })
 </script>
 

@@ -34,7 +34,7 @@
       <el-table-column prop="name" label="名称" min-width="140" show-overflow-tooltip />
       <el-table-column prop="model" label="型号" width="120" show-overflow-tooltip />
       <el-table-column prop="categoryName" label="分类" width="110" show-overflow-tooltip />
-      <el-table-column prop="merchantPrice" label="会员价" width="90" align="right" />
+      <el-table-column prop="merchantPrice" label="货款成本" width="100" align="right" />
       <el-table-column prop="salePrice" label="售价" width="100" align="right" />
       <el-table-column prop="profitAmount" label="利润" width="90" align="right" />
       <el-table-column prop="profitRate" label="利润率" width="100" align="center">
@@ -125,7 +125,7 @@
         </el-form-item>
         <el-row :gutter="16">
           <el-col :span="8">
-            <el-form-item label="会员价">
+            <el-form-item label="货款成本">
               <el-input-number v-model="form.merchantPrice" :min="0" :precision="2" style="width:100%" @change="calcProfit" />
             </el-form-item>
           </el-col>

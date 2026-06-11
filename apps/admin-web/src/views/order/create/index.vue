@@ -17,7 +17,7 @@
           <el-option
             v-for="c in customerOptions"
             :key="c.id"
-            :label="`${c.nickname || c.email || '#' + c.id}${c.isVirtual ? ' [Virtual]' : ''}`"
+            :label="`${c.nickname || c.email || '#' + c.id}${c.isVirtual ? '（虚拟客户）' : ''}`"
             :value="c.id"
           />
         </el-select>
@@ -30,18 +30,22 @@
 
       <el-divider content-position="left">商户</el-divider>
       <el-form-item label="商户" required>
-        <el-select
-          v-model="orderForm.merchantId"
-          filterable
-          remote
-          :remote-method="searchMerchants"
-          :loading="merchantLoading"
-          placeholder="请选择商户"
-          style="width: 100%"
-          @change="onMerchantChange"
-        >
-          <el-option v-for="m in merchantOptions" :key="m.id" :label="m.name" :value="m.id" />
-        </el-select>
+        <div class="merchant-picker">
+          <el-select
+            v-model="orderForm.merchantId"
+            filterable
+            remote
+            :remote-method="searchMerchants"
+            :loading="merchantLoading"
+            placeholder="请选择商户"
+            style="flex: 1"
+            @focus="searchMerchants('')"
+            @change="onMerchantChange"
+          >
+            <el-option v-for="m in merchantOptions" :key="m.id" :label="m.name" :value="m.id" />
+          </el-select>
+          <el-button @click="openMerchantDialog">选择商家</el-button>
+        </div>
       </el-form-item>
 
       <el-divider content-position="left">商品</el-divider>
@@ -58,7 +62,7 @@
               v-for="l in listingOptions"
               :key="l.id"
               :label="l.platformProductName"
-              :value="l.platformProductId"
+              :value="l.id"
             />
           </el-select>
           <el-input-number
@@ -71,9 +75,7 @@
           <span style="margin-left: 8px; min-width: 80px">¥{{ item.price * item.quantity }}</span>
           <el-button type="danger" circle size="small" @click="removeItem(idx)">X</el-button>
         </div>
-        <el-button type="primary" plain @click="addItem" style="margin-top: 8px"
-          >+ Add Item</el-button
-        >
+        <el-button type="primary" plain @click="addItem" style="margin-top: 8px">+ 添加商品</el-button>
       </div>
       <div v-else-if="orderForm.merchantId">
         <p style="color: #909399">该商户暂无可售商品</p>
@@ -137,6 +139,36 @@
       </template>
     </el-dialog>
 
+    <el-dialog v-model="merchantDialogVisible" title="选择商家" width="760px" @open="loadMerchantDialog">
+      <div class="dialog-search">
+        <el-input
+          v-model="merchantSearchKeyword"
+          placeholder="搜索商家账号 / 店铺 / 邮箱 / 手机号"
+          clearable
+          @keyup.enter="loadMerchantDialog"
+          @clear="loadMerchantDialog"
+        />
+        <el-button type="primary" :loading="merchantDialogLoading" @click="loadMerchantDialog">搜索</el-button>
+      </div>
+      <el-table :data="merchantDialogRows" border stripe v-loading="merchantDialogLoading" max-height="420">
+        <el-table-column prop="shopName" label="店铺" min-width="140" show-overflow-tooltip />
+        <el-table-column prop="email" label="账号/邮箱" min-width="170" show-overflow-tooltip />
+        <el-table-column prop="phone" label="手机号" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="status" label="状态" width="90" align="center">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 'ENABLE' ? 'success' : 'danger'" size="small">
+              {{ row.status === 'ENABLE' ? '启用' : '禁用' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="90" align="center" fixed="right">
+          <template #default="{ row }">
+            <el-button link type="primary" @click="chooseMerchant(row)">选择</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
+
     <el-dialog v-model="resultVisible" title="订单已创建" width="500px">
       <div v-if="orderResult">
         <el-descriptions :column="1" border size="small">
@@ -169,6 +201,10 @@ const merchantLoading = ref(false)
 const customerOptions = ref<any[]>([])
 const merchantOptions = ref<any[]>([])
 const listingOptions = ref<any[]>([])
+const merchantDialogVisible = ref(false)
+const merchantDialogLoading = ref(false)
+const merchantSearchKeyword = ref('')
+const merchantDialogRows = ref<any[]>([])
 
 const orderForm = reactive({
   customerId: null as number | null,
@@ -207,10 +243,9 @@ async function searchClients(query: string) {
 }
 
 async function searchMerchants(query: string) {
-  if (!query) return
   merchantLoading.value = true
   try {
-    const { data: res } = await merchantApi.getMerchants({ keyword: query, pageSize: 20 })
+    const { data: res } = await merchantApi.getMerchants({ keyword: query || undefined, pageSize: 20 })
     if (res.code === 200) {
       merchantOptions.value = (res.data?.list || []).map((m: any) => ({
         ...m,
@@ -222,6 +257,44 @@ async function searchMerchants(query: string) {
   } finally {
     merchantLoading.value = false
   }
+}
+
+function openMerchantDialog() {
+  merchantDialogVisible.value = true
+}
+
+async function loadMerchantDialog() {
+  merchantDialogLoading.value = true
+  try {
+    const { data: res } = await merchantApi.getMerchants({
+      keyword: merchantSearchKeyword.value || undefined,
+      pageSize: 50,
+    })
+    if (res.code === 200) {
+      merchantDialogRows.value = (res.data?.list || []).map((m: any) => ({
+        ...m,
+        name: m.shopName || m.nickname || m.email || `ID:${m.id}`,
+      }))
+    } else {
+      ElMessage.error(res.message || '获取商家失败')
+    }
+  } catch {
+    ElMessage.error('获取商家失败')
+  } finally {
+    merchantDialogLoading.value = false
+  }
+}
+
+function chooseMerchant(row: any) {
+  const merchant = {
+    ...row,
+    name: row.shopName || row.nickname || row.email || `ID:${row.id}`,
+  }
+  const exists = merchantOptions.value.some((item) => item.id === merchant.id)
+  if (!exists) merchantOptions.value.unshift(merchant)
+  orderForm.merchantId = merchant.id
+  merchantDialogVisible.value = false
+  onMerchantChange(merchant.id)
 }
 
 async function onMerchantChange(merchantId: number | null) {
@@ -258,7 +331,7 @@ function removeItem(idx: number) {
 function onProductChange(idx: number) {
   const item = orderForm.items[idx]
   if (!item) return
-  const listing = listingOptions.value.find((l) => l.platformProductId === item.platformProductId)
+  const listing = listingOptions.value.find((l) => l.id === item.platformProductId)
   if (listing) {
     item.price = listing.salePrice
     calcTotal()
@@ -288,7 +361,7 @@ async function handleSubmit() {
       customerId: orderForm.customerId,
       merchantId: orderForm.merchantId,
       items: orderForm.items.map((it) => ({
-        platformProductId: it.platformProductId,
+        productId: it.platformProductId,
         quantity: it.quantity,
       })),
       addressSnapshot: orderForm.addressSnapshot,
@@ -361,5 +434,15 @@ function resetVirtualForm() {
   align-items: center;
   margin-bottom: 8px;
   gap: 8px;
+}
+.merchant-picker {
+  display: flex;
+  width: 100%;
+  gap: 8px;
+}
+.dialog-search {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 </style>

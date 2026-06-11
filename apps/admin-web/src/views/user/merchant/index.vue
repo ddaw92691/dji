@@ -95,12 +95,26 @@
         <el-form-item label="手机号" prop="phone"
           ><el-input v-model="editForm.phone"
         /></el-form-item>
-        <el-form-item label="国家" prop="country"
-          ><el-input v-model="editForm.country"
-        /></el-form-item>
-        <el-form-item label="语言" prop="language"
-          ><el-input v-model="editForm.language"
-        /></el-form-item>
+        <el-form-item label="国家" prop="country">
+          <el-select v-model="editForm.country" filterable clearable placeholder="请选择国家" style="width: 100%">
+            <el-option
+              v-for="country in countryOptions"
+              :key="country.code"
+              :label="`${country.name}（${country.code}）`"
+              :value="country.code"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="语言" prop="language">
+          <el-select v-model="editForm.language" filterable clearable placeholder="请选择语言" style="width: 100%">
+            <el-option
+              v-for="language in languageOptions"
+              :key="language.code"
+              :label="`${language.name || language.nativeName}（${language.code}）`"
+              :value="language.code"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="联系人"><el-input v-model="editForm.contactName" /></el-form-item>
         <el-form-item label="联系电话"><el-input v-model="editForm.contactPhone" /></el-form-item>
       </el-form>
@@ -131,8 +145,16 @@
     <BaseDialog v-model="fundVisible" title="商家资金" width="760" @close="fundVisible = false">
       <el-descriptions :column="2" border size="small" style="margin-bottom: 12px">
         <el-descriptions-item label="店铺">{{ fundMerchant.shopName }}</el-descriptions-item>
-        <el-descriptions-item label="可用余额">{{ fundMerchant.balance ?? 0 }}</el-descriptions-item>
-        <el-descriptions-item label="冻结余额">{{ fundMerchant.frozenBalance ?? 0 }}</el-descriptions-item>
+        <el-descriptions-item label="结算货币">
+          {{ fundMerchant.currencyCode || 'USD' }}
+          <span v-if="fundMerchant.exchangeRate">（美元 1 : {{ fundMerchant.exchangeRate }} {{ fundMerchant.currencyCode }}）</span>
+        </el-descriptions-item>
+        <el-descriptions-item label="可用余额">
+          {{ fundMerchant.currencySymbol || '' }}{{ fundMerchant.balance ?? 0 }}
+        </el-descriptions-item>
+        <el-descriptions-item label="冻结余额">
+          {{ fundMerchant.currencySymbol || '' }}{{ fundMerchant.frozenBalance ?? 0 }}
+        </el-descriptions-item>
       </el-descriptions>
 
       <el-form :inline="true" :model="fundForm" class="fund-form">
@@ -146,6 +168,16 @@
         </el-form-item>
         <el-form-item label="金额">
           <el-input-number v-model="fundForm.amount" :min="0.01" :precision="2" :step="100" />
+          <el-select v-model="fundForm.amountCurrency" style="width: 132px; margin-left: 8px">
+            <el-option :label="fundMerchant.currencyCode || '本地货币'" value="LOCAL" />
+            <el-option label="美元 USD" value="USD" />
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="fundForm.amount" label="入账金额">
+          <span class="currency-preview">
+            {{ fundMerchant.currencySymbol || '' }}{{ convertedFundAmount }}
+            {{ fundMerchant.currencyCode || 'USD' }}
+          </span>
         </el-form-item>
         <el-form-item label="备注">
           <el-input v-model="fundForm.remark" placeholder="必填，请填写资金调整原因" style="width: 260px" />
@@ -268,6 +300,7 @@
 <script setup lang="ts">
 import { merchantApi } from '@/api/merchant'
 import { merchantApplicationApi } from '@/api/merchantApplication'
+import { i18nApi, type I18nCountry, type I18nLanguage } from '@/api/i18n'
 import { POPCONFIRM_CONFIG } from '@/config/elementConfig'
 import { STATUS_OPTIONS, getLabelByValue, getColorByValue } from '@/constants/dict'
 import type { IFormConfig } from '@/types/components/page'
@@ -287,19 +320,30 @@ const dialogVisible = ref(false)
 const submitLoading = ref(false)
 const applicationInfo = ref<any>(null)
 const pendingApplicationCount = ref(0)
+const countryOptions = ref<I18nCountry[]>([])
+const languageOptions = ref<I18nLanguage[]>([])
 const applicationButtonTip = computed(() =>
   pendingApplicationCount.value > 0 ? `${pendingApplicationCount.value} 条新商家申请` : '有新商家申请',
 )
 
 // 资金管理
 const fundVisible = ref(false)
-const fundMerchant = reactive<{ id: string | number; shopName: string; balance?: number; frozenBalance?: number }>({
+const fundMerchant = reactive<{
+  id: string | number
+  shopName: string
+  balance?: number
+  frozenBalance?: number
+  currencyCode?: string
+  currencySymbol?: string
+  exchangeRate?: number
+}>({
   id: '',
   shopName: '',
 })
-const fundForm = reactive<{ direction: string; amount?: number; remark: string }>({
+const fundForm = reactive<{ direction: string; amount?: number; amountCurrency: string; remark: string }>({
   direction: 'INCREASE',
   amount: undefined,
+  amountCurrency: 'LOCAL',
   remark: '',
 })
 const fundSubmitting = ref(false)
@@ -308,6 +352,14 @@ const fundLoading = ref(false)
 const fundPage = ref(1)
 const fundPageSize = ref(10)
 const fundTotal = ref(0)
+
+const convertedFundAmount = computed(() => {
+  const amount = Number(fundForm.amount || 0)
+  if (!amount) return '0.00'
+  const rate = Number(fundMerchant.exchangeRate || 1)
+  const value = fundForm.amountCurrency === 'USD' ? amount * rate : amount
+  return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+})
 
 // 改密码
 const pwdVisible = ref(false)
@@ -400,7 +452,7 @@ const columns = ref([
   { prop: 'frozenBalance', label: '冻结金额', width: 100 },
   { prop: 'status', label: '状态', width: 100 },
   { prop: 'createdAt', label: '创建时间', minWidth: 160 },
-  { prop: 'operation', label: '操作', width: 150, fixed: 'right' },
+  { prop: 'operation', label: '操作', width: 300, fixed: 'right' },
 ])
 
 const fetchData = async (queryForm: Record<string, unknown>, page: number, pageSize: number) => {
@@ -455,6 +507,24 @@ const loadPendingApplicationCount = async () => {
   }
 }
 
+const loadLocaleOptions = async () => {
+  try {
+    const [{ data: countryRes }, { data: languageRes }] = await Promise.all([
+      i18nApi.getCountries({ status: 'ENABLE', page: 1, pageSize: 500 }),
+      i18nApi.getLanguages({ status: 'ENABLE', page: 1, pageSize: 500 }),
+    ])
+    if (countryRes.code === 200) {
+      countryOptions.value = countryRes.data?.list || []
+    }
+    if (languageRes.code === 200) {
+      languageOptions.value = languageRes.data?.list || []
+    }
+  } catch {
+    countryOptions.value = []
+    languageOptions.value = []
+  }
+}
+
 const openCreate = () => {
   resetForm()
   applicationInfo.value = null
@@ -478,8 +548,8 @@ const openEdit = async (row: any) => {
       email: d.email || row.email || '',
       name: d.shopName || d.name || row.shopName || '',
       phone: d.phone || row.phone || '',
-      country: d.country || row.country || '',
-      language: d.language || row.language || '',
+      country: d.countryCode || d.country || row.countryCode || row.country || '',
+      language: d.languageCode || d.language || row.languageCode || row.language || '',
       contactName: d.contactName || row.contactName || '',
       contactPhone: d.contactPhone || row.contactPhone || '',
     })
@@ -491,8 +561,8 @@ const openEdit = async (row: any) => {
       email: row.email || '',
       name: row.shopName || '',
       phone: row.phone || '',
-      country: row.country || '',
-      language: row.language || '',
+      country: row.countryCode || row.country || '',
+      language: row.languageCode || row.language || '',
     })
     loadApplication(row.merchantId || row.id)
     dialogVisible.value = true
@@ -508,6 +578,8 @@ const handleSubmit = async () => {
       shopName: editForm.name,
       nickname: editForm.name,
       phone: editForm.phone,
+      countryCode: editForm.country,
+      languageCode: editForm.language,
       country: editForm.country,
       language: editForm.language,
       contactName: editForm.contactName,
@@ -540,8 +612,12 @@ const openFund = (row: any) => {
   fundMerchant.shopName = row.shopName || ''
   fundMerchant.balance = row.balance
   fundMerchant.frozenBalance = row.frozenBalance
+  fundMerchant.currencyCode = row.currencyCode || 'USD'
+  fundMerchant.currencySymbol = row.currencySymbol || ''
+  fundMerchant.exchangeRate = row.exchangeRate
   fundForm.direction = 'INCREASE'
   fundForm.amount = undefined
+  fundForm.amountCurrency = 'LOCAL'
   fundForm.remark = ''
   fundPage.value = 1
   fundVisible.value = true
@@ -582,6 +658,7 @@ const handleAdjustFund = async () => {
   try {
     const payload = {
       amount: fundForm.amount,
+      amountCurrency: fundForm.amountCurrency,
       reason: fundForm.remark,
       remark: fundForm.remark,
       direction: fundForm.direction,
@@ -725,7 +802,10 @@ const handleToggleStatus = async (row: any) => {
   }
 }
 
-onMounted(loadPendingApplicationCount)
+onMounted(() => {
+  loadPendingApplicationCount()
+  loadLocaleOptions()
+})
 </script>
 
 <style scoped>
@@ -736,5 +816,13 @@ onMounted(loadPendingApplicationCount)
   display: flex;
   justify-content: flex-end;
   margin-top: 12px;
+}
+.currency-hint {
+  margin-left: 8px;
+  color: var(--el-text-color-secondary);
+}
+.currency-preview {
+  color: var(--el-color-primary);
+  font-weight: 600;
 }
 </style>

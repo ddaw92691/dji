@@ -253,10 +253,15 @@ public class SupportService {
         return result;
     }
 
-    public Map<String, Object> getAdminPlatformSessions(String status, int page, int pageSize) {
+    public Map<String, Object> getAdminPlatformSessions(String status, String keyword, Long merchantId, int page, int pageSize) {
         LambdaQueryWrapper<SupportSession> wrapper = Wrappers.<SupportSession>lambdaQuery()
                 .eq(SupportSession::getSessionType, "MERCHANT_TO_PLATFORM")
                 .eq(status != null && !status.isBlank(), SupportSession::getStatus, status)
+                .eq(merchantId != null, SupportSession::getMerchantId, merchantId)
+                .and(keyword != null && !keyword.isBlank(), w -> w
+                        .like(SupportSession::getSessionNo, keyword)
+                        .or().like(SupportSession::getTitle, keyword)
+                        .or().like(SupportSession::getLastMessage, keyword))
                 .orderByDesc(SupportSession::getUpdatedAt);
 
         Page<SupportSession> pg = sessionMapper.selectPage(new Page<>(page, pageSize), wrapper);
@@ -471,13 +476,23 @@ public class SupportService {
     public SupportSession createInspectionSession(Long operatorUserId, String fakeCustomerName, String title,
                                                     Long inspectionCustomerUserId, Long merchantId,
                                                     String question, Long relatedProductId,
-                                                    Long relatedOrderId) {
+                                                    Long relatedOrderId, String priority) {
+        if (merchantId == null) {
+            throw new BusinessException(400, "Merchant is required");
+        }
+        if (question == null || question.isBlank()) {
+            throw new BusinessException(400, "Question is required");
+        }
+        Merchant merchant = merchantMapper.selectById(merchantId);
+        if (merchant == null || Boolean.TRUE.equals(merchant.getDeleted())) {
+            throw new BusinessException(404, "Merchant not found");
+        }
         SupportSession session = new SupportSession();
         session.setSessionNo("INS" + System.currentTimeMillis() + String.format("%04d", new Random().nextInt(10000)));
         session.setSessionType("ADMIN_INSPECTION_TO_MERCHANT");
         session.setTitle(title != null && !title.isBlank() ? title : "Inspection Session");
         session.setStatus("OPEN");
-        session.setPriority("NORMAL");
+        session.setPriority(priority != null && !priority.isBlank() ? priority : "MEDIUM");
         session.setInspectionOperatorId(operatorUserId);
         session.setInspectionCustomerUserId(inspectionCustomerUserId);
         session.setCustomerUserId(inspectionCustomerUserId);
@@ -536,7 +551,6 @@ public class SupportService {
         log.setUpdatedAt(LocalDateTime.now());
         inspectionLogMapper.insert(log);
 
-        Merchant merchant = merchantMapper.selectById(merchantId);
         if (merchant != null && merchant.getUserId() != null) {
             notificationService.createNotification(merchant.getUserId(), "MERCHANT",
                     "新しい顧客問い合わせ",

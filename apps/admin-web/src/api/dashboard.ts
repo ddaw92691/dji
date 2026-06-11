@@ -22,6 +22,22 @@ export interface IAdminDashboard {
   recentRefunds: any[]
 }
 
+export interface IChartPoint {
+  date?: string
+  amount?: number
+  count?: number
+  name?: string
+  value?: number
+}
+
+export interface IAdminDashboardCharts {
+  salesTrend: IChartPoint[]
+  orderTrend: IChartPoint[]
+  orderStatusDistribution: IChartPoint[]
+  userRoleDistribution: IChartPoint[]
+}
+
 export const dashboardApi = {
   getOverview: () => request.get<ICommonResponse<IAdminDashboard>>('/admin/dashboard'),
+  getCharts: () => request.get<ICommonResponse<IAdminDashboardCharts>>('/admin/dashboard/charts'),
 }

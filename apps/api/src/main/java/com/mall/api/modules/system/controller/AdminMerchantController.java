@@ -5,6 +5,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mall.api.common.enums.ResultCode;
 import com.mall.api.common.exception.BusinessException;
 import com.mall.api.common.response.ApiResponse;
+import com.mall.api.modules.country.entity.Country;
+import com.mall.api.modules.country.mapper.CountryMapper;
+import com.mall.api.modules.language.entity.Language;
+import com.mall.api.modules.language.mapper.LanguageMapper;
 import com.mall.api.modules.log.annotation.Audit;
 import com.mall.api.modules.merchant.entity.Merchant;
 import com.mall.api.modules.merchant.entity.MerchantFundLog;
@@ -27,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -43,12 +48,16 @@ public class AdminMerchantController {
     private final SysUserRoleMapper sysUserRoleMapper;
     private final MerchantFundService merchantFundService;
     private final WithdrawAccountMapper withdrawAccountMapper;
+    private final CountryMapper countryMapper;
+    private final LanguageMapper languageMapper;
 
     public AdminMerchantController(UserMapper userMapper, MerchantMapper merchantMapper,
                                    PasswordEncoder passwordEncoder, SysRoleMapper sysRoleMapper,
                                    SysUserRoleMapper sysUserRoleMapper,
                                    MerchantFundService merchantFundService,
-                                   WithdrawAccountMapper withdrawAccountMapper) {
+                                   WithdrawAccountMapper withdrawAccountMapper,
+                                   CountryMapper countryMapper,
+                                   LanguageMapper languageMapper) {
         this.userMapper = userMapper;
         this.merchantMapper = merchantMapper;
         this.passwordEncoder = passwordEncoder;
@@ -56,6 +65,8 @@ public class AdminMerchantController {
         this.sysUserRoleMapper = sysUserRoleMapper;
         this.merchantFundService = merchantFundService;
         this.withdrawAccountMapper = withdrawAccountMapper;
+        this.countryMapper = countryMapper;
+        this.languageMapper = languageMapper;
     }
 
     @GetMapping
@@ -64,6 +75,7 @@ public class AdminMerchantController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long merchantId,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String country,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize) {
         LambdaQueryWrapper<Merchant> qw = new LambdaQueryWrapper<>();
@@ -105,6 +117,22 @@ public class AdminMerchantController {
                     item.put("phone", user.getPhone());
                     item.put("nickname", user.getNickname());
                     item.put("userStatus", user.getStatus());
+                    item.put("countryCode", user.getCountryCode());
+                    item.put("country", user.getCountryCode());
+                    item.put("languageCode", user.getLanguageCode());
+                    item.put("language", user.getLanguageCode());
+                    Country countryInfo = user.getCountryCode() == null ? null : countryMapper.selectByCode(user.getCountryCode());
+                    if (countryInfo != null) {
+                        item.put("countryName", countryInfo.getName());
+                        item.put("currencyCode", countryInfo.getCurrencyCode());
+                        item.put("currencySymbol", countryInfo.getCurrencySymbol());
+                        item.put("exchangeRate", countryInfo.getExchangeRate());
+                    }
+                    Language languageInfo = user.getLanguageCode() == null ? null : languageMapper.selectByCode(user.getLanguageCode());
+                    if (languageInfo != null) {
+                        item.put("languageName", languageInfo.getName());
+                        item.put("languageNativeName", languageInfo.getNativeName());
+                    }
                 }
             }
             enriched.add(item);
@@ -121,6 +149,8 @@ public class AdminMerchantController {
         String email = (String) body.get("email");
         String password = (String) body.get("password");
         String shopName = (String) body.get("shopName");
+        String countryCode = normalizeCode(text(body, "countryCode", "country"), true);
+        String languageCode = normalizeCode(text(body, "languageCode", "language"), false);
 
         if (email == null || email.isEmpty()) {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "邮箱不能为空");
@@ -137,6 +167,14 @@ public class AdminMerchantController {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "邮箱已存在");
         }
 
+        Country countryInfo = countryCode == null ? null : countryMapper.selectByCode(countryCode);
+        if (countryCode != null && countryInfo == null) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "国家不存在或未启用");
+        }
+        if (languageCode != null && languageMapper.selectByCode(languageCode) == null) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "语言不存在或未启用");
+        }
+
         User user = new User();
         user.setUsername(email);
         user.setEmail(email);
@@ -144,6 +182,8 @@ public class AdminMerchantController {
         user.setNickname(shopName);
         user.setRole("MERCHANT");
         user.setStatus(1);
+        user.setCountryCode(countryCode);
+        user.setLanguageCode(languageCode != null ? languageCode : (countryInfo == null ? null : countryInfo.getDefaultLanguageCode()));
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
         userMapper.insert(user);
@@ -193,7 +233,21 @@ public class AdminMerchantController {
                 if (body.containsKey("email")) user.setEmail((String) body.get("email"));
                 if (body.containsKey("phone")) user.setPhone((String) body.get("phone"));
                 if (body.containsKey("nickname")) user.setNickname((String) body.get("nickname"));
-                if (body.containsKey("status")) user.setStatus((Integer) body.get("status"));
+                String countryCode = normalizeCode(text(body, "countryCode", "country"), true);
+                String languageCode = normalizeCode(text(body, "languageCode", "language"), false);
+                if (countryCode != null) {
+                    if (countryMapper.selectByCode(countryCode) == null) {
+                        throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "国家不存在或未启用");
+                    }
+                    user.setCountryCode(countryCode);
+                }
+                if (languageCode != null) {
+                    if (languageMapper.selectByCode(languageCode) == null) {
+                        throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "语言不存在或未启用");
+                    }
+                    user.setLanguageCode(languageCode);
+                }
+                if (body.containsKey("status")) user.setStatus(toIntStatus(body.get("status")));
                 userMapper.updateById(user);
             }
         }
@@ -238,6 +292,7 @@ public class AdminMerchantController {
         result.put("pageSize", pageSize);
         result.put("balance", merchant.getBalance());
         result.put("frozenBalance", merchant.getFrozenBalance());
+        result.putAll(currencyInfo(id));
         return ApiResponse.success(result);
     }
 
@@ -245,7 +300,7 @@ public class AdminMerchantController {
     @Operation(summary = "调整商家资金（增加/扣减）")
     @Audit(module = "商家管理", action = "调整资金", description = "总后台手动调整商家可用余额")
     public ApiResponse<MerchantFundLog> fundAdjust(@PathVariable Long id, @RequestBody Map<String, Object> body) {
-        BigDecimal amount = toAmount(body.get("amount"));
+        BigDecimal amount = normalizeAdminFundAmount(id, body);
         String direction = String.valueOf(body.getOrDefault("direction", "INCREASE"));
         boolean increase = !"DECREASE".equalsIgnoreCase(direction);
         String remark = requireReason(body);
@@ -258,14 +313,16 @@ public class AdminMerchantController {
     @GetMapping("/{id}/wallet")
     @Operation(summary = "Wallet summary")
     public ApiResponse<Map<String, Object>> wallet(@PathVariable Long id) {
-        return ApiResponse.success(merchantFundService.walletSummary(id));
+        Map<String, Object> summary = merchantFundService.walletSummary(id);
+        summary.putAll(currencyInfo(id));
+        return ApiResponse.success(summary);
     }
 
     @PostMapping("/{id}/wallet/add")
     @Operation(summary = "Admin add merchant funds")
     @Audit(module = "Merchant", action = "Add funds", description = "Admin adds available balance to merchant")
     public ApiResponse<MerchantFundLog> addWallet(@PathVariable Long id, @RequestBody Map<String, Object> body) {
-        MerchantFundLog log = merchantFundService.adjust(id, toAmount(body.get("amount")), true,
+        MerchantFundLog log = merchantFundService.adjust(id, normalizeAdminFundAmount(id, body), true,
                 "admin_add", requireReason(body), SecurityUtils.getCurrentUserId(), "ADMIN_ADJUST", null);
         return ApiResponse.success(log);
     }
@@ -274,7 +331,7 @@ public class AdminMerchantController {
     @Operation(summary = "Admin subtract merchant funds")
     @Audit(module = "Merchant", action = "Subtract funds", description = "Admin subtracts available balance from merchant")
     public ApiResponse<MerchantFundLog> subtractWallet(@PathVariable Long id, @RequestBody Map<String, Object> body) {
-        MerchantFundLog log = merchantFundService.adjust(id, toAmount(body.get("amount")), false,
+        MerchantFundLog log = merchantFundService.adjust(id, normalizeAdminFundAmount(id, body), false,
                 "admin_subtract", requireReason(body), SecurityUtils.getCurrentUserId(), "ADMIN_ADJUST", null);
         return ApiResponse.success(log);
     }
@@ -283,7 +340,7 @@ public class AdminMerchantController {
     @Operation(summary = "Admin freeze merchant funds")
     @Audit(module = "Merchant", action = "Freeze funds", description = "Admin freezes merchant available balance")
     public ApiResponse<MerchantFundLog> freezeWallet(@PathVariable Long id, @RequestBody Map<String, Object> body) {
-        MerchantFundLog log = merchantFundService.freeze(id, toAmount(body.get("amount")),
+        MerchantFundLog log = merchantFundService.freeze(id, normalizeAdminFundAmount(id, body),
                 "freeze", requireReason(body), SecurityUtils.getCurrentUserId(), "ADMIN_ADJUST", null);
         return ApiResponse.success(log);
     }
@@ -292,7 +349,7 @@ public class AdminMerchantController {
     @Operation(summary = "Admin unfreeze merchant funds")
     @Audit(module = "Merchant", action = "Unfreeze funds", description = "Admin unfreezes merchant frozen balance")
     public ApiResponse<MerchantFundLog> unfreezeWallet(@PathVariable Long id, @RequestBody Map<String, Object> body) {
-        MerchantFundLog log = merchantFundService.unfreeze(id, toAmount(body.get("amount")),
+        MerchantFundLog log = merchantFundService.unfreeze(id, normalizeAdminFundAmount(id, body),
                 "unfreeze", requireReason(body), SecurityUtils.getCurrentUserId(), "ADMIN_ADJUST", null);
         return ApiResponse.success(log);
     }
@@ -393,10 +450,78 @@ public class AdminMerchantController {
         return reason;
     }
 
+    private BigDecimal normalizeAdminFundAmount(Long merchantId, Map<String, Object> body) {
+        BigDecimal amount = toAmount(body == null ? null : body.get("amount"));
+        String amountCurrency = body == null || body.get("amountCurrency") == null
+                ? "LOCAL"
+                : String.valueOf(body.get("amountCurrency")).trim();
+        if (!"USD".equalsIgnoreCase(amountCurrency)) {
+            return amount;
+        }
+        Map<String, Object> currency = currencyInfo(merchantId);
+        BigDecimal exchangeRate = currency.get("exchangeRate") instanceof BigDecimal rate ? rate : BigDecimal.ONE;
+        if (exchangeRate.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Exchange rate must be greater than 0");
+        }
+        return amount.multiply(exchangeRate).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private Map<String, Object> currencyInfo(Long merchantId) {
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("currencyCode", "USD");
+        data.put("currencySymbol", "$");
+        data.put("exchangeRate", BigDecimal.ONE);
+        data.put("countryCode", null);
+
+        Merchant merchant = merchantMapper.selectById(merchantId);
+        if (merchant == null || merchant.getUserId() == null) {
+            return data;
+        }
+        User user = userMapper.selectById(merchant.getUserId());
+        if (user == null || user.getCountryCode() == null || user.getCountryCode().isBlank()) {
+            return data;
+        }
+        Country country = countryMapper.selectByCode(user.getCountryCode());
+        data.put("countryCode", user.getCountryCode());
+        if (country != null) {
+            data.put("countryName", country.getName());
+            data.put("currencyCode", country.getCurrencyCode() == null ? "USD" : country.getCurrencyCode());
+            data.put("currencySymbol", country.getCurrencySymbol() == null ? "" : country.getCurrencySymbol());
+            data.put("exchangeRate", country.getExchangeRate() == null ? BigDecimal.ONE : country.getExchangeRate());
+        }
+        return data;
+    }
+
     private String maskSensitive(String value, int prefix, int suffix) {
         if (value == null || value.isBlank()) return value;
         String text = value.trim();
         if (text.length() <= prefix + suffix) return "****";
         return text.substring(0, prefix) + "****" + text.substring(text.length() - suffix);
+    }
+
+    private String text(Map<String, Object> body, String... keys) {
+        if (body == null) return null;
+        for (String key : keys) {
+            Object value = body.get(key);
+            if (value != null && !String.valueOf(value).trim().isEmpty()) {
+                return String.valueOf(value).trim();
+            }
+        }
+        return null;
+    }
+
+    private String normalizeCode(String value, boolean upper) {
+        if (value == null || value.isBlank()) return null;
+        String code = value.trim();
+        return upper ? code.toUpperCase(Locale.ROOT) : code;
+    }
+
+    private Integer toIntStatus(Object value) {
+        if (value == null) return null;
+        if (value instanceof Number n) return n.intValue();
+        String text = String.valueOf(value).trim();
+        if ("ENABLE".equalsIgnoreCase(text)) return 1;
+        if ("DISABLE".equalsIgnoreCase(text)) return 0;
+        return Integer.parseInt(text);
     }
 }

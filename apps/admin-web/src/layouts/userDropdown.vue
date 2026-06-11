@@ -96,7 +96,10 @@ const updatePasswordRef = useTemplateRef('updatePasswordRef')
 
 // 用户角色名称
 const userRoleName = computed(() => {
-  return userStore.roleList.find((role) => role.id === userStore.userInfo?.roleId)?.name ?? '无权限'
+  const roleCode = userStore.userInfo?.role
+  if (roleCode === 'SUPER_ADMIN') return '超级管理员'
+  if (roleCode === 'ADMIN') return '管理员'
+  return userStore.userRoleName
 })
 
 // 用户菜单命令处理

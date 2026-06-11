@@ -11001,7 +11001,7 @@ public class DataInitializer implements CommandLineRunner {
         insertMenu(1100L, null, "ADMIN", "DIRECTORY", null, "用户管理", "HOutline:UsersIcon", null, 2, true);
         insertMenu(1101L, 1100L, "ADMIN", "MENU", "/user/customer", "客户管理", null, "admin:user:customer:view", 1, true);
         insertMenu(1102L, 1100L, "ADMIN", "MENU", "/user/merchant", "商家管理", null, "admin:user:merchant:view", 2, true);
-        insertMenu(1103L, 1100L, "ADMIN", "MENU", "/user/agent", "代理管理", null, "admin:user:agent:view", 3, true);
+        insertMenu(1103L, 1100L, "ADMIN", "MENU", "/user/agent", "代理管理", null, "admin:user:agent:view", 3, false);
         insertMenu(1104L, 1100L, "ADMIN", "MENU", "/user/admin", "管理员管理", null, "admin:user:admin:view", 4, true);
         insertMenu(1105L, 1100L, "ADMIN", "MENU", "/user/merchant-application", "商家申请", null, "admin:merchantApplication:view", 5, true);
 
@@ -11019,7 +11019,7 @@ public class DataInitializer implements CommandLineRunner {
         insertMenu(1400L, null, "ADMIN", "DIRECTORY", null, "财务管理", "HOutline:CurrencyDollarIcon", null, 5, true);
         insertMenu(1401L, 1400L, "ADMIN", "MENU", "/finance/overview", "财务概览", null, "finance:view", 1, true);
         insertMenu(1402L, 1400L, "ADMIN", "MENU", "/finance/withdrawal", "提现管理", null, "finance:view", 2, true);
-        insertMenu(1403L, 1400L, "ADMIN", "MENU", "/finance/commission", "佣金管理", null, "finance:view", 3, true);
+        insertMenu(1403L, 1400L, "ADMIN", "MENU", "/finance/commission", "佣金管理", null, "finance:view", 3, false);
         insertMenu(1404L, 1400L, "ADMIN", "MENU", "/finance/payment", "支付记录", null, "finance:view", 4, true);
         insertMenu(1405L, 1400L, "ADMIN", "MENU", "/finance/recharge", "充值记录", null, "finance:recharge:view", 5, true);
         insertMenu(1406L, 1400L, "ADMIN", "MENU", "/finance/reconciliation", "对账", null, "finance:reconcile:view", 6, true);
@@ -11027,11 +11027,11 @@ public class DataInitializer implements CommandLineRunner {
         insertMenu(1500L, null, "ADMIN", "DIRECTORY", null, "翻译与语言", "HOutline:GlobeAltIcon", null, 6, true);
         insertMenu(1501L, 1500L, "ADMIN", "MENU", "/i18n/country", "国家管理", null, "i18n:country:view", 1, true);
         insertMenu(1502L, 1500L, "ADMIN", "MENU", "/i18n/language", "语言管理", null, "i18n:language:view", 2, true);
-        insertMenu(1503L, 1500L, "ADMIN", "MENU", "/i18n/country-language", "国家语言", null, "i18n:countryLanguage:view", 3, true);
+        insertMenu(1503L, 1500L, "ADMIN", "MENU", "/i18n/country-language", "国家语言", null, "i18n:countryLanguage:view", 3, false);
         insertMenu(1504L, 1500L, "ADMIN", "MENU", "/i18n/namespace", "命名空间", null, "i18n:namespace:view", 4, true);
         insertMenu(1505L, 1500L, "ADMIN", "MENU", "/i18n/translation", "翻译管理", null, "i18n:translation:view", 5, true);
 
-        insertMenu(1600L, null, "ADMIN", "DIRECTORY", null, "系统管理", null, null, 7, true);
+        insertMenu(1600L, null, "ADMIN", "DIRECTORY", null, "系统管理", "HOutline:Cog6ToothIcon", null, 7, true);
         insertMenu(1601L, 1600L, "ADMIN", "MENU", "/system/role", "角色管理", null, "sys:role:view", 1, true);
         insertMenu(1602L, 1600L, "ADMIN", "MENU", "/system/menu", "菜单管理", null, "sys:menu:view", 2, true);
         insertMenu(1603L, 1600L, "ADMIN", "MENU", "/system/audit-log", "操作日志", null, "sys:audit:view", 3, true);
@@ -11040,7 +11040,7 @@ public class DataInitializer implements CommandLineRunner {
         insertMenu(1701L, 1700L, "ADMIN", "MENU", "/support/customer-merchant", "客户商家会话", null, "support:customerMerchant:view", 1, true);
         insertMenu(1702L, 1700L, "ADMIN", "MENU", "/support/platform", "平台支持", null, "support:platform:view", 2, true);
         insertMenu(1703L, 1700L, "ADMIN", "MENU", "/support/inspection", "暗访管理", null, "support:inspection:view", 3, true);
-        insertMenu(1704L, 1700L, "ADMIN", "MENU", "/support/quick-reply", "快捷回复", null, "support:quickReply:view", 4, true);
+        insertMenu(1704L, 1700L, "ADMIN", "MENU", "/support/quick-reply", "快捷回复", null, "support:quickReply:view", 4, false);
 
         // BUTTON permissions
         insertMenu(2001L, 1101L, "ADMIN", "BUTTON", null, null, null, "admin:user:customer:add", 1, false);

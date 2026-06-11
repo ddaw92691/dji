@@ -137,15 +137,13 @@
     </el-dialog>
 
     <el-dialog v-model="transDialogVisible" title="分类翻译" width="550px" @close="resetTransForm">
-      <el-form ref="transFormRef" :model="transForm" label-width="130px">
-        <el-form-item label="日语 (ja)">
-          <el-input v-model="transForm.ja" placeholder="日文名称" />
-        </el-form-item>
-        <el-form-item label="韩语 (ko)">
-          <el-input v-model="transForm.ko" placeholder="韩文名称" />
-        </el-form-item>
-        <el-form-item label="英语 (en)">
-          <el-input v-model="transForm.en" placeholder="英文名称" />
+      <el-form ref="transFormRef" :model="transForm" label-width="150px">
+        <el-form-item
+          v-for="language in languageOptions"
+          :key="language.code"
+          :label="`${language.name || language.nativeName}（${language.code}）`"
+        >
+          <el-input v-model="transForm[language.code]" :placeholder="`请输入${language.name || language.code}名称`" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -162,6 +160,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { categoryApi, type CategoryItem } from '@/api/category'
+import { i18nApi, type I18nLanguage } from '@/api/i18n'
 import { uploadApi } from '@/api/upload'
 
 defineOptions({ name: 'CategoryView' })
@@ -180,6 +179,7 @@ const formRef = ref<FormInstance>()
 const transFormRef = ref<FormInstance>()
 const transEditingId = ref<number | null>(null)
 const parentOptions = ref<CategoryItem[]>([])
+const languageOptions = ref<I18nLanguage[]>([])
 
 const searchForm = reactive({
   keyword: '',
@@ -196,11 +196,7 @@ const form = reactive({
   status: 'ENABLE',
 })
 
-const transForm = reactive({
-  ja: '',
-  ko: '',
-  en: '',
-})
+const transForm = reactive<Record<string, string>>({})
 
 const rules: FormRules = {
   name: [{ required: true, message: 'Please enter name', trigger: 'blur' }],
@@ -222,6 +218,20 @@ async function loadParentOptions() {
     if (res.code === 200) parentOptions.value = res.data.list || []
   } catch {
     /* ignore */
+  }
+}
+
+async function loadLanguageOptions() {
+  try {
+    const { data: res } = await i18nApi.getLanguages({ status: 'ENABLE', page: 1, pageSize: 500 })
+    if (res.code === 200) {
+      languageOptions.value = res.data?.list || []
+      languageOptions.value.forEach((language) => {
+        if (!(language.code in transForm)) transForm[language.code] = ''
+      })
+    }
+  } catch {
+    languageOptions.value = []
   }
 }
 
@@ -337,12 +347,10 @@ async function handleDelete(row: CategoryItem) {
 
 function handleOpenTranslations(row: CategoryItem) {
   transEditingId.value = row.id
-  const jaT = row.translations?.find((t) => t.languageCode === 'ja')
-  const koT = row.translations?.find((t) => t.languageCode === 'ko')
-  const enT = row.translations?.find((t) => t.languageCode === 'en')
-  transForm.ja = jaT?.name || ''
-  transForm.ko = koT?.name || ''
-  transForm.en = enT?.name || ''
+  languageOptions.value.forEach((language) => {
+    const translation = row.translations?.find((t) => t.languageCode === language.code)
+    transForm[language.code] = translation?.name || ''
+  })
   transDialogVisible.value = true
 }
 
@@ -350,11 +358,9 @@ async function handleSaveTranslations() {
   if (!transEditingId.value) return
   transLoading.value = true
   try {
-    const payload = [
-      { languageCode: 'ja', name: transForm.ja },
-      { languageCode: 'ko', name: transForm.ko },
-      { languageCode: 'en', name: transForm.en },
-    ]
+    const payload = languageOptions.value
+      .map((language) => ({ languageCode: language.code, name: transForm[language.code] || '' }))
+      .filter((item) => item.name.trim())
     const { data: res } = await categoryApi.saveTranslations(transEditingId.value, payload)
     if (res.code === 200) {
       ElMessage.success('翻译已保存')
@@ -397,7 +403,7 @@ async function handleIconUpload(options: any) {
 }
 
 onMounted(async () => {
-  await loadParentOptions()
+  await Promise.all([loadParentOptions(), loadLanguageOptions()])
   fetchData()
 })
 </script>

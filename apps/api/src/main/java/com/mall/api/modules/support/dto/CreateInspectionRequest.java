@@ -22,6 +22,9 @@ public class CreateInspectionRequest implements Serializable {
     @Schema(description = "问题内容", requiredMode = Schema.RequiredMode.REQUIRED)
     private String question;
 
+    @Schema(description = "优先级: LOW/MEDIUM/HIGH")
+    private String priority;
+
     @Schema(description = "关联商品ID")
     private Long relatedProductId;
 

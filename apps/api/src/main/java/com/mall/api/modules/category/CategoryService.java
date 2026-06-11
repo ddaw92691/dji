@@ -35,7 +35,11 @@ public class CategoryService {
         }
         wrapper.orderByAsc(Category::getSort);
         Page<Category> result = categoryMapper.selectPage(new Page<>(page, pageSize), wrapper);
-        result.getRecords().forEach(c -> c.setStatus(normalizeStatus(c.getStatus())));
+        result.getRecords().forEach(c -> {
+            c.setStatus(normalizeStatus(c.getStatus()));
+            c.setTranslations(categoryTranslationMapper.selectList(
+                    Wrappers.<CategoryTranslation>lambdaQuery().eq(CategoryTranslation::getCategoryId, c.getId())));
+        });
         return result;
     }
 

@@ -557,7 +557,21 @@ public class OrderService {
             BigDecimal discountAmount = BigDecimal.ZERO;
 
             for (Map<String, Object> itemMap : items) {
-                Long productId = ((Number) itemMap.get("productId")).longValue();
+                Long productId = itemMap.get("productId") == null ? null : ((Number) itemMap.get("productId")).longValue();
+                if (productId == null && itemMap.get("platformProductId") != null) {
+                    Long platformProductId = ((Number) itemMap.get("platformProductId")).longValue();
+                    Product listing = productMapper.selectOne(Wrappers.<Product>lambdaQuery()
+                            .eq(Product::getMerchantId, merchantId)
+                            .eq(Product::getPlatformProductId, platformProductId)
+                            .eq(Product::getDeleted, false)
+                            .last("LIMIT 1"));
+                    if (listing != null) {
+                        productId = listing.getId();
+                    }
+                }
+                if (productId == null) {
+                    throw new BusinessException(400, "商品不能为空");
+                }
                 int quantity = ((Number) itemMap.get("quantity")).intValue();
 
                 Product product = productMapper.selectById(productId);

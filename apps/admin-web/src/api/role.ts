@@ -50,6 +50,8 @@ export const roleApi = {
     request.put('/admin/roles/' + id + '/status', { status }),
   deleteRole: (id: string) =>
     request.delete('/admin/roles/' + id),
-  assignMenus: (id: string, menuIds: string[]) =>
+  getRoleMenus: (id: string) =>
+    request.get('/admin/roles/' + id + '/menus'),
+  assignMenus: (id: string, menuIds: Array<string | number>) =>
     request.put('/admin/roles/' + id + '/menus', { menuIds }),
 }

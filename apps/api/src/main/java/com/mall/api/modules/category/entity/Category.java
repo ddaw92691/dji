@@ -1,10 +1,13 @@
 package com.mall.api.modules.category.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.mall.api.common.entity.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -32,4 +35,8 @@ public class Category extends BaseEntity {
 
     @Schema(description = "逻辑删除")
     private Boolean deleted;
+
+    @TableField(exist = false)
+    @Schema(description = "分类多语言名称")
+    private List<CategoryTranslation> translations;
 }

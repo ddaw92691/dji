@@ -95,10 +95,22 @@
           <el-input v-model="form.currencySymbol" placeholder="$" />
         </el-form-item>
         <el-form-item label="时区" prop="timezone">
-          <el-input v-model="form.timezone" placeholder="America/New_York" />
+          <el-select
+            v-model="form.timezone"
+            filterable
+            allow-create
+            default-first-option
+            placeholder="请选择时区"
+            style="width: 100%"
+          >
+            <el-option v-for="timezone in TIMEZONE_OPTIONS" :key="timezone" :label="timezone" :value="timezone" />
+          </el-select>
         </el-form-item>
         <el-form-item label="汇率" prop="exchangeRate">
-          <el-input-number v-model="form.exchangeRate" :precision="4" :min="0" style="width: 100%" />
+          <el-input-number v-model="form.exchangeRate" :precision="6" :min="0.000001" style="width: 100%" />
+          <div class="form-tip">
+            按美元兑目标货币填写，例如人民币填写：美元 1 : 人民币 7。
+          </div>
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-select v-model="form.status" placeholder="请选择状态" style="width: 100%">
@@ -135,6 +147,25 @@ const dialogVisible = ref(false)
 const isEdit = ref(false)
 const editingId = ref<number | null>(null)
 const formRef = ref<FormInstance>()
+
+const TIMEZONE_OPTIONS = [
+  'UTC',
+  'America/New_York',
+  'America/Los_Angeles',
+  'America/Bogota',
+  'America/Mexico_City',
+  'America/Sao_Paulo',
+  'Europe/London',
+  'Europe/Paris',
+  'Europe/Berlin',
+  'Asia/Shanghai',
+  'Asia/Hong_Kong',
+  'Asia/Tokyo',
+  'Asia/Seoul',
+  'Asia/Singapore',
+  'Asia/Dubai',
+  'Australia/Sydney',
+]
 
 const searchForm = reactive({
   keyword: '',
@@ -319,4 +350,10 @@ onMounted(() => {
 <style scoped>
 .i18n-page { padding: 20px; }
 .search-bar { margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+.form-tip {
+  margin-top: 6px;
+  color: #909399;
+  font-size: 12px;
+  line-height: 18px;
+}
 </style>

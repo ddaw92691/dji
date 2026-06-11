@@ -75,9 +75,11 @@ public class AdminSupportController {
     @Operation(summary = "所有平台会话")
     public ApiResponse<Map<String, Object>> getPlatformSessions(
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long merchantId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize) {
-        return ApiResponse.success(supportService.getAdminPlatformSessions(status, page, pageSize));
+        return ApiResponse.success(supportService.getAdminPlatformSessions(status, keyword, merchantId, page, pageSize));
     }
 
     @GetMapping("/platform-sessions/{id}")
@@ -132,7 +134,8 @@ public class AdminSupportController {
                 request.getMerchantId(),
                 request.getQuestion(),
                 request.getRelatedProductId(),
-                request.getRelatedOrderId()
+                request.getRelatedOrderId(),
+                request.getPriority()
         );
         return ApiResponse.success(session);
     }

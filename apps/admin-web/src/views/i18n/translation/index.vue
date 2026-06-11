@@ -48,6 +48,18 @@
         </el-button>
       </el-form-item>
       <el-form-item>
+        <el-button
+          type="danger"
+          plain
+          :disabled="selectedCount === 0"
+          :loading="batchDeleteLoading"
+          v-permission="'i18n:delete'"
+          @click="handleBatchDelete"
+        >
+          删除所选{{ selectedCount ? `（${selectedCount}）` : '' }}
+        </el-button>
+      </el-form-item>
+      <el-form-item>
         <el-button @click="handleOpenMissing">缺失翻译检测</el-button>
       </el-form-item>
       <el-form-item>
@@ -68,7 +80,17 @@
     />
 
     <!-- ============ 矩阵编辑：一行一个 Key，多语言列 ============ -->
-    <el-table v-if="viewMode === 'matrix'" :data="groupData" border stripe v-loading="loading" max-height="62vh" size="small">
+    <el-table
+      v-if="viewMode === 'matrix'"
+      :data="groupData"
+      border
+      stripe
+      v-loading="loading"
+      max-height="62vh"
+      size="small"
+      @selection-change="handleGroupSelectionChange"
+    >
+      <el-table-column type="selection" width="44" fixed />
       <el-table-column prop="namespaceCode" label="模块" width="120" fixed show-overflow-tooltip />
       <el-table-column label="翻译 Key" width="210" fixed show-overflow-tooltip>
         <template #default="{ row }">
@@ -105,7 +127,8 @@
     </el-table>
 
     <!-- ============ 明细列表（保留原有单条编辑/状态/删除） ============ -->
-    <el-table v-else :data="tableData" border stripe v-loading="loading">
+    <el-table v-else :data="tableData" border stripe v-loading="loading" @selection-change="handleListSelectionChange">
+      <el-table-column type="selection" width="44" />
       <el-table-column prop="countryCode" label="国家" width="90">
         <template #default="{ row }">{{ row.countryCode || '通用' }}</template>
       </el-table-column>
@@ -317,7 +340,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { useClipboard } from '@vueuse/core'
 import {
   i18nApi,
@@ -339,8 +362,11 @@ const loading = ref(false)
 const submitLoading = ref(false)
 const importLoading = ref(false)
 const batchLoading = ref(false)
+const batchDeleteLoading = ref(false)
 const tableData = ref<I18nTranslation[]>([])
 const groupData = ref<I18nTranslationGroup[]>([])
+const selectedTranslations = ref<I18nTranslation[]>([])
+const selectedGroups = ref<I18nTranslationGroup[]>([])
 const total = ref(0)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
@@ -426,6 +452,17 @@ function isDirty(row: I18nTranslation) {
 const dirtyCount = computed(() => tableData.value.filter((r) => editValues[r.id] !== originalValues[r.id]).length)
 
 const currentDirty = computed(() => (viewMode.value === 'matrix' ? matrixDirtyCount.value : dirtyCount.value))
+const selectedCount = computed(() =>
+  viewMode.value === 'matrix' ? selectedGroups.value.length : selectedTranslations.value.length,
+)
+
+function handleListSelectionChange(rows: I18nTranslation[]) {
+  selectedTranslations.value = rows
+}
+
+function handleGroupSelectionChange(rows: I18nTranslationGroup[]) {
+  selectedGroups.value = rows
+}
 
 async function loadCountries() {
   try {
@@ -467,6 +504,7 @@ async function fetchList() {
     if (res.code === 200) {
       const pageData = res.data as PageData<I18nTranslation>
       tableData.value = pageData.list
+      selectedTranslations.value = []
       total.value = pageData.total
       for (const k of Object.keys(editValues)) delete editValues[Number(k)]
       for (const k of Object.keys(originalValues)) delete originalValues[Number(k)]
@@ -498,6 +536,7 @@ async function fetchGrouped() {
     if (res.code === 200) {
       const pageData = res.data as PageData<I18nTranslationGroup>
       groupData.value = pageData.list || []
+      selectedGroups.value = []
       total.value = pageData.total
       for (const k of Object.keys(matrixEdit)) delete matrixEdit[k]
       for (const k of Object.keys(matrixOriginal)) delete matrixOriginal[k]
@@ -643,6 +682,52 @@ async function handleMatrixDelete(g: I18nTranslationGroup) {
   if (fail === 0) ElMessage.success('删除成功')
   else ElMessage.warning(`部分删除失败（${fail} 条）`)
   fetchGrouped()
+}
+
+async function deleteTranslationIds(ids: number[]) {
+  let fail = 0
+  for (const id of ids) {
+    try {
+      const { data: res } = await i18nApi.deleteTranslation(id)
+      if (res.code !== 200) fail++
+    } catch {
+      fail++
+    }
+  }
+  return fail
+}
+
+async function handleBatchDelete() {
+  const ids =
+    viewMode.value === 'matrix'
+      ? selectedGroups.value.flatMap((g) => Object.values(g.values || {}).map((c) => c.id).filter(Boolean))
+      : selectedTranslations.value.map((row) => row.id)
+  const uniqueIds = Array.from(new Set(ids.map((id) => Number(id)))).filter((id) => Number.isFinite(id))
+  if (!uniqueIds.length) {
+    ElMessage.warning('请先选择要删除的翻译')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(`确定删除所选 ${uniqueIds.length} 条翻译吗？删除后不可恢复。`, '批量删除确认', {
+      type: 'warning',
+      confirmButtonText: '确认删除',
+      cancelButtonText: '取消',
+    })
+  } catch {
+    return
+  }
+  batchDeleteLoading.value = true
+  try {
+    const fail = await deleteTranslationIds(uniqueIds)
+    if (fail === 0) {
+      ElMessage.success('批量删除成功')
+    } else {
+      ElMessage.warning(`批量删除完成，失败 ${fail} 条`)
+    }
+    fetchData()
+  } finally {
+    batchDeleteLoading.value = false
+  }
 }
 
 /* ============ 明细列表：批量保存（逐条更新） ============ */
