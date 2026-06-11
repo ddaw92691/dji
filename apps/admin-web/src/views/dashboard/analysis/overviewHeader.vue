@@ -6,7 +6,7 @@
         <BaseCard>
           <div class="flex items-center justify-between gap-4 px-3">
             <div class="flex flex-col gap-4 py-2.5">
-              <div class="text-sm font-semibold text-(--el-color-primary)">Business Overview</div>
+              <div class="text-sm font-semibold text-(--el-color-primary)">业务概览</div>
               <h2 class="text-2xl font-bold">全球业务运营中心</h2>
               <p class="text-sm text-(--el-text-color-regular) md:max-w-80">
                 <span>本月业绩增长势头强劲，已完成季度目标的</span>

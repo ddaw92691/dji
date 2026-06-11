@@ -2,32 +2,31 @@ import { defineStore } from 'pinia'
 import zhCN from 'element-plus/es/locale/lang/zh-cn'
 import EN from 'element-plus/es/locale/lang/en'
 import { setI18nLang } from '@/i18n'
-import { APP_CONFIG } from '@/config/app.config'
 import { STORAGE_KEYS, storage } from '@/utils/storage'
 import request from '@/utils/request'
 import type { ILangCode, ILangOption } from '@/types/lang'
 
 export const useLangStore = defineStore('lang', () => {
-  const currentLang = ref<ILangCode>(
-    storage.get<ILangCode>(STORAGE_KEYS.LANG) || APP_CONFIG.defaultLang,
-  )
+  // 总后台仅简体中文：强制 zhCN，忽略历史 storage 残留值
+  const currentLang = ref<ILangCode>('zhCN')
   const currentCountryCode = ref<string>(
-    storage.get<string>(STORAGE_KEYS.COUNTRY_CODE) || 'US',
+    storage.get<string>(STORAGE_KEYS.COUNTRY_CODE) || 'CN',
   )
 
   const langOptions: ILangOption[] = [
+    { code: 'zhCN', shortCode: 'CN', label: '简体中文', elementLocale: 'zhCN' },
     { code: 'enUS', shortCode: 'US', label: 'English', elementLocale: 'EN' },
     { code: 'jaJP', shortCode: 'JP', label: '日本語', elementLocale: 'zhCN' },
     { code: 'koKR', shortCode: 'KR', label: '한국어', elementLocale: 'zhCN' },
   ] as const
 
   const currentLangOption = computed(
-    () => langOptions.find((option) => option.code === currentLang.value)!,
+    () => langOptions.find((option) => option.code === currentLang.value) || langOptions[0],
   )
 
   const elementLangMap = { EN, zhCN } as const
   const currentElementLang = computed(
-    () => elementLangMap[currentLangOption.value.elementLocale as keyof typeof elementLangMap] || EN,
+    () => elementLangMap[currentLangOption.value?.elementLocale as keyof typeof elementLangMap] || zhCN,
   )
 
   const loadedMessages = ref<Record<string, string>>({})

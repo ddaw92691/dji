@@ -54,6 +54,7 @@ public class PublicController {
             item.put("currencyCode", country.getCurrencyCode());
             item.put("currencySymbol", country.getCurrencySymbol());
             item.put("timezone", country.getTimezone());
+            item.put("region", country.getRegion());
 
             List<CountryLanguage> cls = countryLanguageMapper.selectByCountryId(country.getId());
             List<Map<String, Object>> languages = new ArrayList<>();

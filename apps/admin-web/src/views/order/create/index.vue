@@ -1,17 +1,17 @@
 <template>
   <div class="order-create-page">
-    <h2 style="margin-bottom: 20px">Create Order for Merchant</h2>
+    <h2 style="margin-bottom: 20px">为商户创建订单</h2>
 
     <el-form ref="orderFormRef" :model="orderForm" label-width="130px" style="max-width: 800px">
-      <el-divider content-position="left">Customer</el-divider>
-      <el-form-item label="Customer">
+      <el-divider content-position="left">客户</el-divider>
+      <el-form-item label="客户">
         <el-select
           v-model="orderForm.customerId"
           filterable
           remote
           :remote-method="searchCustomers"
           :loading="customerLoading"
-          placeholder="Search customer by nickname/email"
+          placeholder="按昵称/邮箱搜索客户"
           style="width: 100%"
         >
           <el-option
@@ -26,15 +26,15 @@
         <el-button type="primary" plain @click="virtualDialogVisible = true">+ Create Virtual Customer</el-button>
       </el-form-item>
 
-      <el-divider content-position="left">Merchant</el-divider>
-      <el-form-item label="Merchant" required>
+      <el-divider content-position="left">商户</el-divider>
+      <el-form-item label="商户" required>
         <el-select
           v-model="orderForm.merchantId"
           filterable
           remote
           :remote-method="searchMerchants"
           :loading="merchantLoading"
-          placeholder="Select merchant"
+          placeholder="请选择商户"
           style="width: 100%"
           @change="onMerchantChange"
         >
@@ -42,35 +42,35 @@
         </el-select>
       </el-form-item>
 
-      <el-divider content-position="left">Products</el-divider>
+      <el-divider content-position="left">商品</el-divider>
       <div v-if="orderForm.merchantId && listingOptions.length > 0">
         <div v-for="(item, idx) in orderForm.items" :key="idx" class="order-item-row">
-          <el-select v-model="item.platformProductId" placeholder="Product" filterable style="flex: 1" @change="onProductChange(idx)">
+          <el-select v-model="item.platformProductId" placeholder="商品" filterable style="flex: 1" @change="onProductChange(idx)">
             <el-option v-for="l in listingOptions" :key="l.id" :label="l.platformProductName" :value="l.platformProductId" />
           </el-select>
-          <el-input-number v-model="item.quantity" :min="1" placeholder="Qty" style="width: 100px; margin-left: 8px" @change="calcTotal" />
+          <el-input-number v-model="item.quantity" :min="1" placeholder="数量" style="width: 100px; margin-left: 8px" @change="calcTotal" />
           <span style="margin-left: 8px; min-width: 80px">¥{{ item.price * item.quantity }}</span>
           <el-button type="danger" circle size="small" @click="removeItem(idx)">X</el-button>
         </div>
         <el-button type="primary" plain @click="addItem" style="margin-top: 8px">+ Add Item</el-button>
       </div>
       <div v-else-if="orderForm.merchantId">
-        <p style="color: #909399">No listings available for this merchant</p>
+        <p style="color: #909399">该商户暂无可售商品</p>
       </div>
       <div v-else>
-        <p style="color: #909399">Select a merchant first</p>
+        <p style="color: #909399">请先选择商户</p>
       </div>
 
-      <el-divider content-position="left">Shipping Address</el-divider>
-      <el-form-item label="Address">
-        <el-input v-model="orderForm.addressSnapshot" type="textarea" :rows="3" placeholder="Customer address snapshot" />
+      <el-divider content-position="left">收货地址</el-divider>
+      <el-form-item label="地址">
+        <el-input v-model="orderForm.addressSnapshot" type="textarea" :rows="3" placeholder="客户地址快照" />
       </el-form-item>
 
-      <el-divider content-position="left">Other</el-divider>
-      <el-form-item label="Remark">
-        <el-input v-model="orderForm.remark" type="textarea" :rows="2" placeholder="Order remark" />
+      <el-divider content-position="left">其他</el-divider>
+      <el-form-item label="备注">
+        <el-input v-model="orderForm.remark" type="textarea" :rows="2" placeholder="订单备注" />
       </el-form-item>
-      <el-form-item label="Mark as Paid">
+      <el-form-item label="标记为已支付">
         <el-checkbox v-model="orderForm.markAsPaid" />
       </el-form-item>
 
@@ -81,35 +81,35 @@
       </el-form-item>
     </el-form>
 
-    <el-dialog v-model="virtualDialogVisible" title="Create Virtual Customer" width="500px" @close="resetVirtualForm">
+    <el-dialog v-model="virtualDialogVisible" title="新建虚拟客户" width="500px" @close="resetVirtualForm">
       <el-form ref="virtualFormRef" :model="virtualForm" label-width="100px">
-        <el-form-item label="Nickname" required>
-          <el-input v-model="virtualForm.nickname" placeholder="Virtual customer name" />
+        <el-form-item label="昵称" required>
+          <el-input v-model="virtualForm.nickname" placeholder="虚拟客户名称" />
         </el-form-item>
-        <el-form-item label="Email">
-          <el-input v-model="virtualForm.email" placeholder="Optional" />
+        <el-form-item label="邮箱">
+          <el-input v-model="virtualForm.email" placeholder="选填" />
         </el-form-item>
-        <el-form-item label="Remark">
-          <el-input v-model="virtualForm.remark" type="textarea" :rows="2" placeholder="Virtual customer remark" />
+        <el-form-item label="备注">
+          <el-input v-model="virtualForm.remark" type="textarea" :rows="2" placeholder="虚拟客户备注" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="virtualDialogVisible = false">Cancel</el-button>
-        <el-button type="primary" :loading="virtualLoading" @click="createVirtualCustomer">Create</el-button>
+        <el-button @click="virtualDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="virtualLoading" @click="createVirtualCustomer">新增</el-button>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="resultVisible" title="Order Created" width="500px">
+    <el-dialog v-model="resultVisible" title="订单已创建" width="500px">
       <div v-if="orderResult">
         <el-descriptions :column="1" border size="small">
-          <el-descriptions-item label="Order No">{{ orderResult.orderNo }}</el-descriptions-item>
-          <el-descriptions-item label="Total">{{ orderResult.totalAmount }}</el-descriptions-item>
-          <el-descriptions-item label="Status">{{ orderResult.status }}</el-descriptions-item>
+          <el-descriptions-item label="订单号">{{ orderResult.orderNo }}</el-descriptions-item>
+          <el-descriptions-item label="合计">{{ orderResult.totalAmount }}</el-descriptions-item>
+          <el-descriptions-item label="状态">{{ orderResult.status }}</el-descriptions-item>
         </el-descriptions>
-        <p style="margin-top: 10px; color: #67c23a">Merchant has been notified via WebSocket</p>
+        <p style="margin-top: 10px; color: #67c23a">已通过 WebSocket 通知商户</p>
       </div>
       <template #footer>
-        <el-button @click="resultVisible = false">Close</el-button>
+        <el-button @click="resultVisible = false">关闭</el-button>
       </template>
     </el-dialog>
   </div>
@@ -220,15 +220,15 @@ function calcTotal() {
 
 async function handleSubmit() {
   if (!orderForm.merchantId) {
-    ElMessage.warning('Please select a merchant')
+    ElMessage.warning('请选择商户')
     return
   }
   if (!orderForm.customerId) {
-    ElMessage.warning('Please select a customer')
+    ElMessage.warning('请选择客户')
     return
   }
   if (!orderForm.items.length) {
-    ElMessage.warning('Add at least one product')
+    ElMessage.warning('请至少添加一个商品')
     return
   }
   submitLoading.value = true
@@ -249,12 +249,12 @@ async function handleSubmit() {
     if (res.code === 200) {
       orderResult.value = res.data
       resultVisible.value = true
-      ElMessage.success('Order created. Merchant notified via WebSocket.')
+      ElMessage.success('订单已创建，已通过 WebSocket 通知商户')
     } else {
-      ElMessage.error(res.message || 'Failed to create order')
+      ElMessage.error(res.message || '创建订单失败')
     }
   } catch {
-    ElMessage.error('Failed to create order')
+    ElMessage.error('创建订单失败')
   } finally {
     submitLoading.value = false
   }
@@ -262,7 +262,7 @@ async function handleSubmit() {
 
 async function createVirtualCustomer() {
   if (!virtualForm.nickname) {
-    ElMessage.warning('Nickname is required')
+    ElMessage.warning('昵称为必填项')
     return
   }
   virtualLoading.value = true
@@ -274,7 +274,7 @@ async function createVirtualCustomer() {
       virtualRemark: virtualForm.remark || undefined,
     })
     if (res.code === 200) {
-      ElMessage.success('Virtual customer created')
+      ElMessage.success('虚拟客户已创建')
       virtualDialogVisible.value = false
       customerOptions.value.unshift(res.data)
       orderForm.customerId = res.data.id
@@ -282,7 +282,7 @@ async function createVirtualCustomer() {
       ElMessage.error(res.message || 'Failed to create')
     }
   } catch {
-    ElMessage.error('Failed to create virtual customer')
+    ElMessage.error('创建虚拟客户失败')
   } finally {
     virtualLoading.value = false
   }

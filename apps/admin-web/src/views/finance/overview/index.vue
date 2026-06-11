@@ -1,32 +1,32 @@
 <template>
   <div class="finance-overview">
     <div class="page-header">
-      <h2>Finance Overview</h2>
-      <el-button type="primary" :loading="loading" @click="fetchData">Refresh</el-button>
+      <h2>财务概览</h2>
+      <el-button type="primary" :loading="loading" @click="fetchData">刷新</el-button>
     </div>
 
     <el-row :gutter="16" class="stats-row">
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">Total Sales</div>
+          <div class="stat-label">总销售额</div>
           <div class="stat-value">${{ formatAmount(summary.totalSales) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">Today Sales</div>
+          <div class="stat-label">今日销售</div>
           <div class="stat-value">${{ formatAmount(summary.todaySales) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">Completed Orders</div>
+          <div class="stat-label">已完成订单</div>
           <div class="stat-value">{{ summary.completedOrderCount }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">Paid Orders</div>
+          <div class="stat-label">已支付订单</div>
           <div class="stat-value">{{ summary.paidOrderCount }}</div>
         </el-card>
       </el-col>
@@ -35,25 +35,25 @@
     <el-row :gutter="16" class="stats-row">
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card balance-card">
-          <div class="stat-label">Merchant Balance</div>
+          <div class="stat-label">商户余额</div>
           <div class="stat-value green">${{ formatAmount(summary.totalMerchantBalance) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card balance-card">
-          <div class="stat-label">Merchant Frozen</div>
+          <div class="stat-label">商户冻结</div>
           <div class="stat-value warn">${{ formatAmount(summary.totalMerchantFrozenBalance) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card balance-card">
-          <div class="stat-label">Agent Balance</div>
+          <div class="stat-label">代理余额</div>
           <div class="stat-value green">${{ formatAmount(summary.totalAgentBalance) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card balance-card">
-          <div class="stat-label">Agent Frozen</div>
+          <div class="stat-label">代理冻结</div>
           <div class="stat-value warn">${{ formatAmount(summary.totalAgentFrozenBalance) }}</div>
         </el-card>
       </el-col>
@@ -62,25 +62,25 @@
     <el-row :gutter="16" class="stats-row">
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">Total Commission</div>
+          <div class="stat-label">总佣金</div>
           <div class="stat-value">${{ formatAmount(summary.totalCommission) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">Total Withdrawn</div>
+          <div class="stat-label">已提现总额</div>
           <div class="stat-value">${{ formatAmount(summary.totalWithdrawn) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card pending-card">
-          <div class="stat-label">Pending Withdrawals</div>
+          <div class="stat-label">待处理提现</div>
           <div class="stat-value">${{ formatAmount(summary.pendingWithdrawalAmount) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card pending-card">
-          <div class="stat-label">Pending Count</div>
+          <div class="stat-label">待处理数量</div>
           <div class="stat-value">{{ summary.pendingWithdrawalCount }}</div>
         </el-card>
       </el-col>

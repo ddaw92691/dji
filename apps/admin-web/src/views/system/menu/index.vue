@@ -35,15 +35,15 @@
         <BaseTag :type="row.visible !== false ? 'success' : 'info'" :text="row.visible !== false ? 'Yes' : 'No'" />
       </template>
       <template #operation="{ row }">
-        <el-button type="primary" link v-permission="['menu:edit']" @click="openEdit(row)">Edit</el-button>
+        <el-button type="primary" link v-permission="['menu:edit']" @click="openEdit(row)">编辑</el-button>
         <el-popconfirm
-          title="Delete this menu?"
+          title="确定要删除该菜单吗？"
           :placement="POPCONFIRM_CONFIG.placement"
           :width="POPCONFIRM_CONFIG.width"
           @confirm="handleDelete(row.id)"
         >
           <template #reference>
-            <el-button type="danger" link v-permission="['menu:delete']">Delete</el-button>
+            <el-button type="danger" link v-permission="['menu:delete']">删除</el-button>
           </template>
         </el-popconfirm>
       </template>
@@ -51,51 +51,51 @@
 
     <BaseDialog v-model="dialogVisible" :title="editForm.id ? 'Edit Menu' : 'Create Menu'" width="600" @close="dialogVisible = false">
       <el-form ref="formRef" :model="editForm" :rules="formRules" label-width="100px">
-        <el-form-item label="Parent">
+        <el-form-item label="上级">
           <el-tree-select
             v-model="editForm.parentId"
             :data="parentOptions"
             :props="{ children: 'children', label: 'title', value: 'id' }"
             check-strictly
             clearable
-            placeholder="Select parent (empty for top level)"
+            placeholder="选择上级（留空为顶级）"
             style="width:100%"
           />
         </el-form-item>
-        <el-form-item label="App Type" prop="appType">
+        <el-form-item label="应用类型" prop="appType">
           <el-select v-model="editForm.appType" style="width:100%">
             <el-option label="ADMIN" value="ADMIN" />
             <el-option label="MERCHANT" value="MERCHANT" />
           </el-select>
         </el-form-item>
-        <el-form-item label="Type" prop="type">
+        <el-form-item label="类型" prop="type">
           <el-select v-model="editForm.type" style="width:100%" @change="onTypeChange">
-            <el-option label="Directory" value="DIRECTORY" />
-            <el-option label="Menu" value="MENU" />
-            <el-option label="Button" value="BUTTON" />
+            <el-option label="目录" value="DIRECTORY" />
+            <el-option label="菜单" value="MENU" />
+            <el-option label="按钮" value="BUTTON" />
           </el-select>
         </el-form-item>
-        <el-form-item label="Title" prop="title"><el-input v-model="editForm.title" /></el-form-item>
-        <el-form-item label="Path" v-if="editForm.type !== 'BUTTON'"><el-input v-model="editForm.path" /></el-form-item>
-        <el-form-item label="Component" v-if="editForm.type === 'MENU'"><el-input v-model="editForm.component" placeholder="e.g. user/customer/index" /></el-form-item>
-        <el-form-item label="Icon" v-if="editForm.type !== 'BUTTON'"><el-input v-model="editForm.icon" placeholder="Icon name" /></el-form-item>
-        <el-form-item label="Permission"><el-input v-model="editForm.permission" placeholder="e.g. customer:view" /></el-form-item>
-        <el-form-item label="Sort"><el-input-number v-model="editForm.sort" :min="0" style="width:100%" /></el-form-item>
-        <el-form-item label="Visible">
+        <el-form-item label="标题" prop="title"><el-input v-model="editForm.title" /></el-form-item>
+        <el-form-item label="路径" v-if="editForm.type !== 'BUTTON'"><el-input v-model="editForm.path" /></el-form-item>
+        <el-form-item label="组件" v-if="editForm.type === 'MENU'"><el-input v-model="editForm.component" placeholder="e.g. user/customer/index" /></el-form-item>
+        <el-form-item label="图标" v-if="editForm.type !== 'BUTTON'"><el-input v-model="editForm.icon" placeholder="图标名称" /></el-form-item>
+        <el-form-item label="权限"><el-input v-model="editForm.permission" placeholder="e.g. customer:view" /></el-form-item>
+        <el-form-item label="排序"><el-input-number v-model="editForm.sort" :min="0" style="width:100%" /></el-form-item>
+        <el-form-item label="显示">
           <el-radio-group v-model="editForm.visible">
-            <el-radio :value="true">Yes</el-radio>
-            <el-radio :value="false">No</el-radio>
+            <el-radio :value="true">是</el-radio>
+            <el-radio :value="false">否</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="Status">
+        <el-form-item label="状态">
           <el-radio-group v-model="editForm.status">
             <el-radio v-for="item in STATUS_OPTIONS" :key="item.value" :value="item.value">{{ item.label }}</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">Cancel</el-button>
-        <el-button type="primary" :loading="submitLoading" @click="handleSubmit">Save</el-button>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="handleSubmit">保存</el-button>
       </template>
     </BaseDialog>
   </div>
@@ -230,15 +230,15 @@ const handleSubmit = async () => {
       ElMessage.success(editForm.id ? 'Menu updated' : 'Menu created')
       dialogVisible.value = false
       basePageRef.value?.refreshCurrentPage()
-    } else { ElMessage.error(res.message || 'Operation failed') }
-  } catch { ElMessage.error('Operation failed') } finally { submitLoading.value = false }
+    } else { ElMessage.error(res.message || '操作失败') }
+  } catch { ElMessage.error('操作失败') } finally { submitLoading.value = false }
 }
 
 const handleDelete = async (id: string) => {
   try {
     const { data: res } = await menuApi.deleteMenu(id)
-    if (res.code === 200) { ElMessage.success('Menu deleted'); basePageRef.value?.refreshCurrentPage() }
-    else { ElMessage.error(res.message || 'Delete failed') }
-  } catch { ElMessage.error('Delete failed') }
+    if (res.code === 200) { ElMessage.success('菜单已删除'); basePageRef.value?.refreshCurrentPage() }
+    else { ElMessage.error(res.message || '删除失败') }
+  } catch { ElMessage.error('删除失败') }
 }
 </script>

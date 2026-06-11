@@ -4,7 +4,7 @@ import type { ICommonResponse } from '@/types/common'
 export interface I18nCountry {
   id: number; name: string; code: string; flagIcon: string; phoneCode: string
   defaultLanguageCode: string; currencyCode: string; currencySymbol: string
-  timezone: string; exchangeRate: number; status: string; sort: number
+  timezone: string; region: string; exchangeRate: number; status: string; sort: number
   createdAt: string; updatedAt: string
 }
 

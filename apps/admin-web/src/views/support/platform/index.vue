@@ -2,57 +2,57 @@
   <div class="admin-platform-support-page">
     <el-form :inline="true" :model="searchForm" class="search-bar">
       <el-form-item>
-        <el-input v-model="searchForm.keyword" placeholder="Keyword" clearable @clear="handleSearch" @keyup.enter="handleSearch" style="width: 200px" />
+        <el-input v-model="searchForm.keyword" placeholder="关键词" clearable @clear="handleSearch" @keyup.enter="handleSearch" style="width: 200px" />
       </el-form-item>
       <el-form-item>
-        <el-input v-model="searchForm.merchantId" placeholder="Merchant ID" clearable @clear="handleSearch" style="width: 120px" />
+        <el-input v-model="searchForm.merchantId" placeholder="商户ID" clearable @clear="handleSearch" style="width: 120px" />
       </el-form-item>
       <el-form-item>
-        <el-select v-model="searchForm.status" placeholder="Status" clearable @change="handleSearch" style="width: 110px">
-          <el-option label="Open" value="OPEN" />
-          <el-option label="Closed" value="CLOSED" />
+        <el-select v-model="searchForm.status" placeholder="状态" clearable @change="handleSearch" style="width: 110px">
+          <el-option label="开启" value="OPEN" />
+          <el-option label="已关闭" value="CLOSED" />
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-select v-model="searchForm.priority" placeholder="Priority" clearable @change="handleSearch" style="width: 110px">
-          <el-option label="High" value="HIGH" />
-          <el-option label="Medium" value="MEDIUM" />
-          <el-option label="Low" value="LOW" />
+        <el-select v-model="searchForm.priority" placeholder="优先级" clearable @change="handleSearch" style="width: 110px">
+          <el-option label="高" value="HIGH" />
+          <el-option label="中" value="MEDIUM" />
+          <el-option label="低" value="LOW" />
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="handleSearch">Search</el-button>
+        <el-button type="primary" @click="handleSearch">搜索</el-button>
       </el-form-item>
     </el-form>
 
     <el-table :data="tableData" border stripe v-loading="loading" @row-click="openReply">
       <el-table-column type="index" label="#" width="50" />
-      <el-table-column prop="merchantName" label="Merchant" width="120" show-overflow-tooltip />
-      <el-table-column prop="title" label="Title" min-width="180" show-overflow-tooltip />
-      <el-table-column label="Status" width="80" align="center">
+      <el-table-column prop="merchantName" label="商户" width="120" show-overflow-tooltip />
+      <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
+      <el-table-column label="状态" width="80" align="center">
         <template #default="{ row }">
           <el-tag :type="row.status === 'OPEN' ? 'success' : 'info'" size="small">{{ row.status }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Priority" width="80" align="center">
+      <el-table-column label="优先级" width="80" align="center">
         <template #default="{ row }">
           <el-tag :type="row.priority === 'HIGH' ? 'danger' : row.priority === 'MEDIUM' ? 'warning' : 'info'" size="small">{{ row.priority }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Last Message" min-width="160" show-overflow-tooltip>
+      <el-table-column label="最后消息" min-width="160" show-overflow-tooltip>
         <template #default="{ row }">{{ row.lastMessage || '-' }}</template>
       </el-table-column>
-      <el-table-column label="Unread" width="70" align="center">
+      <el-table-column label="未读" width="70" align="center">
         <template #default="{ row }">
           <el-badge v-if="row.merchantUnread" :value="row.merchantUnread" type="danger" />
           <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column prop="lastMessageAt" label="Last At" width="160" />
-      <el-table-column label="Actions" width="120" fixed="right">
+      <el-table-column prop="lastMessageAt" label="最后时间" width="160" />
+      <el-table-column label="操作" width="120" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click.stop="openReply(row)">Reply</el-button>
-          <el-button v-if="row.status === 'OPEN'" link type="danger" @click.stop="handleClose(row)">Close</el-button>
+          <el-button link type="primary" @click.stop="openReply(row)">回复</el-button>
+          <el-button v-if="row.status === 'OPEN'" link type="danger" @click.stop="handleClose(row)">关闭</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -66,7 +66,7 @@
       @change="fetchData"
     />
 
-    <el-dialog v-model="chatVisible" title="Platform Support Reply" width="700px" @closed="closeChat">
+    <el-dialog v-model="chatVisible" title="平台客服回复" width="700px" @closed="closeChat">
       <div v-if="chatSession" class="chat-panel">
         <div class="chat-header">
           <span class="session-title">{{ chatSession.title }} - {{ chatSession.merchantName }}</span>
@@ -85,13 +85,13 @@
           </div>
         </div>
         <div class="chat-input-area" v-if="chatSession.status === 'OPEN'">
-          <el-select v-model="quickReplySelected" placeholder="Quick Reply" clearable @change="applyQuickReply" style="width: 160px; margin-right: 8px">
+          <el-select v-model="quickReplySelected" placeholder="快捷回复" clearable @change="applyQuickReply" style="width: 160px; margin-right: 8px">
             <el-option v-for="qr in quickReplies" :key="qr.id" :label="qr.title" :value="qr.content" />
           </el-select>
-          <el-input v-model="chatInput" placeholder="Type a message..." @keyup.enter="sendMessage" class="chat-input" />
-          <el-button type="primary" @click="sendMessage" :loading="sending">Send</el-button>
+          <el-input v-model="chatInput" placeholder="输入消息…" @keyup.enter="sendMessage" class="chat-input" />
+          <el-button type="primary" @click="sendMessage" :loading="sending">发送</el-button>
         </div>
-        <div v-else class="chat-closed-notice">This session has been closed.</div>
+        <div v-else class="chat-closed-notice">该会话已关闭。</div>
       </div>
     </el-dialog>
   </div>
@@ -199,10 +199,10 @@ async function handleClose(row: IAdminSupportSession) {
   try {
     const { data: res } = await platformSupportApi.closeSession(row.id)
     if (res.code === 200) {
-      ElMessage.success('Session closed')
+      ElMessage.success('会话已关闭')
       fetchData()
     }
-  } catch { ElMessage.error('Close failed') }
+  } catch { ElMessage.error('关闭失败') }
 }
 
 function closeChat() {

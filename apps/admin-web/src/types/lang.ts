@@ -1,7 +1,7 @@
 // 国际化的类型
 
 // 本地语言code
-export type ILangCode = 'enUS' | 'jaJP' | 'koKR'
+export type ILangCode = 'zhCN' | 'enUS' | 'jaJP' | 'koKR'
 // Element Plus 语言包key
 export type IElementLocale = 'EN' | 'zhCN' | 'zhTW'
 

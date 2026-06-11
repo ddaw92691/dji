@@ -507,6 +507,7 @@ CREATE TABLE IF NOT EXISTS country (
     currency_code   VARCHAR(10),
     currency_symbol VARCHAR(10),
     timezone        VARCHAR(50),
+    region          VARCHAR(32),
     exchange_rate   NUMERIC(10,4)   DEFAULT 1,
     status          VARCHAR(20)     NOT NULL DEFAULT 'ENABLE',
     sort            INTEGER         NOT NULL DEFAULT 0,
@@ -515,6 +516,7 @@ CREATE TABLE IF NOT EXISTS country (
     updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE UNIQUE INDEX IF NOT EXISTS uk_country_code ON country(code);
+ALTER TABLE country ADD COLUMN IF NOT EXISTS region VARCHAR(32);
 
 -- 27. Language
 CREATE TABLE IF NOT EXISTS language (

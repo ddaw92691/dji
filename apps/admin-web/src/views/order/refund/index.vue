@@ -2,16 +2,16 @@
   <div class="refund-page">
     <el-form :inline="true" :model="searchForm" class="search-bar">
       <el-form-item>
-        <el-input v-model="searchForm.orderNo" placeholder="Order No" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input v-model="searchForm.orderNo" placeholder="订单号" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
       </el-form-item>
       <el-form-item>
-        <el-input v-model="searchForm.userId" placeholder="User ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input v-model="searchForm.userId" placeholder="用户ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
       </el-form-item>
       <el-form-item>
-        <el-input v-model="searchForm.merchantId" placeholder="Merchant ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input v-model="searchForm.merchantId" placeholder="商户ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
       </el-form-item>
       <el-form-item>
-        <el-select v-model="searchForm.refundStatus" placeholder="Refund Status" clearable @change="handleSearch">
+        <el-select v-model="searchForm.refundStatus" placeholder="退款状态" clearable @change="handleSearch">
           <el-option v-for="o in REFUND_STATUS_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
         </el-select>
       </el-form-item>
@@ -20,38 +20,38 @@
           v-model="searchForm.dateRange"
           type="daterange"
           range-separator="to"
-          start-placeholder="Start"
-          end-placeholder="End"
+          start-placeholder="开始"
+          end-placeholder="结束"
           format="YYYY-MM-DD"
           value-format="YYYY-MM-DD"
           @change="handleSearch"
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="handleSearch">Search</el-button>
+        <el-button type="primary" @click="handleSearch">搜索</el-button>
       </el-form-item>
     </el-form>
 
     <el-table :data="tableData" border stripe v-loading="loading">
       <el-table-column type="index" label="#" width="55" />
-      <el-table-column prop="orderNo" label="Order No" min-width="160" show-overflow-tooltip />
-      <el-table-column prop="userName" label="Customer" min-width="120" show-overflow-tooltip />
-      <el-table-column prop="merchantName" label="Merchant" min-width="130" show-overflow-tooltip />
-      <el-table-column prop="payAmount" label="Pay Amount" width="110" align="right" />
-      <el-table-column label="Refund Status" width="120" align="center">
+      <el-table-column prop="orderNo" label="订单号" min-width="160" show-overflow-tooltip />
+      <el-table-column prop="userName" label="客户" min-width="120" show-overflow-tooltip />
+      <el-table-column prop="merchantName" label="商户" min-width="130" show-overflow-tooltip />
+      <el-table-column prop="payAmount" label="支付金额" width="110" align="right" />
+      <el-table-column label="退款状态" width="120" align="center">
         <template #default="{ row }">
           <el-tag :type="getColorByValue(REFUND_STATUS_OPTIONS, row.refundStatus)">
             {{ getLabelByValue(REFUND_STATUS_OPTIONS, row.refundStatus) }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="refundReason" label="Reason" min-width="150" show-overflow-tooltip />
-      <el-table-column prop="createdAt" label="Created" width="180" />
-      <el-table-column label="Actions" width="220" fixed="right">
+      <el-table-column prop="refundReason" label="原因" min-width="150" show-overflow-tooltip />
+      <el-table-column prop="createdAt" label="创建时间" width="180" />
+      <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" v-permission="'refund:view'" @click="openDetail(row.orderId)">Detail</el-button>
-          <el-button link type="success" v-if="row.refundStatus === 'REQUESTED'" v-permission="'refund:approve'" @click="handleApprove(row)">Approve</el-button>
-          <el-button link type="danger" v-if="row.refundStatus === 'REQUESTED'" v-permission="'refund:reject'" @click="openReject(row)">Reject</el-button>
+          <el-button link type="primary" v-permission="'refund:view'" @click="openDetail(row.orderId)">详情</el-button>
+          <el-button link type="success" v-if="row.refundStatus === 'REQUESTED'" v-permission="'refund:approve'" @click="handleApprove(row)">通过</el-button>
+          <el-button link type="danger" v-if="row.refundStatus === 'REQUESTED'" v-permission="'refund:reject'" @click="openReject(row)">拒绝</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -65,64 +65,64 @@
       @change="fetchData"
     />
 
-    <el-dialog v-model="detailVisible" title="Refund Detail" width="900px">
+    <el-dialog v-model="detailVisible" title="退款详情" width="900px">
       <div v-if="detail" class="refund-detail">
         <el-descriptions :column="2" border size="small">
-          <el-descriptions-item label="Order No">{{ detail.orderNo }}</el-descriptions-item>
-          <el-descriptions-item label="Customer">{{ detail.userName }}</el-descriptions-item>
-          <el-descriptions-item label="Merchant">{{ detail.merchantName || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="User ID">{{ detail.userId }}</el-descriptions-item>
-          <el-descriptions-item label="Refund Status">
+          <el-descriptions-item label="订单号">{{ detail.orderNo }}</el-descriptions-item>
+          <el-descriptions-item label="客户">{{ detail.userName }}</el-descriptions-item>
+          <el-descriptions-item label="商户">{{ detail.merchantName || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="用户ID">{{ detail.userId }}</el-descriptions-item>
+          <el-descriptions-item label="退款状态">
             <el-tag :type="getColorByValue(REFUND_STATUS_OPTIONS, detail.refundStatus)">
               {{ getLabelByValue(REFUND_STATUS_OPTIONS, detail.refundStatus) }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="Refund Amount">${{ detail.refundAmount }}</el-descriptions-item>
-          <el-descriptions-item label="Pay Amount">${{ detail.payAmount }}</el-descriptions-item>
-          <el-descriptions-item label="Refund Reason">{{ detail.refundReason || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="Reject Reason">{{ detail.rejectReason || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="Created At">{{ detail.createdAt }}</el-descriptions-item>
-          <el-descriptions-item label="Reviewed At">{{ detail.reviewedAt || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="退款金额">${{ detail.refundAmount }}</el-descriptions-item>
+          <el-descriptions-item label="支付金额">${{ detail.payAmount }}</el-descriptions-item>
+          <el-descriptions-item label="退款原因">{{ detail.refundReason || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="拒绝原因">{{ detail.rejectReason || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间">{{ detail.createdAt }}</el-descriptions-item>
+          <el-descriptions-item label="审核时间">{{ detail.reviewedAt || '-' }}</el-descriptions-item>
         </el-descriptions>
 
-        <el-divider>Order Items</el-divider>
+        <el-divider>订单商品</el-divider>
         <el-table :data="detail.items" border size="small">
-          <el-table-column label="Image" width="80">
+          <el-table-column label="图片" width="80">
             <template #default="{ row: item }">
               <el-image v-if="item.productImage" :src="item.productImage" style="width:50px;height:50px;border-radius:4px" fit="cover" />
               <span v-else>-</span>
             </template>
           </el-table-column>
-          <el-table-column prop="productTitle" label="Product" min-width="180" show-overflow-tooltip />
-          <el-table-column prop="price" label="Price" width="100" />
-          <el-table-column prop="quantity" label="Qty" width="60" />
-          <el-table-column label="Subtotal" width="100">
+          <el-table-column prop="productTitle" label="商品" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="price" label="价格" width="100" />
+          <el-table-column prop="quantity" label="数量" width="60" />
+          <el-table-column label="小计" width="100">
             <template #default="{ row: item }">${{ (item.price * item.quantity).toFixed(2) }}</template>
           </el-table-column>
         </el-table>
 
-        <el-divider>Payment Info</el-divider>
+        <el-divider>支付信息</el-divider>
         <div v-if="detail.payment" class="info-box">
           <p><strong>Method:</strong> {{ detail.payment.method || '-' }}</p>
           <p><strong>Transaction No:</strong> {{ detail.payment.transactionNo || '-' }}</p>
           <p><strong>Paid At:</strong> {{ detail.payment.paidAt || '-' }}</p>
         </div>
-        <span v-else>No payment info</span>
+        <span v-else>暂无支付信息</span>
       </div>
       <template #footer>
-        <el-button @click="detailVisible = false">Close</el-button>
+        <el-button @click="detailVisible = false">关闭</el-button>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="rejectVisible" title="Reject Refund" width="480px">
+    <el-dialog v-model="rejectVisible" title="拒绝退款" width="480px">
       <el-form :model="rejectForm" label-width="110px">
-        <el-form-item label="Reject Reason" required>
-          <el-input v-model="rejectForm.rejectReason" type="textarea" :rows="4" placeholder="Enter reject reason" />
+        <el-form-item label="拒绝原因" required>
+          <el-input v-model="rejectForm.rejectReason" type="textarea" :rows="4" placeholder="请输入拒绝原因" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="rejectVisible = false">Cancel</el-button>
-        <el-button type="danger" :loading="actionLoading" @click="handleReject">Confirm Reject</el-button>
+        <el-button @click="rejectVisible = false">取消</el-button>
+        <el-button type="danger" :loading="actionLoading" @click="handleReject">确认拒绝</el-button>
       </template>
     </el-dialog>
   </div>
@@ -202,7 +202,7 @@ async function handleApprove(row: IAdminRefund) {
   try {
     const { data: res } = await refundApi.approveRefund(row.orderId)
     if (res.code !== 200) return
-    ElMessage.success('Refund approved')
+    ElMessage.success('退款已通过')
     fetchData()
   } finally {
     actionLoading.value = false
@@ -217,14 +217,14 @@ function openReject(row: IAdminRefund) {
 
 async function handleReject() {
   if (!rejectingId.value || !rejectForm.rejectReason.trim()) {
-    ElMessage.warning('Please enter a reject reason')
+    ElMessage.warning('请输入拒绝原因')
     return
   }
   actionLoading.value = true
   try {
     const { data: res } = await refundApi.rejectRefund(rejectingId.value, rejectForm.rejectReason)
     if (res.code !== 200) return
-    ElMessage.success('Refund rejected')
+    ElMessage.success('退款已拒绝')
     rejectVisible.value = false
     fetchData()
   } finally {

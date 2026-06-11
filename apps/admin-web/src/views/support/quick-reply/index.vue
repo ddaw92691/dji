@@ -1,32 +1,32 @@
 <template>
   <div class="quick-reply-admin-page">
     <div class="page-header">
-      <h3>Quick Replies</h3>
-      <el-button type="primary" @click="openCreate">Add Reply</el-button>
+      <h3>快捷回复</h3>
+      <el-button type="primary" @click="openCreate">新增回复</el-button>
     </div>
 
     <el-table :data="tableData" border stripe v-loading="loading">
       <el-table-column type="index" label="#" width="55" />
-      <el-table-column prop="title" label="Title" min-width="150" show-overflow-tooltip />
-      <el-table-column label="Content" min-width="250" show-overflow-tooltip>
+      <el-table-column prop="title" label="标题" min-width="150" show-overflow-tooltip />
+      <el-table-column label="内容" min-width="250" show-overflow-tooltip>
         <template #default="{ row }">{{ row.content?.length > 60 ? row.content.slice(0, 60) + '...' : row.content }}</template>
       </el-table-column>
-      <el-table-column prop="languageCode" label="Language" width="90" align="center" />
-      <el-table-column prop="merchantId" label="Merchant" width="80" align="center">
+      <el-table-column prop="languageCode" label="语言" width="90" align="center" />
+      <el-table-column prop="merchantId" label="商户" width="80" align="center">
         <template #default="{ row }">{{ row.merchantId || 'Global' }}</template>
       </el-table-column>
-      <el-table-column label="Status" width="90" align="center">
+      <el-table-column label="状态" width="90" align="center">
         <template #default="{ row }">
           <el-tag :type="row.status === 'ENABLE' ? 'success' : 'info'" size="small">{{ row.status }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="sort" label="Sort" width="60" align="center" />
-      <el-table-column label="Actions" width="200" fixed="right">
+      <el-table-column prop="sort" label="排序" width="60" align="center" />
+      <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openEdit(row)">Edit</el-button>
-          <el-popconfirm title="Confirm delete?" @confirm="handleDelete(row)">
+          <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
+          <el-popconfirm title="确定要删除吗？" @confirm="handleDelete(row)">
             <template #reference>
-              <el-button link type="danger">Delete</el-button>
+              <el-button link type="danger">删除</el-button>
             </template>
           </el-popconfirm>
         </template>
@@ -44,35 +44,35 @@
 
     <el-dialog v-model="formVisible" :title="editingId ? 'Edit Quick Reply' : 'Add Quick Reply'" width="550px" @closed="resetForm">
       <el-form :model="formData" label-width="120px">
-        <el-form-item label="Title" required>
-          <el-input v-model="formData.title" placeholder="Quick reply title" />
+        <el-form-item label="标题" required>
+          <el-input v-model="formData.title" placeholder="快捷回复标题" />
         </el-form-item>
-        <el-form-item label="Content" required>
-          <el-input v-model="formData.content" type="textarea" :rows="5" placeholder="Reply content..." />
+        <el-form-item label="内容" required>
+          <el-input v-model="formData.content" type="textarea" :rows="5" placeholder="回复内容…" />
         </el-form-item>
-        <el-form-item label="Language">
+        <el-form-item label="语言">
           <el-select v-model="formData.languageCode" style="width: 100%">
-            <el-option label="English" value="en" />
-            <el-option label="Japanese" value="ja" />
-            <el-option label="Korean" value="ko" />
+            <el-option label="英语" value="en" />
+            <el-option label="日语" value="ja" />
+            <el-option label="韩语" value="ko" />
           </el-select>
         </el-form-item>
-        <el-form-item label="Merchant ID">
-          <el-input v-model="formData.merchantId" placeholder="Blank for global" />
+        <el-form-item label="商户ID">
+          <el-input v-model="formData.merchantId" placeholder="留空表示全局" />
         </el-form-item>
-        <el-form-item label="Status">
+        <el-form-item label="状态">
           <el-select v-model="formData.status" style="width: 100%">
-            <el-option label="Enabled" value="ENABLE" />
-            <el-option label="Disabled" value="DISABLE" />
+            <el-option label="已启用" value="ENABLE" />
+            <el-option label="已禁用" value="DISABLE" />
           </el-select>
         </el-form-item>
-        <el-form-item label="Sort">
+        <el-form-item label="排序">
           <el-input-number v-model="formData.sort" :min="0" :max="9999" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="formVisible = false">Cancel</el-button>
-        <el-button type="primary" :loading="submitting" @click="handleSubmit">Save</el-button>
+        <el-button @click="formVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="handleSubmit">保存</el-button>
       </template>
     </el-dialog>
   </div>
@@ -114,9 +114,9 @@ async function fetchData() {
       tableData.value = res.data.list || []
       total.value = res.data.total || 0
     } else {
-      ElMessage.error(res.message || 'Fetch failed')
+      ElMessage.error(res.message || '获取失败')
     }
-  } catch { ElMessage.error('Fetch failed') } finally { loading.value = false }
+  } catch { ElMessage.error('获取失败') } finally { loading.value = false }
 }
 
 function openCreate() {
@@ -147,7 +147,7 @@ function resetForm() {
 
 async function handleSubmit() {
   if (!formData.title.trim() || !formData.content.trim()) {
-    ElMessage.warning('Title and content are required')
+    ElMessage.warning('标题和内容为必填项')
     return
   }
   submitting.value = true
@@ -171,21 +171,21 @@ async function handleSubmit() {
       formVisible.value = false
       fetchData()
     } else {
-      ElMessage.error(res.data.message || 'Save failed')
+      ElMessage.error(res.data.message || '保存失败')
     }
-  } catch { ElMessage.error('Save failed') } finally { submitting.value = false }
+  } catch { ElMessage.error('保存失败') } finally { submitting.value = false }
 }
 
 async function handleDelete(row: IQuickReply) {
   try {
     const { data: res } = await quickReplyAdminApi.delete(row.id)
     if (res.code === 200) {
-      ElMessage.success('Deleted')
+      ElMessage.success('已删除')
       fetchData()
     } else {
-      ElMessage.error(res.message || 'Delete failed')
+      ElMessage.error(res.message || '删除失败')
     }
-  } catch { ElMessage.error('Delete failed') }
+  } catch { ElMessage.error('删除失败') }
 }
 
 onMounted(() => { fetchData() })

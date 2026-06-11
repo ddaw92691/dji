@@ -21,7 +21,7 @@
         />
       </template>
       <template #operation="{ row }">
-        <el-button type="primary" link v-permission="['merchant:edit']" @click="openEdit(row)">Edit</el-button>
+        <el-button type="primary" link v-permission="['merchant:edit']" @click="openEdit(row)">编辑</el-button>
         <el-popconfirm
           :title="row.status === 'ENABLE' ? 'Disable this merchant?' : 'Enable this merchant?'"
           :placement="POPCONFIRM_CONFIG.placement"
@@ -39,20 +39,20 @@
 
     <BaseDialog v-model="dialogVisible" :title="editForm.id ? 'Edit Merchant' : 'Create Merchant'" width="600" @close="dialogVisible = false">
       <el-form ref="formRef" :model="editForm" :rules="formRules" label-width="120px">
-        <el-form-item label="Email" prop="email"><el-input v-model="editForm.email" /></el-form-item>
-        <el-form-item label="Password" prop="password" v-if="!editForm.id">
+        <el-form-item label="邮箱" prop="email"><el-input v-model="editForm.email" /></el-form-item>
+        <el-form-item label="密码" prop="password" v-if="!editForm.id">
           <el-input v-model="editForm.password" type="password" show-password />
         </el-form-item>
-        <el-form-item label="Shop Name" prop="name"><el-input v-model="editForm.name" /></el-form-item>
-        <el-form-item label="Phone" prop="phone"><el-input v-model="editForm.phone" /></el-form-item>
-        <el-form-item label="Country" prop="country"><el-input v-model="editForm.country" /></el-form-item>
-        <el-form-item label="Language" prop="language"><el-input v-model="editForm.language" /></el-form-item>
-        <el-form-item label="Contact Name"><el-input v-model="editForm.contactName" /></el-form-item>
-        <el-form-item label="Contact Phone"><el-input v-model="editForm.contactPhone" /></el-form-item>
+        <el-form-item label="店铺名称" prop="name"><el-input v-model="editForm.name" /></el-form-item>
+        <el-form-item label="手机号" prop="phone"><el-input v-model="editForm.phone" /></el-form-item>
+        <el-form-item label="国家" prop="country"><el-input v-model="editForm.country" /></el-form-item>
+        <el-form-item label="语言" prop="language"><el-input v-model="editForm.language" /></el-form-item>
+        <el-form-item label="联系人"><el-input v-model="editForm.contactName" /></el-form-item>
+        <el-form-item label="联系电话"><el-input v-model="editForm.contactPhone" /></el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">Cancel</el-button>
-        <el-button type="primary" :loading="submitLoading" @click="handleSubmit">Save</el-button>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="handleSubmit">保存</el-button>
       </template>
     </BaseDialog>
   </div>
@@ -192,17 +192,17 @@ const handleSubmit = async () => {
       dialogVisible.value = false
       editForm.id ? basePageRef.value?.refreshCurrentPage() : basePageRef.value?.refreshToFirstPage()
     } else {
-      ElMessage.error(res.data.message || 'Operation failed')
+      ElMessage.error(res.data.message || '操作失败')
     }
-  } catch { ElMessage.error('Operation failed') } finally { submitLoading.value = false }
+  } catch { ElMessage.error('操作失败') } finally { submitLoading.value = false }
 }
 
 const handleToggleStatus = async (row: any) => {
   const newStatus = row.status === 'ENABLE' ? 'DISABLE' : 'ENABLE'
   try {
     const { data: res } = await merchantApi.updateMerchantStatus(row.id, newStatus)
-    if (res.code === 200) { ElMessage.success('Status updated'); basePageRef.value?.refreshCurrentPage() }
-    else { ElMessage.error(res.message || 'Status update failed') }
-  } catch { ElMessage.error('Status update failed') }
+    if (res.code === 200) { ElMessage.success('状态已更新'); basePageRef.value?.refreshCurrentPage() }
+    else { ElMessage.error(res.message || '状态更新失败') }
+  } catch { ElMessage.error('状态更新失败') }
 }
 </script>

@@ -1,7 +1,7 @@
 <template>
   <div class="notification-page">
     <div class="page-header">
-      <h2>Notifications</h2>
+      <h2>通知</h2>
       <el-badge :value="unreadCount" :hidden="unreadCount === 0" class="unread-badge">
         <el-button type="primary" :loading="markingAll" @click="handleMarkAllAsRead">
           Mark All as Read
@@ -10,24 +10,24 @@
     </div>
 
     <el-table :data="tableData" border stripe v-loading="loading" @row-click="handleRowClick" style="cursor: pointer">
-      <el-table-column prop="title" label="Title" min-width="160" show-overflow-tooltip />
-      <el-table-column prop="content" label="Content" min-width="240" show-overflow-tooltip />
-      <el-table-column label="Type" width="100" align="center">
+      <el-table-column prop="title" label="标题" min-width="160" show-overflow-tooltip />
+      <el-table-column prop="content" label="内容" min-width="240" show-overflow-tooltip />
+      <el-table-column label="类型" width="100" align="center">
         <template #default="{ row }">
           <el-tag size="small">{{ row.type }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Read" width="80" align="center">
+      <el-table-column label="已读" width="80" align="center">
         <template #default="{ row }">
           <el-tag :type="row.isRead ? 'success' : 'danger'" size="small">
             {{ row.isRead ? 'Read' : 'Unread' }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="User" width="120" show-overflow-tooltip>
+      <el-table-column label="用户" width="120" show-overflow-tooltip>
         <template #default="{ row }">{{ row.userName || `ID:${row.userId}` }}</template>
       </el-table-column>
-      <el-table-column prop="createdAt" label="Created" width="160" />
+      <el-table-column prop="createdAt" label="创建时间" width="160" />
     </el-table>
 
     <el-pagination
@@ -70,10 +70,10 @@ async function fetchData() {
       tableData.value = res.data.list
       total.value = res.data.total
     } else {
-      ElMessage.error(res.message || 'Failed to fetch data')
+      ElMessage.error(res.message || '获取数据失败')
     }
   } catch {
-    ElMessage.error('Failed to fetch data')
+    ElMessage.error('获取数据失败')
   } finally {
     loading.value = false
   }
@@ -104,12 +104,12 @@ async function handleMarkAllAsRead() {
     if (res.code === 200) {
       tableData.value.forEach((n) => (n.isRead = true))
       unreadCount.value = 0
-      ElMessage.success('All marked as read')
+      ElMessage.success('已全部标为已读')
     } else {
-      ElMessage.error(res.message || 'Failed')
+      ElMessage.error(res.message || '操作失败')
     }
   } catch {
-    ElMessage.error('Failed')
+    ElMessage.error('操作失败')
   } finally {
     markingAll.value = false
   }

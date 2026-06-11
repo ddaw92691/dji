@@ -15,12 +15,12 @@
             :type="getColorByValue(CUSTOMER_STATUS_OPTIONS, row.status)"
             :text="getLabelByValue(CUSTOMER_STATUS_OPTIONS, row.status)"
           />
-          <el-tag v-if="row.isVirtual" type="info" size="small" effect="plain">Virtual</el-tag>
+          <el-tag v-if="row.isVirtual" type="info" size="small" effect="plain">虚拟</el-tag>
         </div>
       </template>
       <template #operation="{ row }">
-        <el-button type="primary" link @click="openDetail(row)">Detail</el-button>
-        <el-button type="warning" link v-permission="['customer:edit']" @click="openEdit(row)">Edit</el-button>
+        <el-button type="primary" link @click="openDetail(row)">详情</el-button>
+        <el-button type="warning" link v-permission="['customer:edit']" @click="openEdit(row)">编辑</el-button>
         <el-popconfirm
           :title="row.status === 1 ? 'Disable this customer?' : 'Enable this customer?'"
           :placement="POPCONFIRM_CONFIG.placement"
@@ -36,42 +36,42 @@
       </template>
     </BasePage>
 
-    <BaseDialog v-model="detailVisible" title="Customer Detail" width="650" @close="detailVisible = false">
+    <BaseDialog v-model="detailVisible" title="客户详情" width="650" @close="detailVisible = false">
       <el-descriptions v-if="detailItem" :column="2" border size="small">
         <el-descriptions-item label="ID">{{ detailItem.id }}</el-descriptions-item>
-        <el-descriptions-item label="Email">{{ detailItem.email || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="Phone">{{ detailItem.phone || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="Nickname">{{ detailItem.nickname || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="Country">{{ detailItem.country || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="Language">{{ detailItem.language || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="Orders">{{ detailItem.orderCount ?? '-' }}</el-descriptions-item>
-        <el-descriptions-item label="Total Spent">{{ detailItem.totalSpent ?? '-' }}</el-descriptions-item>
-        <el-descriptions-item label="Status">{{ detailItem.status }}</el-descriptions-item>
-        <el-descriptions-item label="Created">{{ detailItem.createdAt || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="邮箱">{{ detailItem.email || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="手机号">{{ detailItem.phone || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="昵称">{{ detailItem.nickname || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="国家">{{ detailItem.country || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="语言">{{ detailItem.language || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="订单">{{ detailItem.orderCount ?? '-' }}</el-descriptions-item>
+        <el-descriptions-item label="消费总额">{{ detailItem.totalSpent ?? '-' }}</el-descriptions-item>
+        <el-descriptions-item label="状态">{{ detailItem.status }}</el-descriptions-item>
+        <el-descriptions-item label="创建时间">{{ detailItem.createdAt || '-' }}</el-descriptions-item>
       </el-descriptions>
       <template #footer>
-        <el-button @click="detailVisible = false">Close</el-button>
+        <el-button @click="detailVisible = false">关闭</el-button>
       </template>
     </BaseDialog>
 
-    <BaseDialog v-model="editVisible" title="Edit Customer" width="550" @close="editVisible = false">
+    <BaseDialog v-model="editVisible" title="编辑客户" width="550" @close="editVisible = false">
       <el-form ref="editFormRef" :model="editForm" label-width="100px" v-if="editForm.id">
-        <el-form-item label="Email"><el-input v-model="editForm.email" /></el-form-item>
-        <el-form-item label="Phone"><el-input v-model="editForm.phone" /></el-form-item>
-        <el-form-item label="Nickname"><el-input v-model="editForm.nickname" /></el-form-item>
-        <el-form-item label="Country"><el-input v-model="editForm.country" /></el-form-item>
-        <el-form-item label="Language"><el-input v-model="editForm.language" /></el-form-item>
+        <el-form-item label="邮箱"><el-input v-model="editForm.email" /></el-form-item>
+        <el-form-item label="手机号"><el-input v-model="editForm.phone" /></el-form-item>
+        <el-form-item label="昵称"><el-input v-model="editForm.nickname" /></el-form-item>
+        <el-form-item label="国家"><el-input v-model="editForm.country" /></el-form-item>
+        <el-form-item label="语言"><el-input v-model="editForm.language" /></el-form-item>
         <el-divider />
-        <el-form-item label="Virtual Customer">
+        <el-form-item label="虚拟客户">
           <el-checkbox v-model="editForm.isVirtual" />
         </el-form-item>
-        <el-form-item label="Virtual Remark" v-if="editForm.isVirtual">
-          <el-input v-model="editForm.virtualRemark" type="textarea" :rows="2" placeholder="Remark for virtual customer" />
+        <el-form-item label="虚拟备注" v-if="editForm.isVirtual">
+          <el-input v-model="editForm.virtualRemark" type="textarea" :rows="2" placeholder="虚拟客户备注" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="editVisible = false">Cancel</el-button>
-        <el-button type="primary" :loading="submitLoading" @click="handleSave">Save</el-button>
+        <el-button @click="editVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="handleSave">保存</el-button>
       </template>
     </BaseDialog>
   </div>
@@ -192,13 +192,13 @@ const handleSave = async () => {
       virtualRemark: editForm.virtualRemark,
     })
     if (res.code === 200) {
-      ElMessage.success('Customer updated')
+      ElMessage.success('客户已更新')
       editVisible.value = false
       basePageRef.value?.refreshCurrentPage()
     } else {
-      ElMessage.error(res.message || 'Update failed')
+      ElMessage.error(res.message || '更新失败')
     }
-  } catch { ElMessage.error('Update failed') } finally { submitLoading.value = false }
+  } catch { ElMessage.error('更新失败') } finally { submitLoading.value = false }
 }
 
 const handleToggleStatus = async (row: any) => {
@@ -206,11 +206,11 @@ const handleToggleStatus = async (row: any) => {
   try {
     const { data: res } = await customerApi.updateCustomerStatus(row.id, newStatus)
     if (res.code === 200) {
-      ElMessage.success('Status updated')
+      ElMessage.success('状态已更新')
       basePageRef.value?.refreshCurrentPage()
     } else {
-      ElMessage.error(res.message || 'Status update failed')
+      ElMessage.error(res.message || '状态更新失败')
     }
-  } catch { ElMessage.error('Status update failed') }
+  } catch { ElMessage.error('状态更新失败') }
 }
 </script>

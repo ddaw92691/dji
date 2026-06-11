@@ -21,8 +21,8 @@
         <BaseTag :type="getColorByValue(ADMIN_STATUS_OPTIONS, row.status)" :text="getLabelByValue(ADMIN_STATUS_OPTIONS, row.status)" />
       </template>
       <template #operation="{ row }">
-        <el-button type="primary" link v-permission="['admin:edit']" @click="openEdit(row)">Edit</el-button>
-        <el-button type="warning" link v-permission="['admin:password']" @click="openResetPassword(row)">Reset Pwd</el-button>
+        <el-button type="primary" link v-permission="['admin:edit']" @click="openEdit(row)">编辑</el-button>
+        <el-button type="warning" link v-permission="['admin:password']" @click="openResetPassword(row)">重置密码</el-button>
         <el-popconfirm
           :title="row.status === 1 ? 'Disable this admin?' : 'Enable this admin?'"
           :placement="POPCONFIRM_CONFIG.placement"
@@ -36,13 +36,13 @@
           </template>
         </el-popconfirm>
         <el-popconfirm
-          title="Are you sure you want to delete this admin?"
+          title="确定要删除该管理员吗？"
           :placement="POPCONFIRM_CONFIG.placement"
           :width="POPCONFIRM_CONFIG.width"
           @confirm="handleDelete(row.id)"
         >
           <template #reference>
-            <el-button type="danger" link v-permission="['admin:delete']">Delete</el-button>
+            <el-button type="danger" link v-permission="['admin:delete']">删除</el-button>
           </template>
         </el-popconfirm>
       </template>
@@ -50,38 +50,38 @@
 
     <BaseDialog v-model="dialogVisible" :title="editForm.id ? 'Edit Admin' : 'Create Admin'" width="550" @close="dialogVisible = false">
       <el-form ref="formRef" :model="editForm" :rules="formRules" label-width="120px">
-        <el-form-item label="Email" prop="email"><el-input v-model="editForm.email" /></el-form-item>
-        <el-form-item label="Password" prop="password" v-if="!editForm.id">
+        <el-form-item label="邮箱" prop="email"><el-input v-model="editForm.email" /></el-form-item>
+        <el-form-item label="密码" prop="password" v-if="!editForm.id">
           <el-input v-model="editForm.password" type="password" show-password />
         </el-form-item>
-        <el-form-item label="Nickname"><el-input v-model="editForm.nickname" /></el-form-item>
-        <el-form-item label="Role" prop="role">
+        <el-form-item label="昵称"><el-input v-model="editForm.nickname" /></el-form-item>
+        <el-form-item label="角色" prop="role">
           <el-select v-model="editForm.role" style="width:100%">
             <el-option label="ADMIN" value="ADMIN" />
             <el-option label="SUPER_ADMIN" value="SUPER_ADMIN" />
           </el-select>
         </el-form-item>
-        <el-form-item label="Country"><el-input v-model="editForm.country" /></el-form-item>
-        <el-form-item label="Language"><el-input v-model="editForm.language" /></el-form-item>
+        <el-form-item label="国家"><el-input v-model="editForm.country" /></el-form-item>
+        <el-form-item label="语言"><el-input v-model="editForm.language" /></el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">Cancel</el-button>
-        <el-button type="primary" :loading="submitLoading" @click="handleSubmit">Save</el-button>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="handleSubmit">保存</el-button>
       </template>
     </BaseDialog>
 
-    <BaseDialog v-model="passwordVisible" title="Reset Password" width="450" @close="passwordVisible = false">
+    <BaseDialog v-model="passwordVisible" title="重置密码" width="450" @close="passwordVisible = false">
       <el-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules" label-width="130px">
-        <el-form-item label="New Password" prop="newPassword">
+        <el-form-item label="新密码" prop="newPassword">
           <el-input v-model="passwordForm.newPassword" type="password" show-password />
         </el-form-item>
-        <el-form-item label="Confirm Password" prop="confirmPassword">
+        <el-form-item label="确认密码" prop="confirmPassword">
           <el-input v-model="passwordForm.confirmPassword" type="password" show-password />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="passwordVisible = false">Cancel</el-button>
-        <el-button type="primary" :loading="passwordSubmitLoading" @click="handleResetPassword">Confirm</el-button>
+        <el-button @click="passwordVisible = false">取消</el-button>
+        <el-button type="primary" :loading="passwordSubmitLoading" @click="handleResetPassword">确认</el-button>
       </template>
     </BaseDialog>
   </div>
@@ -229,25 +229,25 @@ const handleSubmit = async () => {
       ElMessage.success(editForm.id ? 'Admin updated' : 'Admin created')
       dialogVisible.value = false
       editForm.id ? basePageRef.value?.refreshCurrentPage() : basePageRef.value?.refreshToFirstPage()
-    } else { ElMessage.error(res.data.message || 'Operation failed') }
-  } catch { ElMessage.error('Operation failed') } finally { submitLoading.value = false }
+    } else { ElMessage.error(res.data.message || '操作失败') }
+  } catch { ElMessage.error('操作失败') } finally { submitLoading.value = false }
 }
 
 const handleToggleStatus = async (row: any) => {
   const newStatus = row.status === 1 ? 0 : 1
   try {
     const { data: res } = await adminUserApi.updateAdminUserStatus(row.id, newStatus)
-    if (res.code === 200) { ElMessage.success('Status updated'); basePageRef.value?.refreshCurrentPage() }
-    else { ElMessage.error(res.message || 'Status update failed') }
-  } catch { ElMessage.error('Status update failed') }
+    if (res.code === 200) { ElMessage.success('状态已更新'); basePageRef.value?.refreshCurrentPage() }
+    else { ElMessage.error(res.message || '状态更新失败') }
+  } catch { ElMessage.error('状态更新失败') }
 }
 
 const handleDelete = async (id: string | number) => {
   try {
     const { data: res } = await adminUserApi.deleteAdminUser(id)
-    if (res.code === 200) { ElMessage.success('Admin deleted'); basePageRef.value?.refreshAfterDelete(1) }
-    else { ElMessage.error(res.message || 'Delete failed') }
-  } catch { ElMessage.error('Delete failed') }
+    if (res.code === 200) { ElMessage.success('管理员已删除'); basePageRef.value?.refreshAfterDelete(1) }
+    else { ElMessage.error(res.message || '删除失败') }
+  } catch { ElMessage.error('删除失败') }
 }
 
 const openResetPassword = (row: any) => {
@@ -264,9 +264,9 @@ const handleResetPassword = async () => {
   try {
     const resp = await adminUserApi.resetAdminUserPassword(passwordForm.adminId, passwordForm.newPassword)
     if (resp.data.code === 200) {
-      ElMessage.success('Password reset successfully')
+      ElMessage.success('密码重置成功')
       passwordVisible.value = false
-    } else { ElMessage.error(resp.data.message || 'Reset failed') }
-  } catch { ElMessage.error('Reset failed') } finally { passwordSubmitLoading.value = false }
+    } else { ElMessage.error(resp.data.message || '重置失败') }
+  } catch { ElMessage.error('重置失败') } finally { passwordSubmitLoading.value = false }
 }
 </script>

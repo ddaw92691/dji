@@ -48,6 +48,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -87,11 +88,13 @@ public class DataInitializer implements CommandLineRunner {
     private final PlatformProductTranslationMapper platformProductTranslationMapper;
     private final MerchantMapper merchantMapper;
     private final AgentMapper agentMapper;
+    private final JdbcTemplate jdbcTemplate;
 
     @Override
     public void run(String... args) {
         log.info("Checking data initialization...");
 
+        try { initSchemaPatches(); } catch (Exception e) { log.warn("initSchemaPatches failed: {}", e.getMessage()); }
         try { initCountries(); } catch (Exception e) { log.warn("initCountries failed: {}", e.getMessage()); }
         try { initLanguages(); } catch (Exception e) { log.warn("initLanguages failed: {}", e.getMessage()); }
         try { initCountryLanguages(); } catch (Exception e) { log.warn("initCountryLanguages failed: {}", e.getMessage()); }
@@ -111,15 +114,98 @@ public class DataInitializer implements CommandLineRunner {
         log.info("Data initialization check completed.");
     }
 
-    private void initCountries() {
-        if (countryMapper.selectCount(null) > 0) return;
-        countryMapper.insert(createCountry(1L, "Japan", "JP", "🇯🇵", "+81", "ja", "JPY", "¥", "Asia/Tokyo", 1));
-        countryMapper.insert(createCountry(2L, "South Korea", "KR", "🇰🇷", "+82", "ko", "KRW", "₩", "Asia/Seoul", 2));
-        countryMapper.insert(createCountry(3L, "United States", "US", "🇺🇸", "+1", "en", "USD", "$", "America/New_York", 3));
+    /**
+     * 启动时幂等表结构补丁：保证已部署数据库也能拿到新增列，
+     * 不依赖手动执行 schema.sql。Postgres 支持 ADD COLUMN IF NOT EXISTS。
+     */
+    private void initSchemaPatches() {
+        try {
+            jdbcTemplate.execute("ALTER TABLE country ADD COLUMN IF NOT EXISTS region VARCHAR(32)");
+        } catch (Exception e) {
+            log.warn("patch country.region failed: {}", e.getMessage());
+        }
     }
 
-    private Country createCountry(Long id, String name, String code, String flagIcon, String phoneCode,
-                                   String defaultLang, String currency, String symbol, String timezone, int sort) {
+    /**
+     * 补丁式幂等：按 code 存在性逐条插入，已部署库（已有 JP/KR/US）也能补全其余国家，
+     * 并为已存在国家回填 region。不删除/覆盖业务数据。
+     */
+    private void initCountries() {
+        // id, name, code, flag, phone, defaultLang, currency, symbol, timezone, region, sort
+        // ===== Asia Pacific =====
+        upsertCountry(1L, "Japan", "JP", "🇯🇵", "+81", "ja", "JPY", "¥", "Asia/Tokyo", "Asia Pacific", 10);
+        upsertCountry(2L, "South Korea", "KR", "🇰🇷", "+82", "ko", "KRW", "₩", "Asia/Seoul", "Asia Pacific", 11);
+        upsertCountry(3L, "United States", "US", "🇺🇸", "+1", "en", "USD", "$", "America/New_York", "North America", 70);
+        upsertCountry(4L, "中国大陆", "CN", "🇨🇳", "+86", "zh-Hans", "CNY", "¥", "Asia/Shanghai", "Asia Pacific", 1);
+        upsertCountry(5L, "中國香港", "HK", "🇭🇰", "+852", "zh-Hant", "HKD", "$", "Asia/Hong_Kong", "Asia Pacific", 2);
+        upsertCountry(6L, "Indonesia", "ID", "🇮🇩", "+62", "en", "IDR", "Rp", "Asia/Jakarta", "Asia Pacific", 12);
+        upsertCountry(7L, "中國澳門", "MO", "🇲🇴", "+853", "zh-Hant", "MOP", "MOP$", "Asia/Macau", "Asia Pacific", 3);
+        upsertCountry(8L, "Singapore", "SG", "🇸🇬", "+65", "en", "SGD", "$", "Asia/Singapore", "Asia Pacific", 13);
+        upsertCountry(9L, "中國台灣", "TW", "🇹🇼", "+886", "zh-Hant", "TWD", "NT$", "Asia/Taipei", "Asia Pacific", 4);
+        upsertCountry(10L, "Australia", "AU", "🇦🇺", "+61", "en", "AUD", "$", "Australia/Sydney", "Asia Pacific", 14);
+        upsertCountry(11L, "New Zealand", "NZ", "🇳🇿", "+64", "en", "NZD", "$", "Pacific/Auckland", "Asia Pacific", 15);
+
+        // ===== Europe =====
+        upsertCountry(12L, "Österreich", "AT", "🇦🇹", "+43", "de", "EUR", "€", "Europe/Vienna", "Europe", 20);
+        upsertCountry(13L, "Россия", "RU", "🇷🇺", "+7", "ru", "RUB", "₽", "Europe/Moscow", "Europe", 21);
+        upsertCountry(14L, "Belgium", "BE", "🇧🇪", "+32", "en", "EUR", "€", "Europe/Brussels", "Europe", 22);
+        upsertCountry(15L, "Bulgaria", "BG", "🇧🇬", "+359", "en", "BGN", "лв", "Europe/Sofia", "Europe", 23);
+        upsertCountry(16L, "Croatia", "HR", "🇭🇷", "+385", "en", "EUR", "€", "Europe/Zagreb", "Europe", 24);
+        upsertCountry(17L, "Czech Republic", "CZ", "🇨🇿", "+420", "en", "CZK", "Kč", "Europe/Prague", "Europe", 25);
+        upsertCountry(18L, "Denmark", "DK", "🇩🇰", "+45", "en", "DKK", "kr", "Europe/Copenhagen", "Europe", 26);
+        upsertCountry(19L, "Estonia", "EE", "🇪🇪", "+372", "en", "EUR", "€", "Europe/Tallinn", "Europe", 27);
+        upsertCountry(20L, "Finland", "FI", "🇫🇮", "+358", "en", "EUR", "€", "Europe/Helsinki", "Europe", 28);
+        upsertCountry(21L, "France", "FR", "🇫🇷", "+33", "fr", "EUR", "€", "Europe/Paris", "Europe", 29);
+        upsertCountry(22L, "Deutschland", "DE", "🇩🇪", "+49", "de", "EUR", "€", "Europe/Berlin", "Europe", 30);
+        upsertCountry(23L, "Greece", "GR", "🇬🇷", "+30", "en", "EUR", "€", "Europe/Athens", "Europe", 31);
+        upsertCountry(24L, "Hungary", "HU", "🇭🇺", "+36", "en", "HUF", "Ft", "Europe/Budapest", "Europe", 32);
+        upsertCountry(25L, "Ireland", "IE", "🇮🇪", "+353", "en", "EUR", "€", "Europe/Dublin", "Europe", 33);
+        upsertCountry(26L, "Italia", "IT", "🇮🇹", "+39", "it", "EUR", "€", "Europe/Rome", "Europe", 34);
+        upsertCountry(27L, "Latvia", "LV", "🇱🇻", "+371", "en", "EUR", "€", "Europe/Riga", "Europe", 35);
+        upsertCountry(28L, "Liechtenstein", "LI", "🇱🇮", "+423", "de", "CHF", "CHF", "Europe/Vaduz", "Europe", 36);
+        upsertCountry(29L, "Lithuania", "LT", "🇱🇹", "+370", "en", "EUR", "€", "Europe/Vilnius", "Europe", 37);
+        upsertCountry(30L, "Luxembourg", "LU", "🇱🇺", "+352", "fr", "EUR", "€", "Europe/Luxembourg", "Europe", 38);
+        upsertCountry(31L, "Malta", "MT", "🇲🇹", "+356", "en", "EUR", "€", "Europe/Malta", "Europe", 39);
+        upsertCountry(32L, "Monaco", "MC", "🇲🇨", "+377", "fr", "EUR", "€", "Europe/Monaco", "Europe", 40);
+        upsertCountry(33L, "Netherlands", "NL", "🇳🇱", "+31", "en", "EUR", "€", "Europe/Amsterdam", "Europe", 41);
+        upsertCountry(34L, "Norway", "NO", "🇳🇴", "+47", "en", "NOK", "kr", "Europe/Oslo", "Europe", 42);
+        upsertCountry(35L, "Poland", "PL", "🇵🇱", "+48", "en", "PLN", "zł", "Europe/Warsaw", "Europe", 43);
+        upsertCountry(36L, "Portugal", "PT", "🇵🇹", "+351", "en", "EUR", "€", "Europe/Lisbon", "Europe", 44);
+        upsertCountry(37L, "Slovakia", "SK", "🇸🇰", "+421", "en", "EUR", "€", "Europe/Bratislava", "Europe", 45);
+        upsertCountry(38L, "Slovenia", "SI", "🇸🇮", "+386", "en", "EUR", "€", "Europe/Ljubljana", "Europe", 46);
+        upsertCountry(39L, "España", "ES", "🇪🇸", "+34", "es", "EUR", "€", "Europe/Madrid", "Europe", 47);
+        upsertCountry(40L, "Sweden", "SE", "🇸🇪", "+46", "en", "SEK", "kr", "Europe/Stockholm", "Europe", 48);
+        upsertCountry(41L, "Switzerland", "CH", "🇨🇭", "+41", "en", "CHF", "CHF", "Europe/Zurich", "Europe", 49);
+        upsertCountry(42L, "United Kingdom", "GB", "🇬🇧", "+44", "en", "GBP", "£", "Europe/London", "Europe", 50);
+
+        // ===== Middle East =====
+        upsertCountry(43L, "UAE", "AE", "🇦🇪", "+971", "en", "AED", "د.إ", "Asia/Dubai", "Middle East", 60);
+
+        // ===== North America =====
+        upsertCountry(44L, "Canada", "CA", "🇨🇦", "+1", "en", "CAD", "$", "America/Toronto", "North America", 71);
+        upsertCountry(45L, "Puerto Rico", "PR", "🇵🇷", "+1", "en", "USD", "$", "America/Puerto_Rico", "North America", 72);
+        upsertCountry(46L, "México", "MX", "🇲🇽", "+52", "es", "MXN", "$", "America/Mexico_City", "North America", 73);
+
+        // ===== South America =====
+        upsertCountry(47L, "Brasil", "BR", "🇧🇷", "+55", "pt-BR", "BRL", "R$", "America/Sao_Paulo", "South America", 80);
+
+        // ===== Other Countries and Regions =====
+        upsertCountry(48L, "Other Regions", "001", "🌐", "+", "en", "USD", "$", "UTC", "Other", 999);
+    }
+
+    private void upsertCountry(Long id, String name, String code, String flagIcon, String phoneCode,
+                               String defaultLang, String currency, String symbol, String timezone,
+                               String region, int sort) {
+        Country exist = countryMapper.selectByCode(code);
+        if (exist != null) {
+            // 已存在国家：仅回填 region（不覆盖名称/货币等业务数据）
+            if (exist.getRegion() == null || exist.getRegion().isEmpty()) {
+                exist.setRegion(region);
+                exist.setUpdatedAt(LocalDateTime.now());
+                countryMapper.updateById(exist);
+            }
+            return;
+        }
         Country c = new Country();
         c.setId(id);
         c.setName(name);
@@ -130,23 +216,33 @@ public class DataInitializer implements CommandLineRunner {
         c.setCurrencyCode(currency);
         c.setCurrencySymbol(symbol);
         c.setTimezone(timezone);
+        c.setRegion(region);
         c.setExchangeRate(BigDecimal.ONE);
         c.setStatus("ENABLE");
         c.setSort(sort);
         c.setDeleted(false);
         c.setCreatedAt(LocalDateTime.now());
         c.setUpdatedAt(LocalDateTime.now());
-        return c;
+        countryMapper.insert(c);
     }
 
     private void initLanguages() {
-        if (languageMapper.selectCount(null) > 0) return;
-        languageMapper.insert(createLanguage(1L, "Japanese", "日本語", "ja", 1));
-        languageMapper.insert(createLanguage(2L, "Korean", "한국어", "ko", 2));
-        languageMapper.insert(createLanguage(3L, "English", "English", "en", 3));
+        upsertLanguage(1L, "Japanese", "日本語", "ja", 1);
+        upsertLanguage(2L, "Korean", "한국어", "ko", 2);
+        upsertLanguage(3L, "English", "English", "en", 3);
+        upsertLanguage(4L, "Simplified Chinese", "简体中文", "zh-Hans", 4);
+        upsertLanguage(5L, "Traditional Chinese", "繁體中文", "zh-Hant", 5);
+        upsertLanguage(6L, "German", "Deutsch", "de", 6);
+        upsertLanguage(7L, "French", "Français", "fr", 7);
+        upsertLanguage(8L, "Spanish", "Español", "es", 8);
+        upsertLanguage(9L, "Italian", "Italiano", "it", 9);
+        upsertLanguage(10L, "Russian", "Русский", "ru", 10);
+        upsertLanguage(11L, "Portuguese (Brazil)", "Português (BR)", "pt-BR", 11);
     }
 
-    private Language createLanguage(Long id, String name, String nativeName, String code, int sort) {
+    private void upsertLanguage(Long id, String name, String nativeName, String code, int sort) {
+        Language exist = languageMapper.selectByCode(code);
+        if (exist != null) return;
         Language l = new Language();
         l.setId(id);
         l.setName(name);
@@ -157,21 +253,75 @@ public class DataInitializer implements CommandLineRunner {
         l.setDeleted(false);
         l.setCreatedAt(LocalDateTime.now());
         l.setUpdatedAt(LocalDateTime.now());
-        return l;
+        languageMapper.insert(l);
     }
 
+    private long clSeq = 20000L;
+
     private void initCountryLanguages() {
-        if (countryLanguageMapper.selectCount(null) > 0) return;
-        // Japan: ja (default), en
-        insertCL(1L, 1L, 1L, true);
-        insertCL(2L, 1L, 3L, false);
-        // South Korea: ko (default), en
-        insertCL(3L, 2L, 2L, true);
-        insertCL(4L, 2L, 3L, false);
-        // United States: en (default), ja, ko
-        insertCL(5L, 3L, 3L, true);
-        insertCL(6L, 3L, 1L, false);
-        insertCL(7L, 3L, 2L, false);
+        // (countryId, languageId, isDefault) —— languageId: ja1 ko2 en3 zhHans4 zhHant5 de6 fr7 es8 it9 ru10 ptBR11
+        // Asia Pacific
+        bindCL(1L, 1L, true); bindCL(1L, 3L, false);     // JP: ja(默认), en
+        bindCL(2L, 2L, true); bindCL(2L, 3L, false);     // KR: ko(默认), en
+        bindCL(3L, 3L, true);                            // US: en
+        bindCL(4L, 4L, true); bindCL(4L, 3L, false);     // CN: zh-Hans(默认), en
+        bindCL(5L, 5L, true); bindCL(5L, 3L, false);     // HK: zh-Hant(默认), en
+        bindCL(6L, 3L, true);                            // ID: en
+        bindCL(7L, 5L, true); bindCL(7L, 3L, false);     // MO: zh-Hant(默认), en
+        bindCL(8L, 3L, true);                            // SG: en
+        bindCL(9L, 5L, true); bindCL(9L, 3L, false);     // TW: zh-Hant(默认), en
+        bindCL(10L, 3L, true);                           // AU: en
+        bindCL(11L, 3L, true);                           // NZ: en
+        // Europe
+        bindCL(12L, 6L, true); bindCL(12L, 3L, false);   // AT: de(默认), en
+        bindCL(13L, 10L, true); bindCL(13L, 3L, false);  // RU: ru(默认), en
+        bindCL(14L, 3L, true);                           // BE
+        bindCL(15L, 3L, true);                           // BG
+        bindCL(16L, 3L, true);                           // HR
+        bindCL(17L, 3L, true);                           // CZ
+        bindCL(18L, 3L, true);                           // DK
+        bindCL(19L, 3L, true);                           // EE
+        bindCL(20L, 3L, true);                           // FI
+        bindCL(21L, 7L, true); bindCL(21L, 3L, false);   // FR: fr(默认), en
+        bindCL(22L, 6L, true); bindCL(22L, 3L, false);   // DE: de(默认), en
+        bindCL(23L, 3L, true);                           // GR
+        bindCL(24L, 3L, true);                           // HU
+        bindCL(25L, 3L, true);                           // IE
+        bindCL(26L, 9L, true); bindCL(26L, 3L, false);   // IT: it(默认), en
+        bindCL(27L, 3L, true);                           // LV
+        bindCL(28L, 6L, true); bindCL(28L, 3L, false);   // LI: de(默认), en
+        bindCL(29L, 3L, true);                           // LT
+        bindCL(30L, 7L, true); bindCL(30L, 3L, false);   // LU: fr(默认), en
+        bindCL(31L, 3L, true);                           // MT
+        bindCL(32L, 7L, true); bindCL(32L, 3L, false);   // MC: fr(默认), en
+        bindCL(33L, 3L, true);                           // NL
+        bindCL(34L, 3L, true);                           // NO
+        bindCL(35L, 3L, true);                           // PL
+        bindCL(36L, 3L, true);                           // PT
+        bindCL(37L, 3L, true);                           // SK
+        bindCL(38L, 3L, true);                           // SI
+        bindCL(39L, 8L, true); bindCL(39L, 3L, false);   // ES: es(默认), en
+        bindCL(40L, 3L, true);                           // SE
+        bindCL(41L, 3L, true);                           // CH
+        bindCL(42L, 3L, true);                           // GB
+        // Middle East
+        bindCL(43L, 3L, true);                           // AE
+        // North America
+        bindCL(44L, 3L, true); bindCL(44L, 7L, false);   // CA: en(默认), fr
+        bindCL(45L, 3L, true);                           // PR
+        bindCL(46L, 8L, true); bindCL(46L, 3L, false);   // MX: es(默认), en
+        // South America
+        bindCL(47L, 11L, true); bindCL(47L, 3L, false);  // BR: pt-BR(默认), en
+        // Other
+        bindCL(48L, 3L, true);                           // 001: en
+    }
+
+    private void bindCL(Long countryId, Long languageId, boolean isDefault) {
+        Long cnt = countryLanguageMapper.selectCount(new LambdaQueryWrapper<CountryLanguage>()
+                .eq(CountryLanguage::getCountryId, countryId)
+                .eq(CountryLanguage::getLanguageId, languageId));
+        if (cnt != null && cnt > 0) return;
+        insertCL(clSeq++, countryId, languageId, isDefault);
     }
 
     private void insertCL(Long id, Long countryId, Long languageId, boolean isDefault) {
@@ -185,11 +335,13 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initNamespaces() {
-        if (namespaceMapper.selectCount(null) > 0) return;
         String[] namespaces = {"common", "auth", "customer", "merchant", "admin", "product",
                 "order", "payment", "withdrawal", "error", "finance", "system", "i18n",
-                "catalog", "tax", "websocket", "support"};
+                "catalog", "tax", "websocket", "support", "website", "mall"};
         for (int i = 0; i < namespaces.length; i++) {
+            Long cnt = namespaceMapper.selectCount(new LambdaQueryWrapper<I18nNamespace>()
+                    .eq(I18nNamespace::getCode, namespaces[i]));
+            if (cnt != null && cnt > 0) continue;
             I18nNamespace ns = new I18nNamespace();
             ns.setId((long) (100 + i));
             ns.setName(namespaces[i]);

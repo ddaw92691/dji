@@ -23,8 +23,8 @@
         <BaseTag :type="getColorByValue(STATUS_OPTIONS, row.status)" :text="getLabelByValue(STATUS_OPTIONS, row.status)" />
       </template>
       <template #operation="{ row }">
-        <el-button type="primary" link v-permission="['role:edit']" @click="openEdit(row)">Edit</el-button>
-        <el-button type="info" link v-permission="['role:assign']" @click="openAssignMenus(row)">Assign Menus</el-button>
+        <el-button type="primary" link v-permission="['role:edit']" @click="openEdit(row)">编辑</el-button>
+        <el-button type="info" link v-permission="['role:assign']" @click="openAssignMenus(row)">分配菜单</el-button>
         <el-popconfirm
           :title="row.status === 'active' ? 'Disable this role?' : 'Enable this role?'"
           :placement="POPCONFIRM_CONFIG.placement"
@@ -38,13 +38,13 @@
           </template>
         </el-popconfirm>
         <el-popconfirm
-          title="Delete this role?"
+          title="确定要删除该角色吗？"
           :placement="POPCONFIRM_CONFIG.placement"
           :width="POPCONFIRM_CONFIG.width"
           @confirm="handleDelete(row.id)"
         >
           <template #reference>
-            <el-button type="danger" link v-permission="['role:delete']">Delete</el-button>
+            <el-button type="danger" link v-permission="['role:delete']">删除</el-button>
           </template>
         </el-popconfirm>
       </template>
@@ -52,22 +52,22 @@
 
     <BaseDialog v-model="dialogVisible" :title="editForm.id ? 'Edit Role' : 'Create Role'" width="500" @close="dialogVisible = false">
       <el-form ref="formRef" :model="editForm" :rules="formRules" label-width="100px">
-        <el-form-item label="Code" prop="code"><el-input v-model="editForm.code" :disabled="!!editForm.id" /></el-form-item>
-        <el-form-item label="Name" prop="name"><el-input v-model="editForm.name" /></el-form-item>
-        <el-form-item label="Sort"><el-input-number v-model="editForm.sort" :min="0" style="width:100%" /></el-form-item>
-        <el-form-item label="Status">
+        <el-form-item label="代码" prop="code"><el-input v-model="editForm.code" :disabled="!!editForm.id" /></el-form-item>
+        <el-form-item label="名称" prop="name"><el-input v-model="editForm.name" /></el-form-item>
+        <el-form-item label="排序"><el-input-number v-model="editForm.sort" :min="0" style="width:100%" /></el-form-item>
+        <el-form-item label="状态">
           <el-radio-group v-model="editForm.status">
             <el-radio v-for="item in STATUS_OPTIONS" :key="item.value" :value="item.value">{{ item.label }}</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">Cancel</el-button>
-        <el-button type="primary" :loading="submitLoading" @click="handleSubmit">Save</el-button>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="handleSubmit">保存</el-button>
       </template>
     </BaseDialog>
 
-    <BaseDialog v-model="menuVisible" title="Assign Menus" width="500" @close="menuVisible = false">
+    <BaseDialog v-model="menuVisible" title="分配菜单" width="500" @close="menuVisible = false">
       <el-tree
         ref="menuTreeRef"
         :data="menuTreeData"
@@ -78,8 +78,8 @@
         default-expand-all
       />
       <template #footer>
-        <el-button @click="menuVisible = false">Cancel</el-button>
-        <el-button type="primary" :loading="menuSubmitLoading" @click="handleAssignMenus">Save</el-button>
+        <el-button @click="menuVisible = false">取消</el-button>
+        <el-button type="primary" :loading="menuSubmitLoading" @click="handleAssignMenus">保存</el-button>
       </template>
     </BaseDialog>
   </div>
@@ -199,25 +199,25 @@ const handleSubmit = async () => {
       ElMessage.success(editForm.id ? 'Role updated' : 'Role created')
       dialogVisible.value = false
       editForm.id ? basePageRef.value?.refreshCurrentPage() : basePageRef.value?.refreshToFirstPage()
-    } else { ElMessage.error(res.message || 'Operation failed') }
-  } catch { ElMessage.error('Operation failed') } finally { submitLoading.value = false }
+    } else { ElMessage.error(res.message || '操作失败') }
+  } catch { ElMessage.error('操作失败') } finally { submitLoading.value = false }
 }
 
 const handleToggleStatus = async (row: any) => {
   const status = row.status === 'active' ? 'inactive' : 'active'
   try {
     const { data: res } = await roleApi.updateRoleStatus(row.id, status)
-    if (res.code === 200) { ElMessage.success('Status updated'); basePageRef.value?.refreshCurrentPage() }
-    else { ElMessage.error(res.message || 'Status update failed') }
-  } catch { ElMessage.error('Status update failed') }
+    if (res.code === 200) { ElMessage.success('状态已更新'); basePageRef.value?.refreshCurrentPage() }
+    else { ElMessage.error(res.message || '状态更新失败') }
+  } catch { ElMessage.error('状态更新失败') }
 }
 
 const handleDelete = async (id: string) => {
   try {
     const { data: res } = await roleApi.deleteRole(id)
-    if (res.code === 200) { ElMessage.success('Role deleted'); basePageRef.value?.refreshAfterDelete(1) }
-    else { ElMessage.error(res.message || 'Delete failed') }
-  } catch { ElMessage.error('Delete failed') }
+    if (res.code === 200) { ElMessage.success('角色已删除'); basePageRef.value?.refreshAfterDelete(1) }
+    else { ElMessage.error(res.message || '删除失败') }
+  } catch { ElMessage.error('删除失败') }
 }
 
 const batchDelete = () => {
@@ -229,8 +229,8 @@ const batchDelete = () => {
     onConfirm: async () => {
       const responses = await Promise.all(selectedIds.value.map((id) => roleApi.deleteRole(id)))
       const failed = responses.find(({ data }) => data.code !== 200)
-      if (!failed) { ElMessage.success('Roles deleted'); basePageRef.value?.refreshAfterDelete(selectedIds.value.length) }
-      else { ElMessage.error(failed.data.message || 'Delete failed') }
+      if (!failed) { ElMessage.success('角色已删除'); basePageRef.value?.refreshAfterDelete(selectedIds.value.length) }
+      else { ElMessage.error(failed.data.message || '删除失败') }
     },
   })
 }
@@ -251,8 +251,8 @@ const handleAssignMenus = async () => {
   menuSubmitLoading.value = true
   try {
     const { data: res } = await roleApi.assignMenus(currentRoleId.value, [...checkedKeys, ...halfCheckedKeys])
-    if (res.code === 200) { ElMessage.success('Menus assigned'); menuVisible.value = false }
-    else { ElMessage.error(res.message || 'Assign failed') }
-  } catch { ElMessage.error('Assign failed') } finally { menuSubmitLoading.value = false }
+    if (res.code === 200) { ElMessage.success('菜单已分配'); menuVisible.value = false }
+    else { ElMessage.error(res.message || '分配失败') }
+  } catch { ElMessage.error('分配失败') } finally { menuSubmitLoading.value = false }
 }
 </script>

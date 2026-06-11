@@ -1,26 +1,26 @@
 <template>
   <div class="i18n-page">
     <el-form :inline="true" class="search-bar">
-      <el-form-item label="Country">
-        <el-select v-model="selectedCountryId" placeholder="Select country" filterable @change="fetchData" style="width: 220px">
+      <el-form-item label="国家">
+        <el-select v-model="selectedCountryId" placeholder="请选择国家" filterable @change="fetchData" style="width: 220px">
           <el-option v-for="c in countryOptions" :key="c.id" :label="`${c.name} (${c.code})`" :value="c.id" />
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" v-permission="'i18n:add'" @click="handleAddLanguage">Add Language</el-button>
+        <el-button type="primary" v-permission="'i18n:add'" @click="handleAddLanguage">绑定语言</el-button>
       </el-form-item>
     </el-form>
 
     <el-table :data="tableData" border stripe v-loading="loading">
-      <el-table-column prop="code" label="Language Code" width="140" />
-      <el-table-column prop="name" label="Name" min-width="140" show-overflow-tooltip />
-      <el-table-column prop="nativeName" label="Native Name" min-width="140" show-overflow-tooltip />
-      <el-table-column prop="isDefault" label="Default" width="100" align="center">
+      <el-table-column prop="code" label="语言代码" width="140" />
+      <el-table-column prop="name" label="语言名称" min-width="140" show-overflow-tooltip />
+      <el-table-column prop="nativeName" label="本地名称" min-width="140" show-overflow-tooltip />
+      <el-table-column prop="isDefault" label="默认语言" width="100" align="center">
         <template #default="{ row }">
-          <el-tag :type="row.isDefault ? 'success' : 'info'">{{ row.isDefault ? 'Yes' : 'No' }}</el-tag>
+          <el-tag :type="row.isDefault ? 'success' : 'info'">{{ row.isDefault ? '是' : '否' }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Actions" width="220" fixed="right">
+      <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
           <el-button
             link
@@ -29,36 +29,39 @@
             :disabled="row.isDefault"
             @click="handleSetDefault(row)"
           >
-            Set Default
+            设为默认
           </el-button>
-          <el-popconfirm title="Confirm delete?" @confirm="handleDelete(row)">
+          <el-popconfirm title="确定要删除该语言绑定吗？" confirm-button-text="确认" cancel-button-text="取消" @confirm="handleDelete(row)">
             <template #reference>
-              <el-button link type="danger" v-permission="'i18n:delete'">Delete</el-button>
+              <el-button link type="danger" v-permission="'i18n:delete'">删除</el-button>
             </template>
           </el-popconfirm>
         </template>
       </el-table-column>
+      <template #empty>
+        <el-empty description="暂无数据" />
+      </template>
     </el-table>
 
-    <el-dialog v-model="dialogVisible" title="Add Language" width="500px" @close="resetForm">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
-        <el-form-item label="Country" prop="countryId">
-          <el-select v-model="form.countryId" placeholder="Select country" filterable style="width: 100%">
+    <el-dialog v-model="dialogVisible" title="绑定语言" width="500px" @close="resetForm">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+        <el-form-item label="国家" prop="countryId">
+          <el-select v-model="form.countryId" placeholder="请选择国家" filterable style="width: 100%">
             <el-option v-for="c in countryOptions" :key="c.id" :label="`${c.name} (${c.code})`" :value="c.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="Language" prop="languageId">
-          <el-select v-model="form.languageId" placeholder="Select language" filterable style="width: 100%">
+        <el-form-item label="语言" prop="languageId">
+          <el-select v-model="form.languageId" placeholder="请选择语言" filterable style="width: 100%">
             <el-option v-for="l in languageOptions" :key="l.id" :label="`${l.name} (${l.code})`" :value="l.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="Default">
-          <el-checkbox v-model="form.isDefault">Set as default language</el-checkbox>
+        <el-form-item label="默认语言">
+          <el-checkbox v-model="form.isDefault">设为该国家默认语言</el-checkbox>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">Cancel</el-button>
-        <el-button type="primary" :loading="submitLoading" @click="handleSubmit">Confirm</el-button>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="handleSubmit">确认</el-button>
       </template>
     </el-dialog>
   </div>
@@ -87,8 +90,8 @@ const form = reactive({
 })
 
 const rules: FormRules = {
-  countryId: [{ required: true, message: 'Please select country', trigger: 'change' }],
-  languageId: [{ required: true, message: 'Please select language', trigger: 'change' }],
+  countryId: [{ required: true, message: '请选择国家', trigger: 'change' }],
+  languageId: [{ required: true, message: '请选择语言', trigger: 'change' }],
 }
 
 async function loadCountries() {
@@ -98,7 +101,7 @@ async function loadCountries() {
       countryOptions.value = res.data.list || []
     }
   } catch {
-    ElMessage.error('Failed to load countries')
+    ElMessage.error('加载国家列表失败')
   }
 }
 
@@ -109,7 +112,7 @@ async function loadLanguages() {
       languageOptions.value = res.data.list || []
     }
   } catch {
-    ElMessage.error('Failed to load languages')
+    ElMessage.error('加载语言列表失败')
   }
 }
 
@@ -120,16 +123,17 @@ async function fetchData() {
   }
   loading.value = true
   try {
-    const { data: res } = await i18nApi.getCountryLanguages({ countryId: selectedCountryId.value })
+    const selectedCode = countryOptions.value.find((c) => c.id === selectedCountryId.value)?.code
+    const { data: res } = await i18nApi.getCountryLanguages({ countryCode: selectedCode })
     if (res.code === 200) {
-      const item = res.data[0] as I18nCountryLanguage | undefined
-      tableData.value = item?.languages || []
+      const item = res.data.find((it) => it.countryId === selectedCountryId.value) || res.data[0]
+      tableData.value = (item as I18nCountryLanguage | undefined)?.languages || []
     } else {
       tableData.value = []
-      ElMessage.error(res.message || 'Failed to fetch data')
+      ElMessage.error(res.message || '获取数据失败')
     }
   } catch {
-    ElMessage.error('Failed to fetch data')
+    ElMessage.error('获取数据失败')
   } finally {
     loading.value = false
   }
@@ -155,17 +159,17 @@ async function handleSubmit() {
       isDefault: form.isDefault,
     })
     if (res.code === 200) {
-      ElMessage.success('Language bound successfully')
+      ElMessage.success('语言绑定成功')
       dialogVisible.value = false
       if (form.countryId) {
         selectedCountryId.value = form.countryId
       }
       fetchData()
     } else {
-      ElMessage.error(res.message || 'Bind failed')
+      ElMessage.error(res.message || '绑定失败')
     }
   } catch {
-    ElMessage.error('Bind failed')
+    ElMessage.error('绑定失败')
   } finally {
     submitLoading.value = false
   }
@@ -175,13 +179,13 @@ async function handleSetDefault(row: { id: number }) {
   try {
     const { data: res } = await i18nApi.setDefaultCountryLanguage(row.id)
     if (res.code === 200) {
-      ElMessage.success('Default language set successfully')
+      ElMessage.success('已设为默认语言')
       fetchData()
     } else {
-      ElMessage.error(res.message || 'Failed to set default')
+      ElMessage.error(res.message || '设置默认失败')
     }
   } catch {
-    ElMessage.error('Failed to set default')
+    ElMessage.error('设置默认失败')
   }
 }
 
@@ -189,13 +193,13 @@ async function handleDelete(row: { id: number }) {
   try {
     const { data: res } = await i18nApi.deleteCountryLanguage(row.id)
     if (res.code === 200) {
-      ElMessage.success('Deleted successfully')
+      ElMessage.success('删除成功')
       fetchData()
     } else {
-      ElMessage.error(res.message || 'Delete failed')
+      ElMessage.error(res.message || '删除失败')
     }
   } catch {
-    ElMessage.error('Delete failed')
+    ElMessage.error('删除失败')
   }
 }
 

@@ -2,79 +2,79 @@
   <div class="cm-support-page">
     <el-form :inline="true" :model="searchForm" class="search-bar">
       <el-form-item>
-        <el-input v-model="searchForm.keyword" placeholder="Keyword" clearable @clear="handleSearch" @keyup.enter="handleSearch" style="width: 180px" />
+        <el-input v-model="searchForm.keyword" placeholder="关键词" clearable @clear="handleSearch" @keyup.enter="handleSearch" style="width: 180px" />
       </el-form-item>
       <el-form-item>
-        <el-input v-model="searchForm.merchantId" placeholder="Merchant ID" clearable @clear="handleSearch" style="width: 120px" />
+        <el-input v-model="searchForm.merchantId" placeholder="商户ID" clearable @clear="handleSearch" style="width: 120px" />
       </el-form-item>
       <el-form-item>
-        <el-input v-model="searchForm.customerUserId" placeholder="Customer ID" clearable @clear="handleSearch" style="width: 120px" />
+        <el-input v-model="searchForm.customerUserId" placeholder="客户ID" clearable @clear="handleSearch" style="width: 120px" />
       </el-form-item>
       <el-form-item>
-        <el-select v-model="searchForm.status" placeholder="Status" clearable @change="handleSearch" style="width: 110px">
-          <el-option label="Open" value="OPEN" />
-          <el-option label="Closed" value="CLOSED" />
+        <el-select v-model="searchForm.status" placeholder="状态" clearable @change="handleSearch" style="width: 110px">
+          <el-option label="开启" value="OPEN" />
+          <el-option label="已关闭" value="CLOSED" />
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-select v-model="searchForm.sessionType" placeholder="Type" clearable @change="handleSearch" style="width: 130px">
-          <el-option label="Normal" value="NORMAL" />
-          <el-option label="Inspection" value="INSPECTION" />
+        <el-select v-model="searchForm.sessionType" placeholder="类型" clearable @change="handleSearch" style="width: 130px">
+          <el-option label="正常" value="NORMAL" />
+          <el-option label="质检" value="INSPECTION" />
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-date-picker v-model="searchForm.dateRange" type="daterange" range-separator="to" start-placeholder="Start" end-placeholder="End" format="YYYY-MM-DD" value-format="YYYY-MM-DD" @change="handleSearch" style="width: 240px" />
+        <el-date-picker v-model="searchForm.dateRange" type="daterange" range-separator="to" start-placeholder="开始" end-placeholder="结束" format="YYYY-MM-DD" value-format="YYYY-MM-DD" @change="handleSearch" style="width: 240px" />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="handleSearch">Search</el-button>
+        <el-button type="primary" @click="handleSearch">搜索</el-button>
       </el-form-item>
     </el-form>
 
     <el-table :data="tableData" border stripe v-loading="loading" @row-click="openDetail">
       <el-table-column type="index" label="#" width="50" />
-      <el-table-column prop="sessionNo" label="Session No" width="150" show-overflow-tooltip />
-      <el-table-column prop="customerName" label="Customer" width="100" show-overflow-tooltip />
-      <el-table-column prop="merchantName" label="Merchant" width="100" show-overflow-tooltip />
-      <el-table-column label="Type" width="90" align="center">
+      <el-table-column prop="sessionNo" label="会话编号" width="150" show-overflow-tooltip />
+      <el-table-column prop="customerName" label="客户" width="100" show-overflow-tooltip />
+      <el-table-column prop="merchantName" label="商户" width="100" show-overflow-tooltip />
+      <el-table-column label="类型" width="90" align="center">
         <template #default="{ row }">
           <el-tag :type="row.sessionType === 'INSPECTION' ? 'warning' : 'info'" size="small">{{ row.sessionType }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Status" width="80" align="center">
+      <el-table-column label="状态" width="80" align="center">
         <template #default="{ row }">
           <el-tag :type="row.status === 'OPEN' ? 'success' : 'info'" size="small">{{ row.status }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Priority" width="70" align="center">
+      <el-table-column label="优先级" width="70" align="center">
         <template #default="{ row }">
           <el-tag :type="row.priority === 'HIGH' ? 'danger' : row.priority === 'MEDIUM' ? 'warning' : 'info'" size="small">{{ row.priority }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Response" width="90" align="center">
+      <el-table-column label="回复" width="90" align="center">
         <template #default="{ row }">
           <span v-if="row.firstResponseSeconds">{{ row.firstResponseSeconds }}s</span>
           <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column label="Last Msg" min-width="150" show-overflow-tooltip>
+      <el-table-column label="最后消息" min-width="150" show-overflow-tooltip>
         <template #default="{ row }">{{ row.lastMessage || '-' }}</template>
       </el-table-column>
-      <el-table-column label="Unread" width="80" align="center">
+      <el-table-column label="未读" width="80" align="center">
         <template #default="{ row }">
           <span>C:{{ row.customerUnread || 0 }} / M:{{ row.merchantUnread || 0 }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="Inspect" width="80" align="center">
+      <el-table-column label="质检" width="80" align="center">
         <template #default="{ row }">
           <el-tag v-if="row.inspectionId" type="warning" size="small">#{{ row.inspectionId }}</el-tag>
           <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column prop="lastMessageAt" label="Last At" width="160" />
-      <el-table-column label="Actions" width="120" fixed="right">
+      <el-table-column prop="lastMessageAt" label="最后时间" width="160" />
+      <el-table-column label="操作" width="120" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click.stop="openDetail(row)">Detail</el-button>
-          <el-button v-if="row.status === 'OPEN'" link type="danger" @click.stop="handleClose(row)">Close</el-button>
+          <el-button link type="primary" @click.stop="openDetail(row)">详情</el-button>
+          <el-button v-if="row.status === 'OPEN'" link type="danger" @click.stop="handleClose(row)">关闭</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -91,16 +91,16 @@
     <el-dialog v-model="detailVisible" :title="'Session: ' + (detailSession?.sessionNo || '')" width="750px">
       <div v-if="detailSession" class="detail-panel">
         <el-descriptions :column="3" border size="small">
-          <el-descriptions-item label="Customer">{{ detailSession.customerName || `ID:${detailSession.customerUserId}` }}</el-descriptions-item>
-          <el-descriptions-item label="Merchant">{{ detailSession.merchantName || `ID:${detailSession.merchantId}` }}</el-descriptions-item>
-          <el-descriptions-item label="Status">
+          <el-descriptions-item label="客户">{{ detailSession.customerName || `ID:${detailSession.customerUserId}` }}</el-descriptions-item>
+          <el-descriptions-item label="商户">{{ detailSession.merchantName || `ID:${detailSession.merchantId}` }}</el-descriptions-item>
+          <el-descriptions-item label="状态">
             <el-tag :type="detailSession.status === 'OPEN' ? 'success' : 'info'" size="small">{{ detailSession.status }}</el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="Type">{{ detailSession.sessionType }}</el-descriptions-item>
-          <el-descriptions-item label="Priority">{{ detailSession.priority }}</el-descriptions-item>
-          <el-descriptions-item v-if="detailSession.operatorName" label="Operator">{{ detailSession.operatorName }}</el-descriptions-item>
+          <el-descriptions-item label="类型">{{ detailSession.sessionType }}</el-descriptions-item>
+          <el-descriptions-item label="优先级">{{ detailSession.priority }}</el-descriptions-item>
+          <el-descriptions-item v-if="detailSession.operatorName" label="操作人">{{ detailSession.operatorName }}</el-descriptions-item>
         </el-descriptions>
-        <el-divider>Messages</el-divider>
+        <el-divider>消息</el-divider>
         <div class="msg-list" ref="detailMsgRef">
           <div v-for="msg in detailMessages" :key="msg.id" class="msg-item">
             <span class="msg-side" :class="msg.senderSide === 'CUSTOMER' ? 'side-customer' : msg.senderSide === 'MERCHANT' ? 'side-merchant' : 'side-admin'">
@@ -163,8 +163,8 @@ async function fetchData() {
     if (res.code === 200) {
       tableData.value = res.data.list || []
       total.value = res.data.total || 0
-    } else { ElMessage.error(res.message || 'Failed') }
-  } catch { ElMessage.error('Failed to fetch') } finally { loading.value = false }
+    } else { ElMessage.error(res.message || '操作失败') }
+  } catch { ElMessage.error('获取失败') } finally { loading.value = false }
 }
 
 function handleSearch() {
@@ -190,10 +190,10 @@ async function handleClose(row: IAdminSupportSession) {
   try {
     const { data: res } = await customerMerchantApi.closeSession(row.id)
     if (res.code === 200) {
-      ElMessage.success('Session closed')
+      ElMessage.success('会话已关闭')
       fetchData()
     }
-  } catch { ElMessage.error('Close failed') }
+  } catch { ElMessage.error('关闭失败') }
 }
 
 onMounted(() => {

@@ -2,51 +2,51 @@
   <div class="catalog-listing-page">
     <el-form :inline="true" :model="searchForm" class="search-bar">
       <el-form-item>
-        <el-input v-model="searchForm.merchantKeyword" placeholder="Merchant name" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input v-model="searchForm.merchantKeyword" placeholder="商户名称" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
       </el-form-item>
       <el-form-item>
-        <el-input v-model="searchForm.platformProductId" placeholder="Platform Product ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input v-model="searchForm.platformProductId" placeholder="平台商品ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
       </el-form-item>
       <el-form-item>
-        <el-select v-model="searchForm.status" placeholder="Status" clearable @change="handleSearch">
-          <el-option label="On Sale" value="ON_SALE" />
-          <el-option label="Off Sale" value="OFF_SALE" />
+        <el-select v-model="searchForm.status" placeholder="状态" clearable @change="handleSearch">
+          <el-option label="在售" value="ON_SALE" />
+          <el-option label="已下架" value="OFF_SALE" />
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="handleSearch">Search</el-button>
+        <el-button type="primary" @click="handleSearch">搜索</el-button>
       </el-form-item>
     </el-form>
 
     <el-table :data="tableData" border stripe v-loading="loading">
       <el-table-column type="index" label="#" width="55" />
-      <el-table-column prop="merchantName" label="Merchant" min-width="140" show-overflow-tooltip />
-      <el-table-column prop="platformProductName" label="Platform Product" min-width="180" show-overflow-tooltip>
+      <el-table-column prop="merchantName" label="商户" min-width="140" show-overflow-tooltip />
+      <el-table-column prop="platformProductName" label="平台商品" min-width="180" show-overflow-tooltip>
         <template #default="{ row }">
           <span>{{ row.platformProductName || row.platformProductModel || '-' }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="listingStatus" label="Status" width="110" align="center">
+      <el-table-column prop="listingStatus" label="状态" width="110" align="center">
         <template #default="{ row }">
           <el-tag :type="row.listingStatus === 'ON_SALE' ? 'success' : 'warning'" size="small">
             {{ row.listingStatus === 'ON_SALE' ? 'On Sale' : 'Off Sale' }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="merchantStock" label="Stock" width="80" align="center" />
-      <el-table-column prop="salePrice" label="Sale Price" width="100" align="right" />
-      <el-table-column prop="merchantPrice" label="M.Price" width="90" align="right" />
-      <el-table-column prop="profitAmount" label="Profit" width="90" align="right" />
-      <el-table-column prop="listedAt" label="Listed At" width="160" />
-      <el-table-column label="Actions" width="120" fixed="right">
+      <el-table-column prop="merchantStock" label="库存" width="80" align="center" />
+      <el-table-column prop="salePrice" label="售价" width="100" align="right" />
+      <el-table-column prop="merchantPrice" label="会员价" width="90" align="right" />
+      <el-table-column prop="profitAmount" label="利润" width="90" align="right" />
+      <el-table-column prop="listedAt" label="上架时间" width="160" />
+      <el-table-column label="操作" width="120" fixed="right">
         <template #default="{ row }">
           <el-popconfirm
-            title="Force delist this listing?"
+            title="确定要强制下架该商品吗？"
             placement="top" width="200"
             @confirm="handleDelist(row)"
           >
             <template #reference>
-              <el-button link type="danger" v-permission="'catalog:edit'">Force Delist</el-button>
+              <el-button link type="danger" v-permission="'catalog:edit'">强制下架</el-button>
             </template>
           </el-popconfirm>
         </template>
@@ -97,10 +97,10 @@ async function fetchData() {
       tableData.value = res.data.list
       total.value = res.data.total
     } else {
-      ElMessage.error(res.message || 'Failed to fetch data')
+      ElMessage.error(res.message || '获取数据失败')
     }
   } catch {
-    ElMessage.error('Failed to fetch data')
+    ElMessage.error('获取数据失败')
   } finally {
     loading.value = false
   }
@@ -115,13 +115,13 @@ async function handleDelist(row: CatalogListing) {
   try {
     const { data: res } = await catalogApi.disableListing(row.id)
     if (res.code === 200) {
-      ElMessage.success('Listing has been delisted')
+      ElMessage.success('商品已下架')
       fetchData()
     } else {
-      ElMessage.error(res.message || 'Delist failed')
+      ElMessage.error(res.message || '下架失败')
     }
   } catch {
-    ElMessage.error('Delist failed')
+    ElMessage.error('下架失败')
   }
 }
 

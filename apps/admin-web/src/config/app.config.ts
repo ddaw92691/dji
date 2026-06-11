@@ -51,11 +51,11 @@ export const APP_CONFIG: IAppConfig = {
   // 是否展示全屏/退出全屏按钮
   showFullscreen: true,
 
-  // 是否展示国际化
-  showI18n: true,
+  // 是否展示国际化（总后台仅简体中文，隐藏语言切换）
+  showI18n: false,
 
-  // 国际化默认语言
-  defaultLang: 'enUS',
+  // 国际化默认语言（总后台固定简体中文）
+  defaultLang: 'zhCN',
 
   // 是否展示消息通知
   showNotification: true,

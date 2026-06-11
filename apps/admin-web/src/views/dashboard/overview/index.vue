@@ -1,44 +1,44 @@
 <template>
   <div class="dashboard-overview">
     <div class="page-header">
-      <h2>Dashboard</h2>
-      <el-button type="primary" :loading="loading" @click="fetchData">Refresh</el-button>
+      <h2>控制台</h2>
+      <el-button type="primary" :loading="loading" @click="fetchData">刷新</el-button>
     </div>
 
     <el-row :gutter="16" class="stats-row">
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">Total Users</div>
+          <div class="stat-label">用户总数</div>
           <div class="stat-value">{{ summary.totalUsers }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">Customers</div>
+          <div class="stat-label">客户</div>
           <div class="stat-value">{{ summary.totalCustomers }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">Merchants</div>
+          <div class="stat-label">商户</div>
           <div class="stat-value">{{ summary.totalMerchants }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">Agents</div>
+          <div class="stat-label">代理</div>
           <div class="stat-value">{{ summary.totalAgents }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">Products</div>
+          <div class="stat-label">商品</div>
           <div class="stat-value">{{ summary.totalProducts }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="stat-card pending-card">
-          <div class="stat-label">Pending Products</div>
+          <div class="stat-label">待审商品</div>
           <div class="stat-value">{{ summary.pendingProducts }}</div>
         </el-card>
       </el-col>
@@ -47,25 +47,25 @@
     <el-row :gutter="16" class="stats-row">
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">Total Orders</div>
+          <div class="stat-label">订单总数</div>
           <div class="stat-value">{{ summary.totalOrders }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">Paid Orders</div>
+          <div class="stat-label">已支付订单</div>
           <div class="stat-value">{{ summary.paidOrders }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">Completed Orders</div>
+          <div class="stat-label">已完成订单</div>
           <div class="stat-value">{{ summary.completedOrders }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card warn-card">
-          <div class="stat-label">Refund Requests</div>
+          <div class="stat-label">退款申请</div>
           <div class="stat-value">{{ summary.refundRequests }}</div>
         </el-card>
       </el-col>
@@ -74,25 +74,25 @@
     <el-row :gutter="16" class="stats-row">
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">Total Sales</div>
+          <div class="stat-label">总销售额</div>
           <div class="stat-value green">${{ formatAmount(summary.totalSales) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">Today Sales</div>
+          <div class="stat-label">今日销售</div>
           <div class="stat-value">${{ formatAmount(summary.todaySales) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">Total Commission</div>
+          <div class="stat-label">总佣金</div>
           <div class="stat-value">${{ formatAmount(summary.totalCommission) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card warn-card">
-          <div class="stat-label">Pending Withdrawals</div>
+          <div class="stat-label">待处理提现</div>
           <div class="stat-value">{{ summary.pendingWithdrawals }}</div>
         </el-card>
       </el-col>
@@ -101,39 +101,39 @@
     <el-row :gutter="16" class="tables-row">
       <el-col :span="12">
         <el-card shadow="hover" class="section-card">
-          <template #header><span class="section-title">Recent Orders</span></template>
+          <template #header><span class="section-title">最近订单</span></template>
           <el-table :data="summary.recentOrders || []" border size="small">
-            <el-table-column prop="orderNo" label="Order No" min-width="140" show-overflow-tooltip />
-            <el-table-column label="Customer" min-width="100" show-overflow-tooltip>
+            <el-table-column prop="orderNo" label="订单号" min-width="140" show-overflow-tooltip />
+            <el-table-column label="客户" min-width="100" show-overflow-tooltip>
               <template #default="{ row }">{{ row.userName || '-' }}</template>
             </el-table-column>
-            <el-table-column prop="payAmount" label="Amount" width="90" align="right" />
-            <el-table-column label="Status" width="100" align="center">
+            <el-table-column prop="payAmount" label="金额" width="90" align="right" />
+            <el-table-column label="状态" width="100" align="center">
               <template #default="{ row }">
                 <el-tag size="small">{{ row.status }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="createdAt" label="Created" width="160" />
+            <el-table-column prop="createdAt" label="创建时间" width="160" />
           </el-table>
         </el-card>
       </el-col>
       <el-col :span="12">
         <el-card shadow="hover" class="section-card">
-          <template #header><span class="section-title">Recent Refunds</span></template>
+          <template #header><span class="section-title">最近退款</span></template>
           <el-table :data="summary.recentRefunds || []" border size="small">
-            <el-table-column prop="orderNo" label="Order No" min-width="140" show-overflow-tooltip />
-            <el-table-column label="Customer" min-width="100" show-overflow-tooltip>
+            <el-table-column prop="orderNo" label="订单号" min-width="140" show-overflow-tooltip />
+            <el-table-column label="客户" min-width="100" show-overflow-tooltip>
               <template #default="{ row }">{{ row.userName || '-' }}</template>
             </el-table-column>
-            <el-table-column prop="refundAmount" label="Amount" width="90" align="right" />
-            <el-table-column label="Status" width="100" align="center">
+            <el-table-column prop="refundAmount" label="金额" width="90" align="right" />
+            <el-table-column label="状态" width="100" align="center">
               <template #default="{ row }">
                 <el-tag size="small" :type="row.refundStatus === 'REQUESTED' ? 'warning' : row.refundStatus === 'APPROVED' ? 'success' : 'danger'">
                   {{ row.refundStatus }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="createdAt" label="Created" width="160" />
+            <el-table-column prop="createdAt" label="创建时间" width="160" />
           </el-table>
         </el-card>
       </el-col>
@@ -157,13 +157,13 @@
     <el-row :gutter="16" class="charts-row">
       <el-col :span="12">
         <el-card shadow="hover" class="section-card">
-          <template #header><span class="section-title">Order Status Distribution</span></template>
+          <template #header><span class="section-title">订单状态分布</span></template>
           <div ref="orderStatusChartRef" class="chart-box" />
         </el-card>
       </el-col>
       <el-col :span="12">
         <el-card shadow="hover" class="section-card">
-          <template #header><span class="section-title">User Role Distribution</span></template>
+          <template #header><span class="section-title">用户角色分布</span></template>
           <div ref="userRoleChartRef" class="chart-box" />
         </el-card>
       </el-col>

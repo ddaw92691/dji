@@ -2,13 +2,13 @@
   <div class="commission-page">
     <el-form :inline="true" :model="searchForm" class="search-bar">
       <el-form-item>
-        <el-input v-model="searchForm.keyword" placeholder="Order No / Agent" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input v-model="searchForm.keyword" placeholder="订单号 / 代理" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
       </el-form-item>
       <el-form-item>
-        <el-input v-model="searchForm.agentId" placeholder="Agent ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input v-model="searchForm.agentId" placeholder="代理ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
       </el-form-item>
       <el-form-item>
-        <el-select v-model="searchForm.status" placeholder="Status" clearable @change="handleSearch">
+        <el-select v-model="searchForm.status" placeholder="状态" clearable @change="handleSearch">
           <el-option v-for="o in COMMISSION_STATUS_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
         </el-select>
       </el-form-item>
@@ -17,37 +17,37 @@
           v-model="searchForm.dateRange"
           type="daterange"
           range-separator="to"
-          start-placeholder="Start"
-          end-placeholder="End"
+          start-placeholder="开始"
+          end-placeholder="结束"
           format="YYYY-MM-DD"
           value-format="YYYY-MM-DD"
           @change="handleSearch"
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="handleSearch">Search</el-button>
+        <el-button type="primary" @click="handleSearch">搜索</el-button>
       </el-form-item>
     </el-form>
 
     <el-table :data="tableData" border stripe v-loading="loading">
       <el-table-column type="index" label="#" width="55" />
-      <el-table-column prop="orderNo" label="Order No" min-width="160" show-overflow-tooltip />
-      <el-table-column prop="agentName" label="Agent" min-width="120" show-overflow-tooltip />
-      <el-table-column prop="amount" label="Amount" width="120" align="right">
+      <el-table-column prop="orderNo" label="订单号" min-width="160" show-overflow-tooltip />
+      <el-table-column prop="agentName" label="代理" min-width="120" show-overflow-tooltip />
+      <el-table-column prop="amount" label="金额" width="120" align="right">
         <template #default="{ row }">${{ (row.amount ?? 0).toFixed(2) }}</template>
       </el-table-column>
-      <el-table-column label="Rate" width="80" align="center">
+      <el-table-column label="比例" width="80" align="center">
         <template #default="{ row }">{{ ((row.rate ?? 0) * 100).toFixed(0) }}%</template>
       </el-table-column>
-      <el-table-column label="Status" width="110" align="center">
+      <el-table-column label="状态" width="110" align="center">
         <template #default="{ row }">
           <el-tag :type="getColorByValue(COMMISSION_STATUS_OPTIONS, row.status)">
             {{ getLabelByValue(COMMISSION_STATUS_OPTIONS, row.status) }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="createdAt" label="Created" width="180" />
-      <el-table-column label="Settled At" width="180">
+      <el-table-column prop="createdAt" label="创建时间" width="180" />
+      <el-table-column label="结算时间" width="180">
         <template #default="{ row }">{{ row.settledAt || '-' }}</template>
       </el-table-column>
     </el-table>

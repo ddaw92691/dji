@@ -21,6 +21,7 @@ public class Country extends BaseEntity {
     @Schema(description = "货币代码") private String currencyCode;
     @Schema(description = "货币符号") private String currencySymbol;
     @Schema(description = "时区") private String timezone;
+    @Schema(description = "区域分组") private String region;
     @Schema(description = "汇率") private BigDecimal exchangeRate;
     @Schema(description = "状态") private String status;
     @Schema(description = "排序") private Integer sort;

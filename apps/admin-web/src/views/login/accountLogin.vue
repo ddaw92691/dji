@@ -222,7 +222,7 @@ const handleLogin = async () => {
     }
     const role = res.data.user?.role
     if (role !== 'SUPER_ADMIN' && role !== 'ADMIN') {
-      ElMessage.error('This account does not have permission to access the admin panel')
+      ElMessage.error('该账号没有访问后台的权限')
       loading.value = false
       return
     }

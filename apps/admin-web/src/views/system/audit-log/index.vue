@@ -2,63 +2,63 @@
   <div class="audit-log-page">
     <el-form :inline="true" :model="searchForm" class="search-bar">
       <el-form-item>
-        <el-input v-model="searchForm.userId" placeholder="User ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input v-model="searchForm.userId" placeholder="用户ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
       </el-form-item>
       <el-form-item>
-        <el-select v-model="searchForm.action" placeholder="Action" clearable @change="handleSearch">
+        <el-select v-model="searchForm.action" placeholder="操作" clearable @change="handleSearch">
           <el-option v-for="o in AUDIT_ACTION_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-select v-model="searchForm.targetType" placeholder="Target Type" clearable @change="handleSearch">
+        <el-select v-model="searchForm.targetType" placeholder="目标类型" clearable @change="handleSearch">
           <el-option v-for="o in AUDIT_TARGET_TYPE_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-input v-model="searchForm.keyword" placeholder="Keyword" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input v-model="searchForm.keyword" placeholder="关键词" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
       </el-form-item>
       <el-form-item>
         <el-date-picker
           v-model="searchForm.dateRange"
           type="daterange"
           range-separator="to"
-          start-placeholder="Start"
-          end-placeholder="End"
+          start-placeholder="开始"
+          end-placeholder="结束"
           format="YYYY-MM-DD"
           value-format="YYYY-MM-DD"
           @change="handleSearch"
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="handleSearch">Search</el-button>
+        <el-button type="primary" @click="handleSearch">搜索</el-button>
       </el-form-item>
     </el-form>
 
     <el-table :data="tableData" border stripe v-loading="loading">
       <el-table-column type="index" label="#" width="55" />
       <el-table-column prop="id" label="ID" width="70" />
-      <el-table-column prop="userEmail" label="User" min-width="180" show-overflow-tooltip />
-      <el-table-column label="Action" width="100" align="center">
+      <el-table-column prop="userEmail" label="用户" min-width="180" show-overflow-tooltip />
+      <el-table-column label="操作" width="100" align="center">
         <template #default="{ row }">
           <el-tag>{{ getLabelByValue(AUDIT_ACTION_OPTIONS, row.action) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Target Type" width="120" align="center">
+      <el-table-column label="目标类型" width="120" align="center">
         <template #default="{ row }">
           <el-tag type="info">{{ getLabelByValue(AUDIT_TARGET_TYPE_OPTIONS, row.targetType) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="targetId" label="Target ID" width="100" />
-      <el-table-column prop="detail" label="Detail" min-width="200" show-overflow-tooltip>
+      <el-table-column prop="targetId" label="目标ID" width="100" />
+      <el-table-column prop="detail" label="详情" min-width="200" show-overflow-tooltip>
         <template #default="{ row }">
           {{ row.detail ? row.detail.substring(0, 100) : '-' }}
         </template>
       </el-table-column>
       <el-table-column prop="ip" label="IP" width="140" show-overflow-tooltip />
-      <el-table-column prop="createdAt" label="Created" width="180" />
-      <el-table-column label="Actions" width="80" fixed="right">
+      <el-table-column prop="createdAt" label="创建时间" width="180" />
+      <el-table-column label="操作" width="80" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" v-permission="'sys:audit:view'" @click="openDetail(row)">Detail</el-button>
+          <el-button link type="primary" v-permission="'sys:audit:view'" @click="openDetail(row)">详情</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -72,28 +72,28 @@
       @change="fetchData"
     />
 
-    <el-dialog v-model="detailVisible" title="Audit Log Detail" width="700px">
+    <el-dialog v-model="detailVisible" title="审计日志详情" width="700px">
       <div v-if="currentLog" class="log-detail">
         <el-descriptions :column="2" border size="small">
           <el-descriptions-item label="ID">{{ currentLog.id }}</el-descriptions-item>
-          <el-descriptions-item label="User ID">{{ currentLog.userId }}</el-descriptions-item>
-          <el-descriptions-item label="User Email">{{ currentLog.userEmail }}</el-descriptions-item>
-          <el-descriptions-item label="Action">
+          <el-descriptions-item label="用户ID">{{ currentLog.userId }}</el-descriptions-item>
+          <el-descriptions-item label="用户邮箱">{{ currentLog.userEmail }}</el-descriptions-item>
+          <el-descriptions-item label="操作">
             <el-tag>{{ getLabelByValue(AUDIT_ACTION_OPTIONS, currentLog.action) }}</el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="Target Type">
+          <el-descriptions-item label="目标类型">
             <el-tag type="info">{{ getLabelByValue(AUDIT_TARGET_TYPE_OPTIONS, currentLog.targetType) }}</el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="Target ID">{{ currentLog.targetId }}</el-descriptions-item>
+          <el-descriptions-item label="目标ID">{{ currentLog.targetId }}</el-descriptions-item>
           <el-descriptions-item label="IP">{{ currentLog.ip }}</el-descriptions-item>
-          <el-descriptions-item label="Created At">{{ currentLog.createdAt }}</el-descriptions-item>
-          <el-descriptions-item label="Detail" :span="2">
+          <el-descriptions-item label="创建时间">{{ currentLog.createdAt }}</el-descriptions-item>
+          <el-descriptions-item label="详情" :span="2">
             <pre class="detail-text">{{ currentLog.detail || '-' }}</pre>
           </el-descriptions-item>
         </el-descriptions>
       </div>
       <template #footer>
-        <el-button @click="detailVisible = false">Close</el-button>
+        <el-button @click="detailVisible = false">关闭</el-button>
       </template>
     </el-dialog>
   </div>

@@ -1,10 +1,10 @@
 <template>
   <div class="setting-page">
     <div class="page-header">
-      <h2>System Settings</h2>
+      <h2>系统设置</h2>
       <div class="header-actions">
-        <el-button :loading="loading" @click="fetchData">Refresh</el-button>
-        <el-button type="primary" :loading="saving" @click="handleSaveAll">Save All</el-button>
+        <el-button :loading="loading" @click="fetchData">刷新</el-button>
+        <el-button type="primary" :loading="saving" @click="handleSaveAll">全部保存</el-button>
       </div>
     </div>
 
@@ -14,21 +14,21 @@
       </template>
 
       <el-table :data="group" border stripe size="small">
-        <el-table-column prop="settingKey" label="Key" min-width="180" show-overflow-tooltip />
-        <el-table-column label="Value" min-width="200">
+        <el-table-column prop="settingKey" label="键" min-width="180" show-overflow-tooltip />
+        <el-table-column label="值" min-width="200">
           <template #default="{ row }">
             <el-input
               v-model="editValues[row.settingKey]"
               size="small"
-              placeholder="Enter value"
+              placeholder="请输入值"
               @change="(v: string) => handleFieldChange(row.settingKey, v)"
             />
           </template>
         </el-table-column>
-        <el-table-column prop="description" label="Description" min-width="180" show-overflow-tooltip />
-        <el-table-column label="Actions" width="100" align="center">
+        <el-table-column prop="description" label="描述" min-width="180" show-overflow-tooltip />
+        <el-table-column label="操作" width="100" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="handleSaveSingle(row)">Save</el-button>
+            <el-button link type="primary" size="small" @click="handleSaveSingle(row)">保存</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -82,10 +82,10 @@ async function fetchData() {
       })
       changedKeys.clear()
     } else {
-      ElMessage.error(res.message || 'Failed to fetch settings')
+      ElMessage.error(res.message || '获取设置失败')
     }
   } catch {
-    ElMessage.error('Failed to fetch settings')
+    ElMessage.error('获取设置失败')
   } finally {
     loading.value = false
   }
@@ -104,13 +104,13 @@ async function handleSaveSingle(row: SettingItem) {
       row.description
     )
     if (res.code === 200) {
-      ElMessage.success('Saved successfully')
+      ElMessage.success('保存成功')
       changedKeys.delete(row.settingKey)
     } else {
-      ElMessage.error(res.message || 'Save failed')
+      ElMessage.error(res.message || '保存失败')
     }
   } catch {
-    ElMessage.error('Save failed')
+    ElMessage.error('保存失败')
   } finally {
     saving.value = false
   }
@@ -118,7 +118,7 @@ async function handleSaveSingle(row: SettingItem) {
 
 async function handleSaveAll() {
   if (changedKeys.size === 0) {
-    ElMessage.info('No changes to save')
+    ElMessage.info('没有需要保存的修改')
     return
   }
   saving.value = true
@@ -129,13 +129,13 @@ async function handleSaveAll() {
     }))
     const { data: res } = await settingApi.batchUpdateSettings(batchSettings)
     if (res.code === 200) {
-      ElMessage.success('All settings saved')
+      ElMessage.success('全部设置已保存')
       changedKeys.clear()
     } else {
-      ElMessage.error(res.message || 'Save failed')
+      ElMessage.error(res.message || '保存失败')
     }
   } catch {
-    ElMessage.error('Save failed')
+    ElMessage.error('保存失败')
   } finally {
     saving.value = false
   }

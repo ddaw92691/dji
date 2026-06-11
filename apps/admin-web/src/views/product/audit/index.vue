@@ -2,41 +2,41 @@
   <div class="product-page">
     <el-form :inline="true" :model="searchForm" class="search-bar">
       <el-form-item>
-        <el-input v-model="searchForm.keyword" placeholder="Keyword" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input v-model="searchForm.keyword" placeholder="关键词" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
       </el-form-item>
       <el-form-item>
-        <el-input v-model="searchForm.merchantId" placeholder="Merchant ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input v-model="searchForm.merchantId" placeholder="商户ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
       </el-form-item>
       <el-form-item>
-        <el-input v-model="searchForm.categoryId" placeholder="Category ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input v-model="searchForm.categoryId" placeholder="分类ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="handleSearch">Search</el-button>
+        <el-button type="primary" @click="handleSearch">搜索</el-button>
       </el-form-item>
     </el-form>
 
     <el-table :data="tableData" border stripe v-loading="loading">
-      <el-table-column label="Cover" width="90" align="center">
+      <el-table-column label="封面" width="90" align="center">
         <template #default="{ row }">
           <el-image v-if="row.coverImage" :src="row.coverImage" style="width: 70px; height: 70px; object-fit: cover; border-radius: 4px" fit="cover" />
           <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column prop="title" label="Title" min-width="180" show-overflow-tooltip />
-      <el-table-column prop="merchantName" label="Merchant" width="130" show-overflow-tooltip />
-      <el-table-column prop="categoryName" label="Category" width="120" show-overflow-tooltip />
-      <el-table-column prop="price" label="Price" width="100" align="right" />
-      <el-table-column prop="auditStatus" label="Audit Status" width="110" align="center">
+      <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
+      <el-table-column prop="merchantName" label="商户" width="130" show-overflow-tooltip />
+      <el-table-column prop="categoryName" label="分类" width="120" show-overflow-tooltip />
+      <el-table-column prop="price" label="价格" width="100" align="right" />
+      <el-table-column prop="auditStatus" label="审核状态" width="110" align="center">
         <template #default="{ row }">
           <el-tag :type="row.auditStatus === 'APPROVED' ? 'success' : row.auditStatus === 'REJECTED' ? 'danger' : row.auditStatus === 'PENDING' ? 'warning' : 'info'">
             {{ row.auditStatus }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="createdAt" label="Submitted" width="180" />
-      <el-table-column label="Actions" width="130" fixed="right">
+      <el-table-column prop="createdAt" label="已提交" width="180" />
+      <el-table-column label="操作" width="130" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" v-permission="'product:audit'" @click="handleOpenAudit(row)">Audit</el-button>
+          <el-button link type="primary" v-permission="'product:audit'" @click="handleOpenAudit(row)">审核</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -50,7 +50,7 @@
       @change="fetchData"
     />
 
-    <el-dialog v-model="auditVisible" title="Product Audit" width="800px" @close="resetAuditForm">
+    <el-dialog v-model="auditVisible" title="商品审核" width="800px" @close="resetAuditForm">
       <div v-if="auditItem" class="audit-detail">
         <el-row :gutter="16">
           <el-col :span="12">
@@ -71,36 +71,36 @@
 
         <el-divider />
 
-        <h4>Product Images</h4>
+        <h4>商品图片</h4>
         <div class="image-gallery">
           <el-image v-for="img in auditItem.images" :key="img.id" :src="img.imageUrl" style="width: 120px; height: 120px; object-fit: cover; margin: 4px; border-radius: 4px" fit="cover" />
-          <span v-if="!auditItem.images?.length">No images</span>
+          <span v-if="!auditItem.images?.length">暂无图片</span>
         </div>
 
         <el-divider />
 
-        <h4>Translations</h4>
+        <h4>翻译</h4>
         <div v-if="auditItem.translations?.length">
           <el-descriptions v-for="pt in auditItem.translations" :key="pt.id" :title="pt.languageCode" :column="1" border size="small" style="margin-bottom: 8px">
-            <el-descriptions-item label="Title">{{ pt.title }}</el-descriptions-item>
-            <el-descriptions-item label="Description">{{ pt.description }}</el-descriptions-item>
+            <el-descriptions-item label="标题">{{ pt.title }}</el-descriptions-item>
+            <el-descriptions-item label="描述">{{ pt.description }}</el-descriptions-item>
           </el-descriptions>
         </div>
-        <span v-else>No translations</span>
+        <span v-else>暂无翻译</span>
 
         <el-divider />
 
         <el-form ref="auditFormRef" :model="auditForm" label-width="130px">
-          <el-form-item label="Audit Remark" prop="auditRemark">
-            <el-input v-model="auditForm.auditRemark" type="textarea" :rows="3" placeholder="Audit remarks (optional)" />
+          <el-form-item label="审核备注" prop="auditRemark">
+            <el-input v-model="auditForm.auditRemark" type="textarea" :rows="3" placeholder="审核备注（选填）" />
           </el-form-item>
         </el-form>
       </div>
 
       <template #footer>
-        <el-button @click="auditVisible = false">Cancel</el-button>
-        <el-button type="danger" :loading="auditLoading" @click="handleReject">Reject</el-button>
-        <el-button type="success" :loading="auditLoading" @click="handleApprove">Approve</el-button>
+        <el-button @click="auditVisible = false">取消</el-button>
+        <el-button type="danger" :loading="auditLoading" @click="handleReject">拒绝</el-button>
+        <el-button type="success" :loading="auditLoading" @click="handleApprove">通过</el-button>
       </template>
     </el-dialog>
   </div>
@@ -148,10 +148,10 @@ async function fetchData() {
       tableData.value = res.data.list
       total.value = res.data.total
     } else {
-      ElMessage.error(res.message || 'Failed to fetch data')
+      ElMessage.error(res.message || '获取数据失败')
     }
   } catch {
-    ElMessage.error('Failed to fetch data')
+    ElMessage.error('获取数据失败')
   } finally {
     loading.value = false
   }
@@ -171,10 +171,10 @@ async function handleOpenAudit(row: ProductItem) {
       auditForm.auditRemark = ''
       auditVisible.value = true
     } else {
-      ElMessage.error(res.message || 'Failed to load detail')
+      ElMessage.error(res.message || '加载详情失败')
     }
   } catch {
-    ElMessage.error('Failed to load detail')
+    ElMessage.error('加载详情失败')
   }
 }
 
@@ -199,10 +199,10 @@ async function doAudit(auditStatus: string) {
       auditVisible.value = false
       fetchData()
     } else {
-      ElMessage.error(res.message || 'Audit failed')
+      ElMessage.error(res.message || '审核失败')
     }
   } catch {
-    ElMessage.error('Audit failed')
+    ElMessage.error('审核失败')
   } finally {
     auditLoading.value = false
   }

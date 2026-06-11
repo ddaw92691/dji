@@ -2,15 +2,15 @@
   <div class="payment-page">
     <el-form :inline="true" :model="searchForm" class="search-bar">
       <el-form-item>
-        <el-input v-model="searchForm.keyword" placeholder="Payment No / Transaction No" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input v-model="searchForm.keyword" placeholder="支付单号 / 交易号" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
       </el-form-item>
       <el-form-item>
-        <el-select v-model="searchForm.status" placeholder="Status" clearable @change="handleSearch">
+        <el-select v-model="searchForm.status" placeholder="状态" clearable @change="handleSearch">
           <el-option v-for="o in PAYMENT_STATUS_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-select v-model="searchForm.method" placeholder="Method" clearable @change="handleSearch">
+        <el-select v-model="searchForm.method" placeholder="方式" clearable @change="handleSearch">
           <el-option v-for="o in PAYMENT_METHOD_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
         </el-select>
       </el-form-item>
@@ -19,38 +19,38 @@
           v-model="searchForm.dateRange"
           type="daterange"
           range-separator="to"
-          start-placeholder="Start"
-          end-placeholder="End"
+          start-placeholder="开始"
+          end-placeholder="结束"
           format="YYYY-MM-DD"
           value-format="YYYY-MM-DD"
           @change="handleSearch"
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="handleSearch">Search</el-button>
+        <el-button type="primary" @click="handleSearch">搜索</el-button>
       </el-form-item>
     </el-form>
 
     <el-table :data="tableData" border stripe v-loading="loading">
       <el-table-column type="index" label="#" width="55" />
-      <el-table-column prop="paymentNo" label="Payment No" min-width="180" show-overflow-tooltip />
-      <el-table-column prop="transactionNo" label="Transaction No" min-width="180" show-overflow-tooltip />
-      <el-table-column prop="amount" label="Amount" width="120" align="right">
+      <el-table-column prop="paymentNo" label="支付单号" min-width="180" show-overflow-tooltip />
+      <el-table-column prop="transactionNo" label="交易号" min-width="180" show-overflow-tooltip />
+      <el-table-column prop="amount" label="金额" width="120" align="right">
         <template #default="{ row }">${{ (row.amount ?? 0).toFixed(2) }}</template>
       </el-table-column>
-      <el-table-column label="Method" width="120" align="center">
+      <el-table-column label="方式" width="120" align="center">
         <template #default="{ row }">
           {{ getLabelByValue(PAYMENT_METHOD_OPTIONS, row.method) }}
         </template>
       </el-table-column>
-      <el-table-column label="Status" width="110" align="center">
+      <el-table-column label="状态" width="110" align="center">
         <template #default="{ row }">
           <el-tag :type="getColorByValue(PAYMENT_STATUS_OPTIONS, row.status)">
             {{ getLabelByValue(PAYMENT_STATUS_OPTIONS, row.status) }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Paid At" width="180">
+      <el-table-column label="支付时间" width="180">
         <template #default="{ row }">{{ row.paidAt || '-' }}</template>
       </el-table-column>
     </el-table>

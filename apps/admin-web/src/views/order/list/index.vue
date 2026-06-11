@@ -2,21 +2,21 @@
   <div class="order-page">
     <el-form :inline="true" :model="searchForm" class="search-bar">
       <el-form-item>
-        <el-input v-model="searchForm.orderNo" placeholder="Order No" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input v-model="searchForm.orderNo" placeholder="订单号" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
       </el-form-item>
       <el-form-item>
-        <el-input v-model="searchForm.userId" placeholder="User ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input v-model="searchForm.userId" placeholder="用户ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
       </el-form-item>
       <el-form-item>
-        <el-input v-model="searchForm.merchantId" placeholder="Merchant ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
+        <el-input v-model="searchForm.merchantId" placeholder="商户ID" clearable @clear="handleSearch" @keyup.enter="handleSearch" />
       </el-form-item>
       <el-form-item>
-        <el-select v-model="searchForm.status" placeholder="Status" clearable @change="handleSearch">
+        <el-select v-model="searchForm.status" placeholder="状态" clearable @change="handleSearch">
           <el-option v-for="o in ORDER_STATUS_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-select v-model="searchForm.payStatus" placeholder="Pay Status" clearable @change="handleSearch">
+        <el-select v-model="searchForm.payStatus" placeholder="支付状态" clearable @change="handleSearch">
           <el-option v-for="o in PAY_STATUS_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
         </el-select>
       </el-form-item>
@@ -25,24 +25,24 @@
           v-model="searchForm.dateRange"
           type="daterange"
           range-separator="to"
-          start-placeholder="Start"
-          end-placeholder="End"
+          start-placeholder="开始"
+          end-placeholder="结束"
           format="YYYY-MM-DD"
           value-format="YYYY-MM-DD"
           @change="handleSearch"
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="handleSearch">Search</el-button>
+        <el-button type="primary" @click="handleSearch">搜索</el-button>
       </el-form-item>
     </el-form>
 
     <el-table :data="tableData" border stripe v-loading="loading">
       <el-table-column type="index" label="#" width="55" />
-      <el-table-column prop="orderNo" label="Order No" min-width="160" show-overflow-tooltip />
-      <el-table-column prop="userName" label="Customer" min-width="120" show-overflow-tooltip />
-      <el-table-column prop="merchantName" label="Merchant" min-width="130" show-overflow-tooltip />
-      <el-table-column label="Items" min-width="200">
+      <el-table-column prop="orderNo" label="订单号" min-width="160" show-overflow-tooltip />
+      <el-table-column prop="userName" label="客户" min-width="120" show-overflow-tooltip />
+      <el-table-column prop="merchantName" label="商户" min-width="130" show-overflow-tooltip />
+      <el-table-column label="明细" min-width="200">
         <template #default="{ row }">
           <span v-if="row.items?.length">
             {{ row.items[0].productTitle }}
@@ -53,26 +53,26 @@
           <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column prop="payAmount" label="Amount" width="100" align="right" />
-      <el-table-column label="Status" width="110" align="center">
+      <el-table-column prop="payAmount" label="金额" width="100" align="right" />
+      <el-table-column label="状态" width="110" align="center">
         <template #default="{ row }">
           <el-tag :type="getColorByValue(ORDER_STATUS_OPTIONS, row.status)">
             {{ getLabelByValue(ORDER_STATUS_OPTIONS, row.status) }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Payment" width="110" align="center">
+      <el-table-column label="支付" width="110" align="center">
         <template #default="{ row }">
           <el-tag :type="getColorByValue(PAY_STATUS_OPTIONS, row.payStatus)">
             {{ getLabelByValue(PAY_STATUS_OPTIONS, row.payStatus) }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="createdAt" label="Created" width="180" />
-      <el-table-column label="Actions" width="180" fixed="right">
+      <el-table-column prop="createdAt" label="创建时间" width="180" />
+      <el-table-column label="操作" width="180" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" v-permission="'order:view'" @click="openDetail(row.id)">Detail</el-button>
-          <el-button link type="warning" v-permission="'order:edit'" @click="openStatusEdit(row)">Update</el-button>
+          <el-button link type="primary" v-permission="'order:view'" @click="openDetail(row.id)">详情</el-button>
+          <el-button link type="warning" v-permission="'order:edit'" @click="openStatusEdit(row)">更新</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -86,96 +86,96 @@
       @change="fetchData"
     />
 
-    <el-dialog v-model="detailVisible" title="Order Detail" width="900px">
+    <el-dialog v-model="detailVisible" title="订单详情" width="900px">
       <div v-if="detail" class="order-detail">
         <el-descriptions :column="2" border size="small">
-          <el-descriptions-item label="Order No">{{ detail.orderNo }}</el-descriptions-item>
-          <el-descriptions-item label="Customer">{{ detail.userName }}</el-descriptions-item>
-          <el-descriptions-item label="Merchant">{{ detail.merchantName || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="User ID">{{ detail.userId }}</el-descriptions-item>
-          <el-descriptions-item label="Status">
+          <el-descriptions-item label="订单号">{{ detail.orderNo }}</el-descriptions-item>
+          <el-descriptions-item label="客户">{{ detail.userName }}</el-descriptions-item>
+          <el-descriptions-item label="商户">{{ detail.merchantName || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="用户ID">{{ detail.userId }}</el-descriptions-item>
+          <el-descriptions-item label="状态">
             <el-tag :type="getColorByValue(ORDER_STATUS_OPTIONS, detail.status)">
               {{ getLabelByValue(ORDER_STATUS_OPTIONS, detail.status) }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="Pay Status">
+          <el-descriptions-item label="支付状态">
             <el-tag :type="getColorByValue(PAY_STATUS_OPTIONS, detail.payStatus)">
               {{ getLabelByValue(PAY_STATUS_OPTIONS, detail.payStatus) }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="Total Amount">${{ detail.totalAmount }}</el-descriptions-item>
-          <el-descriptions-item label="Pay Amount">${{ detail.payAmount }}</el-descriptions-item>
-          <el-descriptions-item label="Paid At">{{ detail.paidAt || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="Shipped At">{{ detail.shippedAt || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="Completed At">{{ detail.completedAt || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="Created At">{{ detail.createdAt }}</el-descriptions-item>
+          <el-descriptions-item label="总金额">${{ detail.totalAmount }}</el-descriptions-item>
+          <el-descriptions-item label="支付金额">${{ detail.payAmount }}</el-descriptions-item>
+          <el-descriptions-item label="支付时间">{{ detail.paidAt || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="发货时间">{{ detail.shippedAt || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="完成时间">{{ detail.completedAt || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间">{{ detail.createdAt }}</el-descriptions-item>
         </el-descriptions>
 
-        <el-divider>Order Items</el-divider>
+        <el-divider>订单商品</el-divider>
         <el-table :data="detail.items" border size="small">
-          <el-table-column label="Image" width="80">
+          <el-table-column label="图片" width="80">
             <template #default="{ row: item }">
               <el-image v-if="item.productImage" :src="item.productImage" style="width:50px;height:50px;border-radius:4px" fit="cover" />
               <span v-else>-</span>
             </template>
           </el-table-column>
-          <el-table-column prop="productTitle" label="Product" min-width="180" show-overflow-tooltip />
-          <el-table-column prop="price" label="Price" width="100" />
-          <el-table-column prop="quantity" label="Qty" width="60" />
-          <el-table-column label="Subtotal" width="100">
+          <el-table-column prop="productTitle" label="商品" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="price" label="价格" width="100" />
+          <el-table-column prop="quantity" label="数量" width="60" />
+          <el-table-column label="小计" width="100">
             <template #default="{ row: item }">${{ (item.price * item.quantity).toFixed(2) }}</template>
           </el-table-column>
         </el-table>
 
-        <el-divider>Address</el-divider>
+        <el-divider>地址</el-divider>
         <div v-if="detail.addressSnapshot" class="address-info">
           <p><strong>Receiver:</strong> {{ detail.addressSnapshot.receiverName || '-' }}</p>
           <p><strong>Phone:</strong> {{ detail.addressSnapshot.receiverPhone || '-' }}</p>
           <p><strong>Address:</strong> {{ detail.addressSnapshot.detailAddress || '-' }}</p>
         </div>
-        <span v-else>No address info</span>
+        <span v-else>暂无地址信息</span>
 
-        <el-divider>Payment Info</el-divider>
+        <el-divider>支付信息</el-divider>
         <div v-if="detail.payment" class="address-info">
           <p><strong>Method:</strong> {{ detail.payment.method || '-' }}</p>
           <p><strong>Transaction No:</strong> {{ detail.payment.transactionNo || '-' }}</p>
           <p><strong>Paid At:</strong> {{ detail.payment.paidAt || '-' }}</p>
         </div>
-        <span v-else>No payment info</span>
+        <span v-else>暂无支付信息</span>
 
-        <el-divider>Logistics</el-divider>
+        <el-divider>物流</el-divider>
         <div class="address-info">
           <p><strong>Company:</strong> {{ detail.logisticsCompany || '-' }}</p>
           <p><strong>Tracking No:</strong> {{ detail.trackingNo || '-' }}</p>
         </div>
 
-        <el-divider>Status Timeline</el-divider>
+        <el-divider>状态时间线</el-divider>
         <el-steps :active="statusStep" align-center style="margin-top:8px">
-          <el-step title="Created" :description="detail.createdAt" />
-          <el-step title="Paid" :description="detail.paidAt || '-'" />
-          <el-step title="Shipped" :description="detail.shippedAt || '-'" />
-          <el-step title="Completed" :description="detail.completedAt || '-'" />
+          <el-step title="已创建" :description="detail.createdAt" />
+          <el-step title="已支付" :description="detail.paidAt || '-'" />
+          <el-step title="已发货" :description="detail.shippedAt || '-'" />
+          <el-step title="已完成" :description="detail.completedAt || '-'" />
         </el-steps>
       </div>
       <template #footer>
-        <el-button @click="detailVisible = false">Close</el-button>
+        <el-button @click="detailVisible = false">关闭</el-button>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="statusVisible" title="Update Order Status" width="480px" @closed="resetStatusForm">
+    <el-dialog v-model="statusVisible" title="更新订单状态" width="480px" @closed="resetStatusForm">
       <el-form ref="statusFormRef" :model="statusForm" label-width="120px">
-        <el-form-item label="Status" prop="status" required>
-          <el-select v-model="statusForm.status" placeholder="Select status" style="width:100%">
+        <el-form-item label="状态" prop="status" required>
+          <el-select v-model="statusForm.status" placeholder="请选择状态" style="width:100%">
             <el-option v-for="o in EDITABLE_STATUS_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
           </el-select>
         </el-form-item>
-        <el-form-item label="Remark" prop="remark">
-          <el-input v-model="statusForm.remark" type="textarea" :rows="3" placeholder="Remark (optional)" />
+        <el-form-item label="备注" prop="remark">
+          <el-input v-model="statusForm.remark" type="textarea" :rows="3" placeholder="备注（选填）" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="statusVisible = false">Cancel</el-button>
-        <el-button type="primary" :loading="statusLoading" @click="handleStatusUpdate">Confirm</el-button>
+        <el-button @click="statusVisible = false">取消</el-button>
+        <el-button type="primary" :loading="statusLoading" @click="handleStatusUpdate">确认</el-button>
       </template>
     </el-dialog>
   </div>
@@ -281,7 +281,7 @@ async function handleStatusUpdate() {
       remark: statusForm.remark,
     })
     if (res.code !== 200) return
-    ElMessage.success('Order status updated')
+    ElMessage.success('订单状态已更新')
     statusVisible.value = false
     fetchData()
   } finally {

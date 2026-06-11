@@ -1,44 +1,44 @@
 <template>
   <div class="inspection-page">
     <div class="page-header">
-      <h3>Inspection Management</h3>
-      <el-button type="primary" @click="openCreate">New Inspection</el-button>
+      <h3>质检管理</h3>
+      <el-button type="primary" @click="openCreate">新建质检</el-button>
     </div>
 
     <el-table :data="tableData" border stripe v-loading="loading">
       <el-table-column type="index" label="#" width="50" />
-      <el-table-column prop="merchantName" label="Merchant" width="120" show-overflow-tooltip />
-      <el-table-column prop="fakeCustomerName" label="Fake Customer" width="120" show-overflow-tooltip />
-      <el-table-column label="Question" min-width="180" show-overflow-tooltip>
+      <el-table-column prop="merchantName" label="商户" width="120" show-overflow-tooltip />
+      <el-table-column prop="fakeCustomerName" label="虚拟客户" width="120" show-overflow-tooltip />
+      <el-table-column label="问题" min-width="180" show-overflow-tooltip>
         <template #default="{ row }">{{ row.question?.length > 50 ? row.question.slice(0, 50) + '...' : row.question }}</template>
       </el-table-column>
-      <el-table-column label="Status" width="90" align="center">
+      <el-table-column label="状态" width="90" align="center">
         <template #default="{ row }">
           <el-tag :type="row.status === 'OPEN' ? 'success' : 'info'" size="small">{{ row.status }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Priority" width="80" align="center">
+      <el-table-column label="优先级" width="80" align="center">
         <template #default="{ row }">
           <el-tag :type="row.priority === 'HIGH' ? 'danger' : row.priority === 'MEDIUM' ? 'warning' : 'info'" size="small">{{ row.priority }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Response" width="100" align="center">
+      <el-table-column label="回复" width="100" align="center">
         <template #default="{ row }">
           <span v-if="row.firstResponseSeconds">{{ row.firstResponseSeconds }}s</span>
           <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column label="Score" width="100" align="center">
+      <el-table-column label="评分" width="100" align="center">
         <template #default="{ row }">
           <el-rate v-if="row.qualityScore" v-model="row.qualityScore" disabled size="small" />
           <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column prop="createdAt" label="Created" width="160" />
-      <el-table-column label="Actions" width="200" fixed="right">
+      <el-table-column prop="createdAt" label="创建时间" width="160" />
+      <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openDetail(row)">Messages</el-button>
-          <el-button link type="warning" @click="openScore(row)">Score</el-button>
+          <el-button link type="primary" @click="openDetail(row)">消息</el-button>
+          <el-button link type="warning" @click="openScore(row)">评分</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -52,43 +52,43 @@
       @change="fetchData"
     />
 
-    <el-dialog v-model="createVisible" title="Create Inspection" width="550px" @closed="resetCreateForm">
+    <el-dialog v-model="createVisible" title="新建质检" width="550px" @closed="resetCreateForm">
       <el-form :model="createForm" label-width="140px">
-        <el-form-item label="Merchant" required>
-          <el-select v-model="createForm.merchantId" filterable placeholder="Select merchant" style="width: 100%">
+        <el-form-item label="商户" required>
+          <el-select v-model="createForm.merchantId" filterable placeholder="请选择商户" style="width: 100%">
             <el-option v-for="m in merchantOptions" :key="m.id" :label="m.name" :value="m.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="Fake Customer Name" required>
+        <el-form-item label="虚拟客户名称" required>
           <el-input v-model="createForm.fakeCustomerName" placeholder="e.g. Mystery Shopper" />
         </el-form-item>
-        <el-form-item label="Customer User ID">
-          <el-input v-model="createForm.customerUserId" placeholder="Optional" />
+        <el-form-item label="客户用户ID">
+          <el-input v-model="createForm.customerUserId" placeholder="选填" />
         </el-form-item>
-        <el-form-item label="Product ID">
-          <el-input v-model="createForm.productId" placeholder="Optional" />
+        <el-form-item label="商品ID">
+          <el-input v-model="createForm.productId" placeholder="选填" />
         </el-form-item>
-        <el-form-item label="Title" required>
-          <el-input v-model="createForm.title" placeholder="Inspection title" />
+        <el-form-item label="标题" required>
+          <el-input v-model="createForm.title" placeholder="质检标题" />
         </el-form-item>
-        <el-form-item label="Question" required>
-          <el-input v-model="createForm.question" type="textarea" :rows="4" placeholder="Question to ask the merchant..." />
+        <el-form-item label="问题" required>
+          <el-input v-model="createForm.question" type="textarea" :rows="4" placeholder="向商户提出的问题…" />
         </el-form-item>
-        <el-form-item label="Priority">
+        <el-form-item label="优先级">
           <el-select v-model="createForm.priority" style="width: 100%">
-            <el-option label="Low" value="LOW" />
-            <el-option label="Medium" value="MEDIUM" />
-            <el-option label="High" value="HIGH" />
+            <el-option label="低" value="LOW" />
+            <el-option label="中" value="MEDIUM" />
+            <el-option label="高" value="HIGH" />
           </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="createVisible = false">Cancel</el-button>
-        <el-button type="primary" :loading="creating" @click="handleCreate">Create</el-button>
+        <el-button @click="createVisible = false">取消</el-button>
+        <el-button type="primary" :loading="creating" @click="handleCreate">新增</el-button>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="detailVisible" title="Inspection Messages" width="700px">
+    <el-dialog v-model="detailVisible" title="质检消息" width="700px">
       <div v-if="detailMessages.length" class="msg-list" ref="detailMsgRef">
         <div v-for="msg in detailMessages" :key="msg.id" class="msg-item">
           <span class="msg-side" :class="msg.senderSide === 'CUSTOMER' ? 'side-customer' : 'side-merchant'">
@@ -99,21 +99,21 @@
           <span class="msg-time">{{ msg.createdAt ? new Date(msg.createdAt).toLocaleString() : '' }}</span>
         </div>
       </div>
-      <div v-else class="msg-empty">No messages</div>
+      <div v-else class="msg-empty">暂无消息</div>
     </el-dialog>
 
-    <el-dialog v-model="scoreVisible" title="Quality Score" width="450px" @closed="resetScoreForm">
+    <el-dialog v-model="scoreVisible" title="质量评分" width="450px" @closed="resetScoreForm">
       <el-form :model="scoreForm" label-width="120px">
-        <el-form-item label="Score">
+        <el-form-item label="评分">
           <el-rate v-model="scoreForm.qualityScore" :max="5" show-score />
         </el-form-item>
-        <el-form-item label="Remark">
-          <el-input v-model="scoreForm.qualityRemark" type="textarea" :rows="3" placeholder="Optional remark..." />
+        <el-form-item label="备注">
+          <el-input v-model="scoreForm.qualityRemark" type="textarea" :rows="3" placeholder="备注（选填）" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="scoreVisible = false">Cancel</el-button>
-        <el-button type="primary" :loading="scoring" @click="handleScore">Submit</el-button>
+        <el-button @click="scoreVisible = false">取消</el-button>
+        <el-button type="primary" :loading="scoring" @click="handleScore">提交</el-button>
       </template>
     </el-dialog>
   </div>
@@ -196,7 +196,7 @@ function resetCreateForm() {}
 
 async function handleCreate() {
   if (!createForm.merchantId || !createForm.fakeCustomerName.trim() || !createForm.title.trim() || !createForm.question.trim()) {
-    ElMessage.warning('Please fill required fields')
+    ElMessage.warning('请填写必填项')
     return
   }
   creating.value = true
@@ -211,13 +211,13 @@ async function handleCreate() {
       priority: createForm.priority,
     })
     if (res.code === 200) {
-      ElMessage.success('Inspection created')
+      ElMessage.success('质检已创建')
       createVisible.value = false
       fetchData()
     } else {
-      ElMessage.error(res.message || 'Create failed')
+      ElMessage.error(res.message || '创建失败')
     }
-  } catch { ElMessage.error('Create failed') } finally { creating.value = false }
+  } catch { ElMessage.error('创建失败') } finally { creating.value = false }
 }
 
 async function openDetail(row: IInspectionSession) {
@@ -250,13 +250,13 @@ async function handleScore() {
       qualityRemark: scoreForm.qualityRemark,
     })
     if (res.code === 200) {
-      ElMessage.success('Score saved')
+      ElMessage.success('评分已保存')
       scoreVisible.value = false
       fetchData()
     } else {
-      ElMessage.error(res.message || 'Score failed')
+      ElMessage.error(res.message || '评分失败')
     }
-  } catch { ElMessage.error('Score failed') } finally { scoring.value = false }
+  } catch { ElMessage.error('评分失败') } finally { scoring.value = false }
 }
 
 onMounted(() => { fetchData() })
