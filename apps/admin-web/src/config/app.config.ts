@@ -61,7 +61,7 @@ export const APP_CONFIG: IAppConfig = {
   showNotification: true,
 
   // 登录页面是否展示手机号登录
-  show手机号Login: true,
+  showPhoneLogin: true,
 
   // 登录页面是否展示扫码登录
   showQrLogin: true,

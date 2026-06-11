@@ -90,9 +90,9 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { quickReply管理员Api, type IQuickReply } from '@/api/support'
+import { quickReplyAdminApi, type IQuickReply } from '@/api/support'
 
-defineOptions({ name: '管理员QuickReplyView' })
+defineOptions({ name: 'AdminQuickReplyView' })
 
 const loading = ref(false)
 const tableData = ref<IQuickReply[]>([])
@@ -118,7 +118,7 @@ const formData = reactive({
 async function fetchData() {
   loading.value = true
   try {
-    const { data: res } = await quickReply管理员Api.getList({
+    const { data: res } = await quickReplyAdminApi.getList({
       page: searchForm.page,
       pageSize: searchForm.pageSize,
     })
@@ -178,9 +178,9 @@ async function handleSubmit() {
     if (formData.merchantId) payload.merchantId = Number(formData.merchantId)
     let res
     if (editingId.value) {
-      res = await quickReply管理员Api.update(editingId.value, payload)
+      res = await quickReplyAdminApi.update(editingId.value, payload)
     } else {
-      res = await quickReply管理员Api.create(payload)
+      res = await quickReplyAdminApi.create(payload)
     }
     if (res.data.code === 200) {
       ElMessage.success(editingId.value ? '更新成功' : '新增成功')
@@ -198,7 +198,7 @@ async function handleSubmit() {
 
 async function handleDelete(row: IQuickReply) {
   try {
-    const { data: res } = await quickReply管理员Api.delete(row.id)
+    const { data: res } = await quickReplyAdminApi.delete(row.id)
     if (res.code === 200) {
       ElMessage.success('已删除')
       fetchData()

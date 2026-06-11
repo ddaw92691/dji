@@ -33,7 +33,7 @@
           :title="row.status === 'ENABLE' ? '确定要禁用该商家吗？' : '确定要启用该商家吗？'"
           :placement="POPCONFIRM_CONFIG.placement"
           :width="POPCONFIRM_CONFIG.width"
-          @confirm="handleToggle状态(row)"
+          @confirm="handleToggleStatus(row)"
         >
           <template #reference>
             <el-button
@@ -72,7 +72,7 @@
           ><el-input v-model="editForm.language"
         /></el-form-item>
         <el-form-item label="联系人"><el-input v-model="editForm.contactName" /></el-form-item>
-        <el-form-item label="联系电话"><el-input v-model="editForm.contact手机号" /></el-form-item>
+        <el-form-item label="联系电话"><el-input v-model="editForm.contactPhone" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -110,7 +110,7 @@ const editForm = reactive({
   country: '',
   language: '',
   contactName: '',
-  contact手机号: '',
+  contactPhone: '',
 })
 
 const formRules: FormRules = {
@@ -151,7 +151,7 @@ const columns = ref([
   { prop: 'productCount', label: '商品数', width: 90 },
   { prop: 'totalSales', label: '总销售额', width: 110 },
   { prop: 'balance', label: '余额', width: 100 },
-  { prop: 'frozen余额', label: '冻结金额', width: 100 },
+  { prop: 'frozenBalance', label: '冻结金额', width: 100 },
   { prop: 'status', label: '状态', width: 100 },
   { prop: 'createdAt', label: '创建时间', minWidth: 160 },
   { prop: 'operation', label: '操作', width: 150, fixed: 'right' },
@@ -160,7 +160,7 @@ const columns = ref([
 const fetchData = async (queryForm: Record<string, unknown>, page: number, pageSize: number) => {
   loading.value = true
   try {
-    const { data: res } = await merchantApi.get商家({ ...queryForm, page, pageSize })
+    const { data: res } = await merchantApi.getMerchants({ ...queryForm, page, pageSize })
     if (res.code === 200) {
       tableData.value = res.data?.list || []
       total.value = res.data?.total || 0
@@ -181,7 +181,7 @@ const resetForm = () => {
   editForm.country = ''
   editForm.language = ''
   editForm.contactName = ''
-  editForm.contact手机号 = ''
+  editForm.contactPhone = ''
   formRef.value?.resetFields()
 }
 
@@ -192,7 +192,7 @@ const openCreate = () => {
 
 const openEdit = async (row: any) => {
   try {
-    const { data: res } = await merchantApi.get商家({
+    const { data: res } = await merchantApi.getMerchants({
       merchantId: row.merchantId || row.id,
       page: 1,
       pageSize: 1,
@@ -206,7 +206,7 @@ const openEdit = async (row: any) => {
       country: d.country || row.country || '',
       language: d.language || row.language || '',
       contactName: d.contactName || row.contactName || '',
-      contact手机号: d.contact手机号 || row.contact手机号 || '',
+      contactPhone: d.contactPhone || row.contactPhone || '',
     })
     dialogVisible.value = true
   } catch {
@@ -234,7 +234,7 @@ const handleSubmit = async () => {
       country: editForm.country,
       language: editForm.language,
       contactName: editForm.contactName,
-      contact手机号: editForm.contact手机号,
+      contactPhone: editForm.contactPhone,
     }
     let res
     if (editForm.id) {
@@ -258,10 +258,10 @@ const handleSubmit = async () => {
   }
 }
 
-const handleToggle状态 = async (row: any) => {
-  const new状态 = row.status === 'ENABLE' ? 'DISABLE' : 'ENABLE'
+const handleToggleStatus = async (row: any) => {
+  const newStatus = row.status === 'ENABLE' ? 'DISABLE' : 'ENABLE'
   try {
-    const { data: res } = await merchantApi.updateMerchant状态(row.id, new状态)
+    const { data: res } = await merchantApi.updateMerchantStatus(row.id, newStatus)
     if (res.code === 200) {
       ElMessage.success('状态已更新')
       basePageRef.value?.refreshCurrentPage()

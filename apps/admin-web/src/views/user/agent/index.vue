@@ -29,13 +29,13 @@
         <el-button type="primary" link v-permission="['agent:edit']" @click="openEdit(row)"
           >编辑</el-button
         >
-        <el-button type="info" link @click="open客户(row)">客户</el-button>
+        <el-button type="info" link @click="openCustomers(row)">客户</el-button>
         <el-button type="warning" link @click="openCommissions(row)">佣金</el-button>
         <el-popconfirm
           :title="row.status === 'ENABLE' ? '确定要禁用该代理吗？' : '确定要启用该代理吗？'"
           :placement="POPCONFIRM_CONFIG.placement"
           :width="POPCONFIRM_CONFIG.width"
-          @confirm="handleToggle状态(row)"
+          @confirm="handleToggleStatus(row)"
         >
           <template #reference>
             <el-button
@@ -101,7 +101,7 @@
         :total="customerTotal"
         :page-sizes="[10, 20, 50]"
         layout="total, sizes, prev, pager, next"
-        @change="fetch客户"
+        @change="fetchCustomers"
         style="margin-top: 12px; justify-content: flex-end"
       />
       <template #footer><el-button @click="customersVisible = false">关闭</el-button></template>
@@ -210,7 +210,7 @@ const columns = ref([
   { prop: 'customerCount', label: '客户', width: 100 },
   { prop: 'totalCommission', label: 'Commission', width: 120 },
   { prop: 'balance', label: '余额', width: 100 },
-  { prop: 'frozen余额', label: '冻结金额', width: 100 },
+  { prop: 'frozenBalance', label: '冻结金额', width: 100 },
   { prop: 'status', label: '状态', width: 100 },
   { prop: 'createdAt', label: '创建时间', minWidth: 160 },
   { prop: 'operation', label: '操作', width: 300, fixed: 'right' },
@@ -219,7 +219,7 @@ const columns = ref([
 const fetchData = async (queryForm: Record<string, unknown>, page: number, pageSize: number) => {
   loading.value = true
   try {
-    const { data: res } = await agentApi.get代理({ ...queryForm, page, pageSize })
+    const { data: res } = await agentApi.getAgents({ ...queryForm, page, pageSize })
     if (res.code === 200) {
       tableData.value = res.data?.list || []
       total.value = res.data?.total || 0
@@ -249,7 +249,7 @@ const openCreate = () => {
 
 const openEdit = async (row: any) => {
   try {
-    const { data: res } = await agentApi.get代理({
+    const { data: res } = await agentApi.getAgents({
       agentId: row.agentId || row.id,
       page: 1,
       pageSize: 1,
@@ -310,10 +310,10 @@ const handleSubmit = async () => {
   }
 }
 
-const handleToggle状态 = async (row: any) => {
-  const new状态 = row.status === 'ENABLE' ? 'DISABLE' : 'ENABLE'
+const handleToggleStatus = async (row: any) => {
+  const newStatus = row.status === 'ENABLE' ? 'DISABLE' : 'ENABLE'
   try {
-    const { data: res } = await agentApi.updateAgent状态(row.id, new状态)
+    const { data: res } = await agentApi.updateAgentStatus(row.id, newStatus)
     if (res.code === 200) {
       ElMessage.success('状态已更新')
       basePageRef.value?.refreshCurrentPage()
@@ -325,17 +325,17 @@ const handleToggle状态 = async (row: any) => {
   }
 }
 
-const open客户 = (row: any) => {
+const openCustomers = (row: any) => {
   currentAgentId.value = row.id
   customerPage.value = 1
   customersVisible.value = true
-  fetch客户()
+  fetchCustomers()
 }
 
-const fetch客户 = async () => {
+const fetchCustomers = async () => {
   customerLoading.value = true
   try {
-    const { data: res } = await agentApi.getAgent客户(currentAgentId.value, {
+    const { data: res } = await agentApi.getAgentCustomers(currentAgentId.value, {
       page: customerPage.value,
       pageSize: customerPageSize.value,
     })

@@ -9,7 +9,7 @@
           v-model="orderForm.customerId"
           filterable
           remote
-          :remote-method="search客户"
+          :remote-method="searchClients"
           :loading="customerLoading"
           placeholder="按昵称/邮箱搜索客户"
           style="width: 100%"
@@ -34,7 +34,7 @@
           v-model="orderForm.merchantId"
           filterable
           remote
-          :remote-method="search商家"
+          :remote-method="searchMerchants"
           :loading="merchantLoading"
           placeholder="请选择商户"
           style="width: 100%"
@@ -97,7 +97,7 @@
         <el-input v-model="orderForm.remark" type="textarea" :rows="2" placeholder="订单备注" />
       </el-form-item>
       <el-form-item label="标记为已支付">
-        <el-checkbox v-model="orderForm.markAs已支付" />
+        <el-checkbox v-model="orderForm.markAsPaid" />
       </el-form-item>
 
       <el-form-item>
@@ -176,7 +176,7 @@ const orderForm = reactive({
   items: [] as { platformProductId: number | null; price: number; quantity: number }[],
   addressSnapshot: '',
   remark: '',
-  markAs已支付: false,
+  markAsPaid: false,
 })
 
 const virtualDialogVisible = ref(false)
@@ -191,11 +191,11 @@ const virtualForm = reactive({
 const resultVisible = ref(false)
 const orderResult = ref<any>(null)
 
-async function search客户(query: string) {
+async function searchClients(query: string) {
   if (!query) return
   customerLoading.value = true
   try {
-    const { data: res } = await customerApi.get客户({ keyword: query, pageSize: 20 })
+    const { data: res } = await customerApi.getCustomers({ keyword: query, pageSize: 20 })
     if (res.code === 200) {
       customerOptions.value = res.data?.list || []
     }
@@ -206,11 +206,11 @@ async function search客户(query: string) {
   }
 }
 
-async function search商家(query: string) {
+async function searchMerchants(query: string) {
   if (!query) return
   merchantLoading.value = true
   try {
-    const { data: res } = await merchantApi.get商家({ keyword: query, pageSize: 20 })
+    const { data: res } = await merchantApi.getMerchants({ keyword: query, pageSize: 20 })
     if (res.code === 200) {
       merchantOptions.value = (res.data?.list || []).map((m: any) => ({
         ...m,
@@ -293,7 +293,7 @@ async function handleSubmit() {
       })),
       addressSnapshot: orderForm.addressSnapshot,
       remark: orderForm.remark,
-      markAs已支付: orderForm.markAs已支付,
+      markAsPaid: orderForm.markAsPaid,
     }
     const { default: request } = await import('@/utils/request')
     const { data: res } = await request.post<{ code: number; message?: string; data: any }>(

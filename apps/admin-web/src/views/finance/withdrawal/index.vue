@@ -164,19 +164,18 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { financeApi, type I管理员Withdrawal } from '@/api/finance'
+import { financeApi, type IAdminWithdrawal } from '@/api/finance'
 import { WITHDRAWAL_STATUS_OPTIONS, getLabelByValue, getColorByValue } from '@/constants/dict'
 
 defineOptions({ name: 'FinanceWithdrawalView' })
 
 const loading = ref(false)
 const rejectLoading = ref(false)
-const tableData = ref<I管理员Withdrawal[]>([])
+const tableData = ref<IAdminWithdrawal[]>([])
 const total = ref(0)
 
 const detailVisible = ref(false)
-const detail = ref<I管理员Withdrawal | null>(null)
-
+const detail = ref<IAdminWithdrawal | null>(null)
 const rejectVisible = ref(false)
 const rejectingId = ref<number | null>(null)
 const rejectForm = reactive({ rejectReason: '' })
@@ -227,7 +226,7 @@ async function openDetail(id: number) {
   detailVisible.value = true
 }
 
-async function handleApprove(row: I管理员Withdrawal) {
+async function handleApprove(row: IAdminWithdrawal) {
   try {
     await ElMessageBox.confirm(
       `确定要通过提现 #${row.id}（$${(row.amount ?? 0).toFixed(2)}）吗？`,
@@ -243,7 +242,7 @@ async function handleApprove(row: I管理员Withdrawal) {
   fetchData()
 }
 
-function openRejectDialog(row: I管理员Withdrawal) {
+function openRejectDialog(row: IAdminWithdrawal) {
   rejectingId.value = row.id
   rejectForm.rejectReason = ''
   rejectVisible.value = true

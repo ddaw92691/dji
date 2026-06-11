@@ -43,7 +43,7 @@
           :title="row.status === 1 ? '确定要禁用该管理员吗？' : '确定要启用该管理员吗？'"
           :placement="POPCONFIRM_CONFIG.placement"
           :width="POPCONFIRM_CONFIG.width"
-          @confirm="handleToggle状态(row)"
+          @confirm="handleToggleStatus(row)"
         >
           <template #reference>
             <el-button
@@ -183,8 +183,8 @@ const passwordRules: FormRules = {
 }
 
 const ADMIN_STATUS_OPTIONS: DictItem<number>[] = [
-  { label: '启用d', value: 1, color: 'success' },
-  { label: '禁用d', value: 0, color: 'danger' },
+  { label: '启用', value: 1, color: 'success' },
+  { label: '禁用', value: 0, color: 'danger' },
 ]
 
 const searchFormConfig = ref<IFormConfig[]>([
@@ -320,10 +320,10 @@ const handleSubmit = async () => {
   }
 }
 
-const handleToggle状态 = async (row: any) => {
-  const new状态 = row.status === 1 ? 0 : 1
+const handleToggleStatus = async (row: any) => {
+  const newStatus = row.status === 1 ? 0 : 1
   try {
-    const { data: res } = await adminUserApi.updateAdminUser状态(row.id, new状态)
+    const { data: res } = await adminUserApi.updateAdminUserStatus(row.id, newStatus)
     if (res.code === 200) {
       ElMessage.success('状态已更新')
       basePageRef.value?.refreshCurrentPage()

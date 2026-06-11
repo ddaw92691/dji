@@ -15,31 +15,31 @@
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">客户</div>
-          <div class="stat-value">{{ summary.total客户 }}</div>
+          <div class="stat-value">{{ summary.totalCustomers }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">商户</div>
-          <div class="stat-value">{{ summary.total商家 }}</div>
+          <div class="stat-value">{{ summary.totalMerchants }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">代理</div>
-          <div class="stat-value">{{ summary.total代理 }}</div>
+          <div class="stat-value">{{ summary.totalAgents }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">商品</div>
-          <div class="stat-value">{{ summary.total商品数 }}</div>
+          <div class="stat-value">{{ summary.totalProducts }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="stat-card pending-card">
           <div class="stat-label">待审商品</div>
-          <div class="stat-value">{{ summary.pending商品数 }}</div>
+          <div class="stat-value">{{ summary.pendingProducts }}</div>
         </el-card>
       </el-col>
     </el-row>
@@ -48,25 +48,25 @@
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">订单总数</div>
-          <div class="stat-value">{{ summary.total订单 }}</div>
+          <div class="stat-value">{{ summary.totalOrders }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">已支付订单</div>
-          <div class="stat-value">{{ summary.paid订单 }}</div>
+          <div class="stat-value">{{ summary.paidOrders }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">已完成订单</div>
-          <div class="stat-value">{{ summary.completed订单 }}</div>
+          <div class="stat-value">{{ summary.completedOrders }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card warn-card">
           <div class="stat-label">退款申请</div>
-          <div class="stat-value">{{ summary.refundRequests }}</div>
+          <div class="stat-value">{{ summary.refundRequests || summary.pendingRefunds }}</div>
         </el-card>
       </el-col>
     </el-row>
@@ -102,7 +102,7 @@
       <el-col :span="12">
         <el-card shadow="hover" class="section-card">
           <template #header><span class="section-title">最近订单</span></template>
-          <el-table :data="summary.recent订单 || []" border size="small">
+          <el-table :data="summary.recentOrders || []" border size="small">
             <el-table-column prop="orderNo" label="订单号" min-width="140" show-overflow-tooltip />
             <el-table-column label="客户" min-width="100" show-overflow-tooltip>
               <template #default="{ row }">{{ row.userName || '-' }}</template>
@@ -120,7 +120,7 @@
       <el-col :span="12">
         <el-card shadow="hover" class="section-card">
           <template #header><span class="section-title">最近退款</span></template>
-          <el-table :data="summary.recent退款s || []" border size="small">
+          <el-table :data="summary.recentRefunds || []" border size="small">
             <el-table-column prop="orderNo" label="订单号" min-width="140" show-overflow-tooltip />
             <el-table-column label="客户" min-width="100" show-overflow-tooltip>
               <template #default="{ row }">{{ row.userName || '-' }}</template>
@@ -131,14 +131,14 @@
                 <el-tag
                   size="small"
                   :type="
-                    row.refund状态 === 'REQUESTED'
+                    row.refundStatus === 'REQUESTED'
                       ? 'warning'
-                      : row.refund状态 === 'APPROVED'
+                      : row.refundStatus === 'APPROVED'
                         ? 'success'
                         : 'danger'
                   "
                 >
-                  {{ row.refund状态 }}
+                  {{ row.refundStatus }}
                 </el-tag>
               </template>
             </el-table-column>
@@ -167,7 +167,7 @@
       <el-col :span="12">
         <el-card shadow="hover" class="section-card">
           <template #header><span class="section-title">订单状态分布</span></template>
-          <div ref="order状态ChartRef" class="chart-box" />
+          <div ref="orderStatusChartRef" class="chart-box" />
         </el-card>
       </el-col>
       <el-col :span="12">
@@ -181,40 +181,42 @@
 </template>
 
 <script setup lang="ts">
-import { dashboardApi, type I管理员Dashboard } from '@/api/dashboard'
+import { dashboardApi, type IAdminDashboard } from '@/api/dashboard'
 import * as echarts from 'echarts'
 
-defineOptions({ name: '管理员DashboardOverviewView' })
+defineOptions({ name: 'AdminDashboardOverviewView' })
 
 const loading = ref(false)
 
 const salesChartRef = ref<HTMLElement | null>(null)
 const orderChartRef = ref<HTMLElement | null>(null)
-const order状态ChartRef = ref<HTMLElement | null>(null)
+const orderStatusChartRef = ref<HTMLElement | null>(null)
 const userRoleChartRef = ref<HTMLElement | null>(null)
 
-const summary = reactive<I管理员Dashboard>({
+const summary = reactive<IAdminDashboard>({
   totalUsers: 0,
-  total客户: 0,
-  total商家: 0,
-  total代理: 0,
-  total商品数: 0,
-  pending商品数: 0,
-  total订单: 0,
-  paid订单: 0,
-  completed订单: 0,
+  totalCustomers: 0,
+  totalMerchants: 0,
+  totalAgents: 0,
+  totalProducts: 0,
+  pendingProducts: 0,
+  totalOrders: 0,
+  paidOrders: 0,
+  completedOrders: 0,
   refundRequests: 0,
+  pendingRefunds: 0,
   totalSales: 0,
+  todayOrders: 0,
   todaySales: 0,
   totalCommission: 0,
   pendingWithdrawals: 0,
-  recent订单: [],
-  recent退款s: [],
+  recentOrders: [],
+  recentRefunds: [],
 })
 
 let salesChart: echarts.ECharts | null = null
 let orderChart: echarts.ECharts | null = null
-let order状态Chart: echarts.ECharts | null = null
+let orderStatusChart: echarts.ECharts | null = null
 let userRoleChart: echarts.ECharts | null = null
 
 function formatAmount(val: number) {
@@ -260,19 +262,19 @@ function initOrderChart() {
   })
 }
 
-function initOrder状态Chart() {
-  if (!order状态ChartRef.value) return
-  order状态Chart = echarts.init(order状态ChartRef.value)
-  order状态Chart.setOption({
+function initOrderStatusChart() {
+  if (!orderStatusChartRef.value) return
+  orderStatusChart = echarts.init(orderStatusChartRef.value)
+  orderStatusChart.setOption({
     tooltip: { trigger: 'item' },
     series: [
       {
         type: 'pie',
         radius: ['40%', '70%'],
         data: [
-          { value: summary.paid订单 || 10, name: '已支付' },
-          { value: summary.completed订单 || 5, name: '已完成' },
-          { value: summary.refundRequests || 2, name: '退款' },
+          { value: summary.paidOrders || 10, name: '已支付' },
+          { value: summary.completedOrders || 5, name: '已完成' },
+          { value: summary.refundRequests || summary.pendingRefunds || 2, name: '退款' },
         ],
       },
     ],
@@ -289,12 +291,12 @@ function initUserRoleChart() {
         type: 'pie',
         radius: '70%',
         data: [
-          { value: summary.total客户 || 10, name: '客户' },
-          { value: summary.total商家 || 3, name: '商家' },
-          { value: summary.total代理 || 2, name: '代理' },
+          { value: summary.totalCustomers || 10, name: '客户' },
+          { value: summary.totalMerchants || 3, name: '商家' },
+          { value: summary.totalAgents || 2, name: '代理' },
           {
             value:
-              summary.totalUsers - summary.total客户 - summary.total商家 - summary.total代理 || 1,
+              summary.totalUsers - summary.totalCustomers - summary.totalMerchants - summary.totalAgents || 1,
             name: '管理员',
           },
         ],
@@ -317,7 +319,7 @@ function initCharts() {
   nextTick(() => {
     initSalesChart()
     initOrderChart()
-    initOrder状态Chart()
+    initOrderStatusChart()
     initUserRoleChart()
   })
 }
@@ -325,7 +327,7 @@ function initCharts() {
 window.addEventListener('resize', () => {
   salesChart?.resize()
   orderChart?.resize()
-  order状态Chart?.resize()
+  orderStatusChart?.resize()
   userRoleChart?.resize()
 })
 
@@ -337,7 +339,7 @@ async function fetchData() {
     if (res.data) {
       Object.assign(summary, res.data)
       nextTick(() => {
-        initOrder状态Chart()
+        initOrderStatusChart()
         initUserRoleChart()
       })
     }

@@ -216,10 +216,10 @@ function openCreate() {
   createForm.question = ''
   createForm.priority = 'MEDIUM'
   createVisible.value = true
-  load商家()
+  loadMerchants()
 }
 
-async function load商家() {
+async function loadMerchants() {
   try {
     const { default: request } = await import('@/utils/request')
     const { data: res } = await request.get('/admin/merchants', {

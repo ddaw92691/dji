@@ -195,19 +195,18 @@
 </template>
 
 <script setup lang="ts">
-import { refundApi, type I管理员退款 } from '@/api/refund'
+import { refundApi, type IAdminRefund } from '@/api/refund'
 import { REFUND_STATUS_OPTIONS, getLabelByValue, getColorByValue } from '@/constants/dict'
 
-defineOptions({ name: '管理员退款View' })
+defineOptions({ name: 'AdminRefundView' })
 
 const loading = ref(false)
 const actionLoading = ref(false)
-const tableData = ref<I管理员退款[]>([])
+const tableData = ref<IAdminRefund[]>([])
 const total = ref(0)
 
 const detailVisible = ref(false)
-const detail = ref<I管理员退款 | null>(null)
-
+const detail = ref<IAdminRefund | null>(null)
 const rejectVisible = ref(false)
 const rejectingId = ref<number | null>(null)
 const rejectForm = reactive({ rejectReason: '' })
@@ -237,7 +236,7 @@ async function fetchData() {
       params.startDate = searchForm.dateRange[0]
       params.endDate = searchForm.dateRange[1]
     }
-    const { data: res } = await refundApi.get退款s(params)
+    const { data: res } = await refundApi.getRefunds(params)
     if (res.code !== 200) return
     tableData.value = res.data?.list || []
     total.value = res.data?.total || 0
@@ -252,13 +251,13 @@ function handleSearch() {
 }
 
 async function openDetail(orderId: number) {
-  const { data: res } = await refundApi.get退款Detail(orderId)
+  const { data: res } = await refundApi.getRefundDetail(orderId)
   if (res.code !== 200) return
   detail.value = res.data || null
   detailVisible.value = true
 }
 
-async function handleApprove(row: I管理员退款) {
+async function handleApprove(row: IAdminRefund) {
   try {
     await ElMessageBox.confirm(`确认通过订单退款 "${row.orderNo}"?`, '确认', { type: 'warning' })
   } catch {
@@ -266,7 +265,7 @@ async function handleApprove(row: I管理员退款) {
   }
   actionLoading.value = true
   try {
-    const { data: res } = await refundApi.approve退款(row.orderId)
+    const { data: res } = await refundApi.approveRefund(row.orderId)
     if (res.code !== 200) return
     ElMessage.success('退款已通过')
     fetchData()
@@ -275,7 +274,7 @@ async function handleApprove(row: I管理员退款) {
   }
 }
 
-function openReject(row: I管理员退款) {
+function openReject(row: IAdminRefund) {
   rejectingId.value = row.orderId
   rejectForm.rejectReason = ''
   rejectVisible.value = true
@@ -288,7 +287,7 @@ async function handleReject() {
   }
   actionLoading.value = true
   try {
-    const { data: res } = await refundApi.reject退款(rejectingId.value, rejectForm.rejectReason)
+    const { data: res } = await refundApi.rejectRefund(rejectingId.value, rejectForm.rejectReason)
     if (res.code !== 200) return
     ElMessage.success('退款已拒绝')
     rejectVisible.value = false

@@ -59,7 +59,7 @@
         <template #default="{ row }">
           <el-tag v-if="row.forcePopup" type="warning" size="small" effect="dark">弹窗</el-tag>
           <el-tag
-            v-if="row.blockUntil已支付"
+            v-if="row.blockUntilPaid"
             type="danger"
             size="small"
             effect="dark"
@@ -102,7 +102,7 @@
             v-model="createForm.merchantId"
             filterable
             remote
-            :remote-method="search商家"
+            :remote-method="searchMerchants"
             :loading="merchantLoading"
             placeholder="搜索商户"
             style="width: 100%"
@@ -153,7 +153,7 @@
           <el-checkbox v-model="createForm.forcePopup" />
         </el-form-item>
         <el-form-item label="未支付前锁定">
-          <el-checkbox v-model="createForm.blockUntil已支付" />
+          <el-checkbox v-model="createForm.blockUntilPaid" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -183,7 +183,7 @@
             detailItem.forcePopup ? 'Yes' : 'No'
           }}</el-descriptions-item>
           <el-descriptions-item label="未支付前锁定">{{
-            detailItem.blockUntil已支付 ? 'Yes' : 'No'
+            detailItem.blockUntilPaid ? 'Yes' : 'No'
           }}</el-descriptions-item>
           <el-descriptions-item label="创建时间">{{ detailItem.createdAt }}</el-descriptions-item>
           <el-descriptions-item label="更新时间">{{ detailItem.updatedAt }}</el-descriptions-item>
@@ -225,10 +225,7 @@
             <el-button
               type="danger"
               v-permission="'tax:review'"
-              @click="
-                reviewRejectVisible = true
-                reviewTarget = detailItem
-              "
+              @click="openRejectReview(detailItem)"
               >拒绝</el-button
             >
           </div>
@@ -312,7 +309,7 @@ const createForm = reactive({
   currency: 'JPY',
   dueAt: '' as string | Date,
   forcePopup: false,
-  blockUntil已支付: false,
+  blockUntilPaid: false,
 })
 
 const detailVisible = ref(false)
@@ -364,10 +361,10 @@ function resetCreateForm() {
   createForm.currency = 'JPY'
   createForm.dueAt = ''
   createForm.forcePopup = false
-  createForm.blockUntil已支付 = false
+  createForm.blockUntilPaid = false
 }
 
-async function search商家(query: string) {
+async function searchMerchants(query: string) {
   if (!query) return
   merchantLoading.value = true
   try {
@@ -400,7 +397,7 @@ async function handleCreate() {
       currency: createForm.currency,
       dueAt: createForm.dueAt || undefined,
       forcePopup: createForm.forcePopup,
-      blockUntil已支付: createForm.blockUntil已支付,
+      blockUntilPaid: createForm.blockUntilPaid,
     })
     if (res.code === 200) {
       ElMessage.success('税务通知已创建')
@@ -433,6 +430,11 @@ async function handleCancel(row: TaxNotice) {
   } catch {
     ElMessage.error('取消失败')
   }
+}
+
+function openRejectReview(row: TaxNotice) {
+  reviewRejectVisible.value = true
+  reviewTarget.value = row
 }
 
 async function handleReview(row: TaxNotice, approved: boolean) {

@@ -12,7 +12,9 @@ export interface IAdminDashboard {
   paidOrders: number
   completedOrders: number
   refundRequests: number
+  pendingRefunds: number
   totalSales: number
+  todayOrders: number
   todaySales: number
   totalCommission: number
   pendingWithdrawals: number

@@ -78,7 +78,7 @@
             link
             :type="row.status === 'ENABLE' ? 'warning' : 'success'"
             v-permission="'coupon:edit'"
-            @click="toggle状态(row)"
+            @click="toggleStatus(row)"
           >
             {{ row.status === 'ENABLE' ? '禁用' : '启用' }}
           </el-button>
@@ -253,7 +253,7 @@
 </template>
 
 <script setup lang="ts">
-import { couponApi, type I管理员Coupon, type ICouponRecord } from '@/api/coupon'
+import { couponApi, type IAdminCoupon, type ICouponRecord } from '@/api/coupon'
 import {
   COUPON_STATUS_OPTIONS,
   COUPON_TYPE_OPTIONS,
@@ -262,10 +262,10 @@ import {
 } from '@/constants/dict'
 import type { FormInstance, FormRules } from 'element-plus'
 
-defineOptions({ name: '管理员CouponView' })
+defineOptions({ name: 'AdminCouponView' })
 
 const loading = ref(false)
-const tableData = ref<I管理员Coupon[]>([])
+const tableData = ref<IAdminCoupon[]>([])
 const total = ref(0)
 
 const formVisible = ref(false)
@@ -357,7 +357,7 @@ function openCreate() {
   formVisible.value = true
 }
 
-function openEdit(row: I管理员Coupon) {
+function openEdit(row: IAdminCoupon) {
   editingId.value = row.id
   const trans: any = {
     ja: { name: '', description: '' },
@@ -409,15 +409,15 @@ async function handleSubmit() {
   }
 }
 
-async function toggle状态(row: I管理员Coupon) {
-  const new状态 = row.status === 'ENABLE' ? 'DISABLE' : 'ENABLE'
-  const { data: res } = await couponApi.updateCoupon状态(row.id, new状态)
+async function toggleStatus(row: IAdminCoupon) {
+  const newStatus = row.status === 'ENABLE' ? 'DISABLE' : 'ENABLE'
+  const { data: res } = await couponApi.updateCouponStatus(row.id, newStatus)
   if (res.code !== 200) return
   ElMessage.success('状态已更新')
   fetchData()
 }
 
-async function handleDelete(row: I管理员Coupon) {
+async function handleDelete(row: IAdminCoupon) {
   try {
     await ElMessageBox.confirm(`确定要删除优惠券“${row.name}”吗？`, '确认', { type: 'warning' })
   } catch {
@@ -429,7 +429,7 @@ async function handleDelete(row: I管理员Coupon) {
   fetchData()
 }
 
-function openRecords(row: I管理员Coupon) {
+function openRecords(row: IAdminCoupon) {
   viewingCouponId.value = row.id
   recordsPage.value = 1
   recordsVisible.value = true

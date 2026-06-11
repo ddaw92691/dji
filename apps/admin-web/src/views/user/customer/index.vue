@@ -15,7 +15,7 @@
             :type="getColorByValue(CUSTOMER_STATUS_OPTIONS, row.status)"
             :text="getLabelByValue(CUSTOMER_STATUS_OPTIONS, row.status)"
           />
-          <el-tag v-if="row.is虚拟" type="info" size="small" effect="plain">虚拟</el-tag>
+          <el-tag v-if="row.isVirtual" type="info" size="small" effect="plain">虚拟</el-tag>
         </div>
       </template>
       <template #operation="{ row }">
@@ -27,7 +27,7 @@
           :title="row.status === 1 ? '确定要禁用该客户吗？' : '确定要启用该客户吗？'"
           :placement="POPCONFIRM_CONFIG.placement"
           :width="POPCONFIRM_CONFIG.width"
-          @confirm="handleToggle状态(row)"
+          @confirm="handleToggleStatus(row)"
         >
           <template #reference>
             <el-button
@@ -73,9 +73,9 @@
         <el-form-item label="语言"><el-input v-model="editForm.language" /></el-form-item>
         <el-divider />
         <el-form-item label="虚拟客户">
-          <el-checkbox v-model="editForm.is虚拟" />
+          <el-checkbox v-model="editForm.isVirtual" />
         </el-form-item>
-        <el-form-item label="虚拟备注" v-if="editForm.is虚拟">
+        <el-form-item label="虚拟备注" v-if="editForm.isVirtual">
           <el-input
             v-model="editForm.virtualRemark"
             type="textarea"
@@ -118,13 +118,13 @@ const editForm = reactive({
   nickname: '',
   country: '',
   language: '',
-  is虚拟: false,
+  isVirtual: false,
   virtualRemark: '',
 })
 
 const CUSTOMER_STATUS_OPTIONS: DictItem<number>[] = [
-  { label: '启用d', value: 1, color: 'success' },
-  { label: '禁用d', value: 0, color: 'danger' },
+  { label: '启用', value: 1, color: 'success' },
+  { label: '禁用', value: 0, color: 'danger' },
 ]
 
 const searchFormConfig = ref<IFormConfig[]>([
@@ -152,7 +152,7 @@ const searchFormConfig = ref<IFormConfig[]>([
   },
   {
     label: '虚拟',
-    prop: 'is虚拟',
+    prop: 'isVirtual',
     type: 'elSelect',
     attrs: {
       placeholder: '筛选',
@@ -171,7 +171,7 @@ const columns = ref([
   { prop: 'email', label: '邮箱', minWidth: 180 },
   { prop: 'phone', label: '手机号', minWidth: 130 },
   { prop: 'nickname', label: '昵称', minWidth: 120 },
-  { prop: 'is虚拟', label: '虚拟', width: 80 },
+  { prop: 'isVirtual', label: '虚拟', width: 80 },
   { prop: 'country', label: '国家', width: 100 },
   { prop: 'language', label: '语言', width: 100 },
   { prop: 'orderCount', label: '订单', width: 90 },
@@ -184,7 +184,7 @@ const columns = ref([
 const fetchData = async (queryForm: Record<string, unknown>, page: number, pageSize: number) => {
   loading.value = true
   try {
-    const { data: res } = await customerApi.get客户管理({ ...queryForm, page, pageSize })
+    const { data: res } = await customerApi.getCustomers({ ...queryForm, page, pageSize })
     if (res.code === 200) {
       tableData.value = res.data?.list || []
       total.value = res.data?.total || 0
@@ -220,7 +220,7 @@ const openEdit = async (row: any) => {
         nickname: d.nickname || '',
         country: d.country || '',
         language: d.language || '',
-        is虚拟: !!d.is虚拟,
+        isVirtual: !!d.isVirtual,
         virtualRemark: d.virtualRemark || '',
       })
       editVisible.value = true
@@ -239,7 +239,7 @@ const handleSave = async () => {
       nickname: editForm.nickname,
       countryCode: editForm.country,
       languageCode: editForm.language,
-      is虚拟: editForm.is虚拟,
+      isVirtual: editForm.isVirtual,
       virtualRemark: editForm.virtualRemark,
     })
     if (res.code === 200) {
@@ -256,10 +256,10 @@ const handleSave = async () => {
   }
 }
 
-const handleToggle状态 = async (row: any) => {
-  const new状态 = row.status === 1 ? 0 : 1
+const handleToggleStatus = async (row: any) => {
+  const newStatus = row.status === 1 ? 0 : 1
   try {
-    const { data: res } = await customerApi.updateCustomer状态(row.id, new状态)
+    const { data: res } = await customerApi.updateCustomerStatus(row.id, newStatus)
     if (res.code === 200) {
       ElMessage.success('状态已更新')
       basePageRef.value?.refreshCurrentPage()
