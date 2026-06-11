@@ -129,7 +129,7 @@ function detectFromBrowser(): LocaleEntry {
 
 // 解析初始 locale：localStorage(共用 key / 旧 key) → 浏览器语言 → 默认 en-US
 export function resolveInitialLocale(): LocaleEntry {
-  const savedId = localStorage.getItem(STORAGE_KEYS.locale)
+  const savedId = localStorage.getItem(STORAGE_KEYS.locale) || localStorage.getItem('locale')
   const byId = findLocaleById(savedId)
   if (byId) return byId
 
@@ -151,4 +151,5 @@ export function persistLocale(locale: LocaleEntry) {
   // 兼容旧 key，保证与商城历史逻辑一致
   localStorage.setItem('countryCode', locale.countryCode)
   localStorage.setItem('languageCode', locale.languageCode)
+  localStorage.setItem('locale', locale.id)
 }

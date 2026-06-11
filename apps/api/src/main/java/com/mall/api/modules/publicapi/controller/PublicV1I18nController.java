@@ -64,6 +64,7 @@ public class PublicV1I18nController {
         data.put("fallbackLocale", "en-US");
         data.put("modules", modules);
         data.put("messages", messages);
+        data.put("translations", messages);
         data.put("updatedAt", System.currentTimeMillis());
         return ApiResponse.success(data);
     }
@@ -79,6 +80,7 @@ public class PublicV1I18nController {
 
     private void noStore(HttpServletResponse response) {
         response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+        response.setHeader("CDN-Cache-Control", "no-store");
         response.setHeader("Pragma", "no-cache");
     }
 }

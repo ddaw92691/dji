@@ -32,7 +32,6 @@ import ptBR from "./locales/pt-BR.json";
 
 type Dict = Record<string, string>;
 
-// 本地兜底语言包，按 languageCode 索引
 const LOCAL_PACKS: Record<string, Dict> = {
   en,
   "zh-Hans": zhHans,
@@ -46,6 +45,66 @@ const LOCAL_PACKS: Record<string, Dict> = {
   ru,
   "pt-BR": ptBR,
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function isI18nDebugEnabled() {
+  try {
+    return (
+      import.meta.env.DEV || localStorage.getItem("i18n_debug") === "1"
+    );
+  } catch {
+    return false;
+  }
+}
+
+function debugI18n(event: string, detail: Record<string, unknown>) {
+  if (!isI18nDebugEnabled()) return;
+  console.info(`[i18n:official] ${event}`, detail);
+}
+
+function normalizeLocaleEntry(raw: unknown): LocaleEntry | null {
+  if (!isRecord(raw)) return null;
+  const id = typeof raw.id === "string" ? raw.id : raw.locale;
+  const countryCode = raw.countryCode;
+  const languageCode = raw.languageCode;
+  if (
+    typeof id !== "string" ||
+    typeof countryCode !== "string" ||
+    typeof languageCode !== "string"
+  ) {
+    return null;
+  }
+  return {
+    id,
+    country: String(raw.country ?? raw.countryName ?? countryCode),
+    language: String(raw.language ?? raw.nativeName ?? languageCode),
+    countryCode,
+    languageCode,
+    region: String(raw.region ?? "Other Countries and Regions"),
+  };
+}
+
+function normalizeLocaleList(list: unknown): LocaleEntry[] {
+  if (!Array.isArray(list)) return [];
+  return list
+    .map(normalizeLocaleEntry)
+    .filter((item): item is LocaleEntry => Boolean(item));
+}
+
+function extractMessages(payload: unknown): Dict {
+  const data = isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
+  if (!isRecord(data)) return {};
+  const source = data.translations ?? data.messages;
+  if (!isRecord(source)) return {};
+  return Object.fromEntries(
+    Object.entries(source).filter(
+      ([, value]) => typeof value === "string" && value.length > 0,
+    ),
+  );
+}
 
 interface I18nContextValue {
   locale: LocaleEntry;
@@ -69,8 +128,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     useState<readonly string[]>(REGION_ORDER);
   const [loading, setLoading] = useState(false);
   const reqIdRef = useRef(0);
+  const loggedKeysRef = useRef<Set<string>>(new Set());
 
-  // 合并优先级：后台翻译 > 本地语言包 > 英文兜底 > key
   const resolved = useMemo<Dict>(() => {
     const base = LOCAL_PACKS.en || {};
     const local = LOCAL_PACKS[locale.languageCode] || {};
@@ -81,7 +140,6 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     const myReq = ++reqIdRef.current;
     setLoading(true);
     try {
-      // 优先读取总后台翻译管理（v1），失败后兼容旧接口。带时间戳避免 Safari / CDN 长缓存。
       let data: any;
       try {
         const res = await service.get("/v1/public/translations", {
@@ -99,14 +157,16 @@ export function I18nProvider({ children }: { children: ReactNode }) {
         });
         data = fallback.data;
       }
-      if (myReq !== reqIdRef.current) return; // 已被更晚的切换覆盖
-      if (data?.code === 200 && data.data?.messages) {
-        setRemoteMessages(data.data.messages as Dict);
-      } else {
-        setRemoteMessages({});
-      }
+      if (myReq !== reqIdRef.current) return;
+      const messages = data?.code === 200 ? extractMessages(data) : {};
+      debugI18n("remote messages loaded", {
+        selectedLocale: l.id,
+        savedLocale: localStorage.getItem("mall_locale"),
+        messageKeyCount: Object.keys(messages).length,
+        responseDataKeys: isRecord(data?.data) ? Object.keys(data.data) : [],
+      });
+      setRemoteMessages(messages);
     } catch {
-      // 接口失败 → 仅用本地兜底，不白屏
       if (myReq === reqIdRef.current) setRemoteMessages({});
     } finally {
       if (myReq === reqIdRef.current) setLoading(false);
@@ -118,9 +178,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       .get("/v1/public/languages", { params: { _t: Date.now() } })
       .then((res) => {
         const data = res.data?.data;
-        if (res.data?.code === 200 && Array.isArray(data?.list)) {
-          setAvailableLocales(data.list as LocaleEntry[]);
+        const nextLocales = normalizeLocaleList(data?.list);
+        if (res.data?.code === 200 && nextLocales.length) {
+          setAvailableLocales(nextLocales);
           if (Array.isArray(data.regions)) setAvailableRegions(data.regions);
+          debugI18n("languages loaded", {
+            localeCount: nextLocales.length,
+            regionCount: Array.isArray(data.regions) ? data.regions.length : 0,
+          });
         }
       })
       .catch(() => {
@@ -148,12 +213,32 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   const setLocale = useCallback((next: LocaleEntry) => {
     persistLocale(next);
+    debugI18n("locale changed", {
+      selectedLocale: next.id,
+      savedLocale: localStorage.getItem("mall_locale"),
+      savedCountryCode: localStorage.getItem("mall_countryCode"),
+      savedLanguageCode: localStorage.getItem("mall_languageCode"),
+    });
     setLocaleState(next);
   }, []);
 
   const t = useCallback(
-    (key: string, fallback?: string) => resolved[key] ?? fallback ?? key,
-    [resolved],
+    (key: string, fallback?: string) => {
+      if (
+        isI18nDebugEnabled() &&
+        !loggedKeysRef.current.has(key) &&
+        loggedKeysRef.current.size < 80
+      ) {
+        loggedKeysRef.current.add(key);
+        debugI18n("t key used", {
+          key,
+          locale: locale.id,
+          hasValue: Object.prototype.hasOwnProperty.call(resolved, key),
+        });
+      }
+      return resolved[key] ?? fallback ?? key;
+    },
+    [locale.id, resolved],
   );
 
   const value = useMemo<I18nContextValue>(

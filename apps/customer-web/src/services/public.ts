@@ -28,6 +28,7 @@ export interface I18nResponse {
   fallbackLocale?: string;
   locale?: string;
   messages: Record<string, string>;
+  translations?: Record<string, string>;
 }
 
 export interface PublicLanguageResponse {
