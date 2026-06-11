@@ -124,6 +124,126 @@ public class DataInitializer implements CommandLineRunner {
         } catch (Exception e) {
             log.warn("patch country.region failed: {}", e.getMessage());
         }
+        // 商家独立提现密码
+        try {
+            jdbcTemplate.execute("ALTER TABLE merchant ADD COLUMN IF NOT EXISTS withdraw_password VARCHAR(255)");
+        } catch (Exception e) {
+            log.warn("patch merchant.withdraw_password failed: {}", e.getMessage());
+        }
+        // 商家资金流水
+        try {
+            jdbcTemplate.execute(
+                "CREATE TABLE IF NOT EXISTS merchant_fund_log (" +
+                "  id              BIGINT          PRIMARY KEY," +
+                "  merchant_id     BIGINT          NOT NULL," +
+                "  type            VARCHAR(40)     NOT NULL," +
+                "  amount          NUMERIC(18,2)   NOT NULL," +
+                "  balance_before  NUMERIC(18,2)," +
+                "  balance_after   NUMERIC(18,2)," +
+                "  ref_type        VARCHAR(50)," +
+                "  ref_id          BIGINT," +
+                "  remark          VARCHAR(500)," +
+                "  operator_id     BIGINT," +
+                "  created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP" +
+                ")");
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_merchant_fund_log_merchant ON merchant_fund_log(merchant_id)");
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_merchant_fund_log_created ON merchant_fund_log(created_at)");
+            jdbcTemplate.execute("ALTER TABLE merchant_fund_log ADD COLUMN IF NOT EXISTS frozen_balance_before NUMERIC(18,2)");
+            jdbcTemplate.execute("ALTER TABLE merchant_fund_log ADD COLUMN IF NOT EXISTS frozen_balance_after NUMERIC(18,2)");
+            jdbcTemplate.execute("ALTER TABLE merchant_fund_log ADD COLUMN IF NOT EXISTS operator_type VARCHAR(20)");
+            jdbcTemplate.execute("ALTER TABLE merchant_fund_log ADD COLUMN IF NOT EXISTS reason VARCHAR(500)");
+            jdbcTemplate.execute("ALTER TABLE merchant_fund_log ADD COLUMN IF NOT EXISTS related_order_id BIGINT");
+            jdbcTemplate.execute("ALTER TABLE merchant_fund_log ADD COLUMN IF NOT EXISTS related_recharge_id BIGINT");
+        } catch (Exception e) {
+            log.warn("patch merchant_fund_log failed: {}", e.getMessage());
+        }
+        // 提款账户（加密货币 / 银行）
+        try {
+            jdbcTemplate.execute(
+                "CREATE TABLE IF NOT EXISTS withdraw_account (" +
+                "  id              BIGINT          PRIMARY KEY," +
+                "  merchant_id     BIGINT          NOT NULL," +
+                "  user_id         BIGINT," +
+                "  type            VARCHAR(20)     NOT NULL," +
+                "  chain           VARCHAR(50)," +
+                "  address         VARCHAR(255)," +
+                "  bank_name       VARCHAR(200)," +
+                "  account_no      VARCHAR(100)," +
+                "  account_name    VARCHAR(100)," +
+                "  swift_code      VARCHAR(50)," +
+                "  country         VARCHAR(100)," +
+                "  remark          VARCHAR(500)," +
+                "  is_default      BOOLEAN         NOT NULL DEFAULT FALSE," +
+                "  status          VARCHAR(20)     NOT NULL DEFAULT 'ENABLE'," +
+                "  deleted         BOOLEAN         NOT NULL DEFAULT FALSE," +
+                "  created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                "  updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP" +
+                ")");
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_withdraw_account_merchant ON withdraw_account(merchant_id)");
+        } catch (Exception e) {
+            log.warn("patch withdraw_account failed: {}", e.getMessage());
+        }
+        // 商家充值订单
+        try {
+            jdbcTemplate.execute(
+                "CREATE TABLE IF NOT EXISTS recharge_order (" +
+                "  id              BIGINT          PRIMARY KEY," +
+                "  recharge_no     VARCHAR(50)     NOT NULL," +
+                "  merchant_id     BIGINT          NOT NULL," +
+                "  user_id         BIGINT," +
+                "  amount          NUMERIC(18,2)   NOT NULL," +
+                "  currency        VARCHAR(10)     NOT NULL DEFAULT 'JPY'," +
+                "  method          VARCHAR(50)," +
+                "  proof_url       VARCHAR(500)," +
+                "  status          VARCHAR(20)     NOT NULL DEFAULT 'PENDING'," +
+                "  remark          VARCHAR(500)," +
+                "  reject_reason   VARCHAR(500)," +
+                "  reviewed_by     BIGINT," +
+                "  reviewed_at     TIMESTAMP," +
+                "  deleted         BOOLEAN         NOT NULL DEFAULT FALSE," +
+                "  created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                "  updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP" +
+                ")");
+            jdbcTemplate.execute("CREATE UNIQUE INDEX IF NOT EXISTS uk_recharge_no ON recharge_order(recharge_no)");
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_recharge_merchant ON recharge_order(merchant_id)");
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_recharge_status ON recharge_order(status)");
+        } catch (Exception e) {
+            log.warn("patch recharge_order failed: {}", e.getMessage());
+        }
+        // 订单：商家垫付货款 / 结算（双订单模型）
+        try {
+            jdbcTemplate.execute("ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS goods_cost NUMERIC(18,2)");
+            jdbcTemplate.execute("ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS merchant_profit NUMERIC(18,2)");
+            jdbcTemplate.execute("ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS merchant_paid_status VARCHAR(20) DEFAULT 'UNPAID'");
+            jdbcTemplate.execute("ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS merchant_paid_at TIMESTAMP");
+            jdbcTemplate.execute("ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS expected_arrival_at TIMESTAMP");
+            jdbcTemplate.execute("ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS arrival_status VARCHAR(20) DEFAULT 'WAITING'");
+            jdbcTemplate.execute("ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS arrived_at TIMESTAMP");
+            jdbcTemplate.execute("ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS settlement_amount NUMERIC(18,2)");
+            jdbcTemplate.execute("ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS settle_status VARCHAR(20) DEFAULT 'NONE'");
+            jdbcTemplate.execute("ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS settled_at TIMESTAMP");
+            jdbcTemplate.execute("ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS settlement_operator_id BIGINT");
+            jdbcTemplate.execute("ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS settlement_remark VARCHAR(500)");
+            jdbcTemplate.execute(
+                "CREATE TABLE IF NOT EXISTS order_settlement_record (" +
+                "  id                  BIGINT          PRIMARY KEY," +
+                "  order_id            BIGINT          NOT NULL," +
+                "  merchant_id         BIGINT          NOT NULL," +
+                "  goods_cost          NUMERIC(18,2)   NOT NULL DEFAULT 0," +
+                "  merchant_profit     NUMERIC(18,2)   NOT NULL DEFAULT 0," +
+                "  settlement_amount   NUMERIC(18,2)   NOT NULL DEFAULT 0," +
+                "  status              VARCHAR(20)     NOT NULL DEFAULT 'SETTLED'," +
+                "  operator_id         BIGINT," +
+                "  remark              VARCHAR(500)," +
+                "  settled_at          TIMESTAMP," +
+                "  created_at          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                "  updated_at          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP" +
+                ")");
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_order_settlement_order ON order_settlement_record(order_id)");
+            jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_order_settlement_merchant ON order_settlement_record(merchant_id)");
+        } catch (Exception e) {
+            log.warn("patch mall_order merchant-advance columns failed: {}", e.getMessage());
+        }
     }
 
     /**
@@ -10883,6 +11003,7 @@ public class DataInitializer implements CommandLineRunner {
         insertMenu(1102L, 1100L, "ADMIN", "MENU", "/user/merchant", "商家管理", null, "admin:user:merchant:view", 2, true);
         insertMenu(1103L, 1100L, "ADMIN", "MENU", "/user/agent", "代理管理", null, "admin:user:agent:view", 3, true);
         insertMenu(1104L, 1100L, "ADMIN", "MENU", "/user/admin", "管理员管理", null, "admin:user:admin:view", 4, true);
+        insertMenu(1105L, 1100L, "ADMIN", "MENU", "/user/merchant-application", "商家申请", null, "admin:merchantApplication:view", 5, true);
 
         insertMenu(1200L, null, "ADMIN", "DIRECTORY", null, "商品管理", "HOutline:ShoppingBagIcon", null, 3, true);
         insertMenu(1201L, 1200L, "ADMIN", "MENU", "/product/list", "商品列表", null, "product:view", 1, true);
@@ -10893,12 +11014,15 @@ public class DataInitializer implements CommandLineRunner {
         insertMenu(1300L, null, "ADMIN", "DIRECTORY", null, "订单管理", "HOutline:DocumentTextIcon", null, 4, true);
         insertMenu(1301L, 1300L, "ADMIN", "MENU", "/order/list", "订单列表", null, "order:view", 1, true);
         insertMenu(1302L, 1300L, "ADMIN", "MENU", "/order/create", "创建订单", null, "admin:order:create", 2, true);
+        insertMenu(1303L, 1300L, "ADMIN", "MENU", "/order/refund", "退货订单", null, "order:view", 3, true);
 
         insertMenu(1400L, null, "ADMIN", "DIRECTORY", null, "财务管理", "HOutline:CurrencyDollarIcon", null, 5, true);
         insertMenu(1401L, 1400L, "ADMIN", "MENU", "/finance/overview", "财务概览", null, "finance:view", 1, true);
         insertMenu(1402L, 1400L, "ADMIN", "MENU", "/finance/withdrawal", "提现管理", null, "finance:view", 2, true);
         insertMenu(1403L, 1400L, "ADMIN", "MENU", "/finance/commission", "佣金管理", null, "finance:view", 3, true);
         insertMenu(1404L, 1400L, "ADMIN", "MENU", "/finance/payment", "支付记录", null, "finance:view", 4, true);
+        insertMenu(1405L, 1400L, "ADMIN", "MENU", "/finance/recharge", "充值记录", null, "finance:recharge:view", 5, true);
+        insertMenu(1406L, 1400L, "ADMIN", "MENU", "/finance/reconciliation", "对账", null, "finance:reconcile:view", 6, true);
 
         insertMenu(1500L, null, "ADMIN", "DIRECTORY", null, "翻译与语言", "HOutline:GlobeAltIcon", null, 6, true);
         insertMenu(1501L, 1500L, "ADMIN", "MENU", "/i18n/country", "国家管理", null, "i18n:country:view", 1, true);
@@ -10927,6 +11051,11 @@ public class DataInitializer implements CommandLineRunner {
         insertMenu(2012L, 1102L, "ADMIN", "BUTTON", null, null, null, "admin:user:merchant:edit", 2, false);
         insertMenu(2013L, 1102L, "ADMIN", "BUTTON", null, null, null, "admin:user:merchant:delete", 3, false);
         insertMenu(2014L, 1102L, "ADMIN", "BUTTON", null, null, null, "admin:user:merchant:disable", 4, false);
+        insertMenu(2018L, 1102L, "ADMIN", "BUTTON", null, null, null, "admin:user:merchant:fund", 5, false);
+        insertMenu(2019L, 1102L, "ADMIN", "BUTTON", null, null, null, "admin:user:merchant:resetPwd", 6, false);
+        insertMenu(2015L, 1105L, "ADMIN", "BUTTON", null, null, null, "admin:merchantApplication:view", 1, false);
+        insertMenu(2016L, 1105L, "ADMIN", "BUTTON", null, null, null, "admin:merchantApplication:approve", 2, false);
+        insertMenu(2017L, 1105L, "ADMIN", "BUTTON", null, null, null, "admin:merchantApplication:reject", 3, false);
         insertMenu(2021L, 1103L, "ADMIN", "BUTTON", null, null, null, "admin:user:agent:add", 1, false);
         insertMenu(2022L, 1103L, "ADMIN", "BUTTON", null, null, null, "admin:user:agent:edit", 2, false);
         insertMenu(2023L, 1103L, "ADMIN", "BUTTON", null, null, null, "admin:user:agent:delete", 3, false);
@@ -10956,6 +11085,8 @@ public class DataInitializer implements CommandLineRunner {
         insertMenu(2112L, 1402L, "ADMIN", "BUTTON", null, null, null, "finance:withdrawal:reject", 2, false);
         insertMenu(2121L, 1403L, "ADMIN", "BUTTON", null, null, null, "finance:commission:view", 1, false);
         insertMenu(2131L, 1404L, "ADMIN", "BUTTON", null, null, null, "finance:payment:view", 1, false);
+        insertMenu(2141L, 1405L, "ADMIN", "BUTTON", null, null, null, "finance:recharge:approve", 1, false);
+        insertMenu(2142L, 1405L, "ADMIN", "BUTTON", null, null, null, "finance:recharge:reject", 2, false);
 
         insertMenu(2151L, 1501L, "ADMIN", "BUTTON", null, null, null, "i18n:country:add", 1, false);
         insertMenu(2152L, 1501L, "ADMIN", "BUTTON", null, null, null, "i18n:country:edit", 2, false);
@@ -11022,6 +11153,8 @@ public class DataInitializer implements CommandLineRunner {
         insertMenu(5302L, 5300L, "MERCHANT", "MENU", "/finance/commission", null, null, null, 2, true);
         insertMenu(5303L, 5300L, "MERCHANT", "MENU", "/finance/withdrawal", null, null, null, 3, true);
         insertMenu(5304L, 5300L, "MERCHANT", "MENU", "/finance/withdrawal-record", null, null, null, 4, true);
+        insertMenu(5305L, 5300L, "MERCHANT", "MENU", "/finance/recharge", "充值", null, null, 5, true);
+        insertMenu(5306L, 5300L, "MERCHANT", "MENU", "/finance/fund-log", "资金流水", null, null, 6, true);
 
         insertMenu(5400L, null, "MERCHANT", "DIRECTORY", null, "代理中心", null, null, 5, true);
         insertMenu(5401L, 5400L, "MERCHANT", "MENU", "/agent/invite", null, null, null, 1, true);
@@ -11031,6 +11164,7 @@ public class DataInitializer implements CommandLineRunner {
         insertMenu(5500L, null, "MERCHANT", "DIRECTORY", null, "店铺设置", null, null, 6, true);
         insertMenu(5501L, 5500L, "MERCHANT", "MENU", "/shop/profile", null, null, null, 1, true);
         insertMenu(5502L, 5500L, "MERCHANT", "MENU", "/shop/language", null, null, null, 2, true);
+        insertMenu(5503L, 5500L, "MERCHANT", "MENU", "/shop/withdraw-account", "提款账户", null, null, 3, true);
 
         insertMenu(5600L, null, "MERCHANT", "DIRECTORY", null, "客服中心", "HOutline:ChatBubbleLeftRightIcon", null, 7, true);
         insertMenu(5601L, 5600L, "MERCHANT", "MENU", "/support/customer", "客户会话", null, null, 1, true);
@@ -11076,17 +11210,17 @@ public class DataInitializer implements CommandLineRunner {
         long rid = nextRoleMenuId();
 
         long[] adminMenuIds = {
-            1000, 1001, 1100, 1101, 1102, 1103, 1104,
+            1000, 1001, 1100, 1101, 1102, 1103, 1104, 1105,
             1200, 1201, 1202, 1203, 1204,
-            1300, 1301, 1302,
-            1400, 1401, 1402, 1403, 1404,
+            1300, 1301, 1302, 1303,
+            1400, 1401, 1402, 1403, 1404, 1405, 1406,
             1500, 1501, 1502, 1503, 1504, 1505,
             1600, 1601, 1602, 1603,
             1700, 1701, 1702, 1703, 1704,
             1800, 1801, 1802,
             1850, 1851,
             2001, 2002, 2003, 2004,
-            2011, 2012, 2013, 2014,
+            2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019,
             2021, 2022, 2023, 2024,
             2031, 2032, 2033, 2034,
             2051, 2052, 2053,
@@ -11094,7 +11228,7 @@ public class DataInitializer implements CommandLineRunner {
             2071, 2072, 2073,
             2081, 2082, 2083,
             2101, 2102, 2103,
-            2111, 2112, 2121, 2131,
+            2111, 2112, 2121, 2131, 2141, 2142,
             2151, 2152, 2153,
             2161, 2162, 2163,
             2171, 2172, 2173,
@@ -11120,7 +11254,7 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        long[] merchantMenuIds = {5000, 5001, 5100, 5101, 5102, 5103, 5200, 5201, 5300, 5301, 5302, 5303, 5304, 5500, 5501, 5502, 5600, 5601, 5602, 5603, 5700, 5701, 5750, 5751, 5801, 5802, 5811};
+        long[] merchantMenuIds = {5000, 5001, 5100, 5101, 5102, 5103, 5200, 5201, 5300, 5301, 5302, 5303, 5304, 5305, 5306, 5500, 5501, 5502, 5503, 5600, 5601, 5602, 5603, 5700, 5701, 5750, 5751, 5801, 5802, 5811};
         for (long mid : merchantMenuIds) {
             rid = insertRoleMenu(rid, 3L, mid);
         }

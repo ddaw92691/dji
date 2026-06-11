@@ -26,6 +26,7 @@ export type MerchantApplicationPayload = {
   fullName: string
   age: number
   homeAddress: string
+  documentType: 'id_card' | 'passport' | 'driver_license'
   idCardFrontUrl?: string
   idCardBackUrl?: string
   passportPageUrl?: string
@@ -36,11 +37,15 @@ export type MerchantApplicationPayload = {
 export const uploadMerchantApplicationFile = (file: File) => {
   const formData = new FormData()
   formData.append('file', file)
-  return request.post('/auth/merchant-applications/files', formData, {
+  return request.post('/v1/merchant/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 }
 
 export const submitMerchantApplication = (params: MerchantApplicationPayload) => {
-  return request.post('/auth/merchant-applications', params)
+  return request.post('/v1/merchant/dealer-applications', params)
+}
+
+export const getMerchantApplicationStatus = (id: string | number) => {
+  return request.get('/v1/merchant/dealer-applications/' + id + '/status')
 }

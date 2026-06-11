@@ -147,6 +147,55 @@ public class MallOrder implements Serializable {
     @Schema(description = "虚拟客户ID")
     private Long virtualCustomerId;
 
+    // ===== 商家垫付货款 / 结算（双订单模型，仅 order_source != CUSTOMER 的垫付单使用）=====
+    @TableField("goods_cost")
+    @Schema(description = "货款（商家需垫付的进货成本）")
+    private BigDecimal goodsCost;
+
+    @TableField("merchant_profit")
+    @Schema(description = "商家利润（结算时连同货款一起返还）")
+    private BigDecimal merchantProfit;
+
+    @TableField("merchant_paid_status")
+    @Schema(description = "商家货款支付状态: UNPAID/PAID")
+    private String merchantPaidStatus;
+
+    @TableField("merchant_paid_at")
+    @Schema(description = "商家支付货款时间")
+    private LocalDateTime merchantPaidAt;
+
+    @TableField("expected_arrival_at")
+    @Schema(description = "预计到货时间")
+    private LocalDateTime expectedArrivalAt;
+
+    @TableField("arrival_status")
+    @Schema(description = "Arrival status: WAITING/ARRIVED")
+    private String arrivalStatus;
+
+    @TableField("arrived_at")
+    @Schema(description = "Arrived time")
+    private LocalDateTime arrivedAt;
+
+    @TableField("settlement_amount")
+    @Schema(description = "Settlement amount")
+    private BigDecimal settlementAmount;
+
+    @TableField("settle_status")
+    @Schema(description = "货款+利润结算状态: NONE/SETTLED")
+    private String settleStatus;
+
+    @TableField("settled_at")
+    @Schema(description = "结算时间")
+    private LocalDateTime settledAt;
+
+    @TableField("settlement_operator_id")
+    @Schema(description = "Settlement operator id")
+    private Long settlementOperatorId;
+
+    @TableField("settlement_remark")
+    @Schema(description = "Settlement remark")
+    private String settlementRemark;
+
     @Schema(description = "逻辑删除")
     private Boolean deleted;
 

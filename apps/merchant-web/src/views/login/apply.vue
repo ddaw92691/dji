@@ -5,7 +5,7 @@
 
     <section class="apply-shell">
       <div class="apply-panel">
-        <button class="back-link" type="button" @click="router.push('/login')">Back to login</button>
+        <button class="back-link" type="button" @click="router.push('/login')">返回登录</button>
         <img src="/logo-black.webp" alt="Mall" class="panel-logo" />
 
         <header class="apply-header">
@@ -13,13 +13,39 @@
           <p>请填写真实资料并上传证明文件，平台审核通过后即可登录商家后台。</p>
         </header>
 
-        <el-form ref="applicationFormRef" :model="applicationForm" :rules="applicationRules" label-position="top">
+        <el-alert
+          v-if="applicationStatus && !showForm"
+          :type="statusAlertType"
+          :title="statusTitle"
+          show-icon
+          :closable="false"
+          class="status-alert"
+        >
+          <template #default>
+            <p v-if="applicationStatus === 'PENDING'">申请已提交，请等待审核。</p>
+            <p v-else-if="applicationStatus === 'APPROVED'">申请已通过，请返回登录页面使用申请邮箱和密码登录。</p>
+            <p v-else-if="applicationStatus === 'REJECTED'">
+              拒绝原因：{{ reviewRemark || '未填写' }}
+            </p>
+            <el-button v-if="applicationStatus === 'REJECTED'" type="primary" @click="startResubmit">
+              重新提交申请
+            </el-button>
+          </template>
+        </el-alert>
+
+        <el-form
+          v-if="showForm"
+          ref="applicationFormRef"
+          :model="applicationForm"
+          :rules="applicationRules"
+          label-position="top"
+        >
           <div class="application-grid">
             <el-form-item prop="email" label="邮箱">
               <el-input v-model="applicationForm.email" autocomplete="off" placeholder="your@email.com" />
             </el-form-item>
             <el-form-item prop="phone" label="手机号">
-              <el-input v-model="applicationForm.phone" autocomplete="off" placeholder="+81 90 0000 0000" />
+              <el-input v-model="applicationForm.phone" autocomplete="off" placeholder="+1 555 000 0000" />
             </el-form-item>
             <el-form-item prop="password" label="登录密码">
               <el-input
@@ -27,47 +53,61 @@
                 type="password"
                 show-password
                 autocomplete="new-password"
-                placeholder="Min 6 characters"
+                placeholder="至少 8 位，包含字母和数字"
               />
             </el-form-item>
             <el-form-item prop="fullName" label="姓名">
-              <el-input v-model="applicationForm.fullName" autocomplete="off" placeholder="Full name" />
+              <el-input v-model="applicationForm.fullName" autocomplete="off" placeholder="真实姓名" />
             </el-form-item>
             <el-form-item prop="age" label="年龄">
               <el-input-number v-model="applicationForm.age" :min="18" :max="100" controls-position="right" />
             </el-form-item>
+            <el-form-item prop="documentType" label="证件类型">
+              <el-select v-model="applicationForm.documentType" placeholder="请选择证件类型" @change="clearDocumentFiles">
+                <el-option label="身份证" value="id_card" />
+                <el-option label="护照" value="passport" />
+                <el-option label="驾驶证" value="driver_license" />
+              </el-select>
+            </el-form-item>
             <el-form-item prop="homeAddress" label="家庭地址" class="wide">
-              <el-input v-model="applicationForm.homeAddress" type="textarea" :rows="3" placeholder="Home address" />
+              <el-input v-model="applicationForm.homeAddress" type="textarea" :rows="3" placeholder="家庭地址" />
             </el-form-item>
           </div>
 
           <div class="upload-group">
-            <label class="file-picker">
-              <span>身份证正面照</span>
-              <input type="file" accept="image/*" @change="onFileChange('idCardFront', $event)" />
-              <em>{{ files.idCardFront?.name || 'Choose file' }}</em>
-            </label>
-            <label class="file-picker">
-              <span>身份证反面照</span>
-              <input type="file" accept="image/*" @change="onFileChange('idCardBack', $event)" />
-              <em>{{ files.idCardBack?.name || 'Choose file' }}</em>
-            </label>
-            <label class="file-picker">
-              <span>护照首页</span>
-              <input type="file" accept="image/*" @change="onFileChange('passportPage', $event)" />
-              <em>{{ files.passportPage?.name || 'Choose file' }}</em>
-            </label>
-            <label class="file-picker">
-              <span>驾驶证</span>
-              <input type="file" accept="image/*" @change="onFileChange('driverLicense', $event)" />
-              <em>{{ files.driverLicense?.name || 'Choose file' }}</em>
-            </label>
-            <label class="file-picker wide">
-              <span>手持证件视频<b>*</b></span>
-              <input type="file" accept="video/*" @change="onFileChange('handheldVideo', $event)" />
-              <em>{{ files.handheldVideo?.name || 'Choose file' }}</em>
-            </label>
+            <template v-if="applicationForm.documentType === 'id_card'">
+              <FilePicker label="身份证正面照" required :file="files.idCardFront" @change="onFileChange('idCardFront', $event)" />
+              <FilePicker label="身份证反面照" required :file="files.idCardBack" @change="onFileChange('idCardBack', $event)" />
+            </template>
+            <FilePicker
+              v-else-if="applicationForm.documentType === 'passport'"
+              label="护照首页"
+              required
+              :file="files.passportPage"
+              @change="onFileChange('passportPage', $event)"
+            />
+            <FilePicker
+              v-else-if="applicationForm.documentType === 'driver_license'"
+              label="驾驶证照片"
+              required
+              :file="files.driverLicense"
+              @change="onFileChange('driverLicense', $event)"
+            />
+            <FilePicker
+              class="wide"
+              label="手持证件视频"
+              required
+              video
+              :file="files.handheldVideo"
+              @change="onFileChange('handheldVideo', $event)"
+            />
           </div>
+
+          <el-form-item prop="privacyAccepted" class="privacy-item">
+            <el-checkbox v-model="applicationForm.privacyAccepted">
+              我确认提交的资料真实有效，并同意平台用于商家资质审核。
+            </el-checkbox>
+          </el-form-item>
 
           <p v-if="applicationError" class="error-text">{{ applicationError }}</p>
 
@@ -82,7 +122,9 @@
 
 <script setup lang="ts">
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { defineComponent, h, type PropType } from 'vue'
 import {
+  getMerchantApplicationStatus,
   submitMerchantApplication,
   uploadMerchantApplicationFile,
   type MerchantApplicationPayload,
@@ -90,75 +132,180 @@ import {
 
 defineOptions({ name: 'MerchantApplyView' })
 
+const APPLICATION_ID_KEY = 'merchant_application_id'
+const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp']
+const VIDEO_EXTENSIONS = ['mp4', 'mov', 'webm']
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024
+
+type FileKey = 'idCardFront' | 'idCardBack' | 'passportPage' | 'driverLicense' | 'handheldVideo'
+
+const FilePicker = defineComponent({
+  props: {
+    label: { type: String, required: true },
+    file: Object as PropType<File | undefined>,
+    required: { type: Boolean, default: false },
+    video: { type: Boolean, default: false },
+  },
+  emits: ['change'],
+  setup(props, { emit, attrs }) {
+    return () =>
+      h('label', { ...attrs, class: ['file-picker', props.video ? 'video-picker' : '', attrs.class] }, [
+        h('span', [props.label, props.required ? h('b', '*') : null]),
+        h('input', {
+          type: 'file',
+          accept: props.video ? '.mp4,.mov,.webm,video/mp4,video/quicktime,video/webm' : '.jpg,.jpeg,.png,.webp,image/*',
+          onChange: (event: Event) => emit('change', event),
+        }),
+        h('em', props.file?.name || '请选择文件'),
+      ])
+  },
+})
+
 const router = useRouter()
 const applicationFormRef = useTemplateRef<FormInstance>('applicationFormRef')
 const applicationLoading = ref(false)
 const applicationError = ref('')
+const applicationStatus = ref('')
+const reviewRemark = ref('')
+const showForm = ref(true)
 
-const applicationForm = ref({
+const applicationForm = reactive({
   email: '',
   phone: '',
   password: '',
   fullName: '',
   age: 18,
   homeAddress: '',
+  documentType: 'id_card' as MerchantApplicationPayload['documentType'],
+  privacyAccepted: false,
 })
 
-const files = reactive<{
-  idCardFront?: File
-  idCardBack?: File
-  passportPage?: File
-  driverLicense?: File
-  handheldVideo?: File
-}>({})
+const files = reactive<Partial<Record<FileKey, File>>>({})
 
-type FileKey = 'idCardFront' | 'idCardBack' | 'passportPage' | 'driverLicense' | 'handheldVideo'
+const statusTitle = computed(() => {
+  if (applicationStatus.value === 'PENDING') return '待审核'
+  if (applicationStatus.value === 'APPROVED') return '已通过'
+  if (applicationStatus.value === 'REJECTED') return '已拒绝'
+  return ''
+})
+
+const statusAlertType = computed(() => {
+  if (applicationStatus.value === 'APPROVED') return 'success'
+  if (applicationStatus.value === 'REJECTED') return 'error'
+  return 'warning'
+})
+
+const validatePassword = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
+  if (!value) return callback(new Error('请输入登录密码'))
+  if (value.length < 8 || !/[A-Za-z]/.test(value) || !/\d/.test(value)) {
+    return callback(new Error('密码至少 8 位，并包含字母和数字'))
+  }
+  callback()
+}
 
 const applicationRules = reactive<FormRules>({
-  email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }],
-  phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }],
-  password: [{ required: true, min: 6, message: '请输入至少 6 位密码', trigger: 'blur' }],
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '邮箱格式不正确', trigger: 'blur' },
+  ],
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^\+?[0-9\s-]{6,20}$/, message: '手机号格式不正确', trigger: 'blur' },
+  ],
+  password: [{ validator: validatePassword, trigger: 'blur' }],
   fullName: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-  age: [{ required: true, type: 'number', min: 18, message: '年龄必须大于等于 18', trigger: 'change' }],
+  age: [
+    { required: true, type: 'number', min: 18, max: 100, message: '年龄必须在 18 到 100 之间', trigger: 'change' },
+  ],
   homeAddress: [{ required: true, message: '请输入家庭地址', trigger: 'blur' }],
+  documentType: [{ required: true, message: '请选择证件类型', trigger: 'change' }],
+  privacyAccepted: [
+    {
+      validator: (_rule, value, callback) => {
+        value ? callback() : callback(new Error('请确认隐私授权'))
+      },
+      trigger: 'change',
+    },
+  ],
 })
+
+const fileExtension = (file: File) => file.name.split('.').pop()?.toLowerCase() || ''
 
 const onFileChange = (key: FileKey, event: Event) => {
   const input = event.target as HTMLInputElement
-  files[key] = input.files?.[0]
+  const file = input.files?.[0]
+  if (!file) return
+
+  const isVideo = key === 'handheldVideo'
+  const allowed = isVideo ? VIDEO_EXTENSIONS : IMAGE_EXTENSIONS
+  const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE
+  const extension = fileExtension(file)
+
+  if (!allowed.includes(extension)) {
+    ElMessage.error(isVideo ? '视频仅支持 mp4、mov、webm 格式' : '图片仅支持 jpg、jpeg、png、webp 格式')
+    input.value = ''
+    return
+  }
+  if (file.size > maxSize) {
+    ElMessage.error(isVideo ? '视频大小不能超过 50MB' : '图片大小不能超过 5MB')
+    input.value = ''
+    return
+  }
+  files[key] = file
+}
+
+const clearDocumentFiles = () => {
+  files.idCardFront = undefined
+  files.idCardBack = undefined
+  files.passportPage = undefined
+  files.driverLicense = undefined
+}
+
+const ensureRequiredFiles = () => {
+  if (applicationForm.documentType === 'id_card' && (!files.idCardFront || !files.idCardBack)) {
+    applicationError.value = '请上传身份证正面照和反面照'
+    return false
+  }
+  if (applicationForm.documentType === 'passport' && !files.passportPage) {
+    applicationError.value = '请上传护照首页'
+    return false
+  }
+  if (applicationForm.documentType === 'driver_license' && !files.driverLicense) {
+    applicationError.value = '请上传驾驶证照片'
+    return false
+  }
+  if (!files.handheldVideo) {
+    applicationError.value = '请上传手持证件视频'
+    return false
+  }
+  return true
 }
 
 const uploadOptionalFile = async (file?: File) => {
   if (!file) return undefined
   const { data: res } = await uploadMerchantApplicationFile(file)
-  return (res.data as any)?.url as string | undefined
+  if (res.code !== 200 || !res.data?.url) {
+    throw new Error(res.message || '文件上传失败')
+  }
+  return res.data.url as string
 }
 
 const handleApplicationSubmit = async () => {
   applicationError.value = ''
   await applicationFormRef.value?.validate()
-
-  const hasIdCard = Boolean(files.idCardFront && files.idCardBack)
-  const hasPassport = Boolean(files.passportPage)
-  const hasDriverLicense = Boolean(files.driverLicense)
-  if (!hasIdCard && !hasPassport && !hasDriverLicense) {
-    applicationError.value = '请上传身份证正反面、护照首页或驾驶证中的至少一种材料。'
-    return
-  }
-  if (!files.handheldVideo) {
-    applicationError.value = '请上传手持证件视频。'
-    return
-  }
+  if (!ensureRequiredFiles()) return
 
   applicationLoading.value = true
   try {
     const payload: MerchantApplicationPayload = {
-      email: applicationForm.value.email,
-      phone: applicationForm.value.phone,
-      password: applicationForm.value.password,
-      fullName: applicationForm.value.fullName,
-      age: applicationForm.value.age,
-      homeAddress: applicationForm.value.homeAddress,
+      email: applicationForm.email,
+      phone: applicationForm.phone,
+      password: applicationForm.password,
+      fullName: applicationForm.fullName,
+      age: applicationForm.age,
+      homeAddress: applicationForm.homeAddress,
+      documentType: applicationForm.documentType,
       idCardFrontUrl: await uploadOptionalFile(files.idCardFront),
       idCardBackUrl: await uploadOptionalFile(files.idCardBack),
       passportPageUrl: await uploadOptionalFile(files.passportPage),
@@ -170,12 +317,41 @@ const handleApplicationSubmit = async () => {
       applicationError.value = res.message || '提交失败'
       return
     }
-    ElMessage.success('申请已提交')
-    router.push({ path: '/login', query: { applicationSubmitted: '1' } })
+    localStorage.setItem(APPLICATION_ID_KEY, String(res.data.id))
+    applicationStatus.value = res.data.status
+    reviewRemark.value = ''
+    showForm.value = false
+    ElMessage.success('申请已提交，请等待审核')
+  } catch (error: any) {
+    applicationError.value = error?.response?.data?.message || error?.message || '提交失败，请稍后重试'
   } finally {
     applicationLoading.value = false
   }
 }
+
+const loadStoredStatus = async () => {
+  const id = localStorage.getItem(APPLICATION_ID_KEY)
+  if (!id) return
+  try {
+    const { data: res } = await getMerchantApplicationStatus(id)
+    if (res.code === 200 && res.data?.status) {
+      applicationStatus.value = res.data.status
+      reviewRemark.value = res.data.reviewRemark || ''
+      showForm.value = false
+    }
+  } catch {
+    localStorage.removeItem(APPLICATION_ID_KEY)
+  }
+}
+
+const startResubmit = () => {
+  showForm.value = true
+  applicationStatus.value = ''
+  reviewRemark.value = ''
+  localStorage.removeItem(APPLICATION_ID_KEY)
+}
+
+onMounted(loadStoredStatus)
 </script>
 
 <style scoped lang="scss">
@@ -261,6 +437,10 @@ const handleApplicationSubmit = async () => {
   }
 }
 
+.status-alert {
+  margin-bottom: 18px;
+}
+
 .application-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -294,11 +474,6 @@ const handleApplicationSubmit = async () => {
   box-shadow: 0 0 0 1px #d8d8d8 inset;
 }
 
-:deep(.el-input__wrapper.is-focus),
-:deep(.el-textarea__inner:focus) {
-  box-shadow: 0 0 0 1px #111 inset;
-}
-
 .upload-group {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -322,6 +497,7 @@ const handleApplicationSubmit = async () => {
 
   b {
     color: #d93025;
+    margin-left: 2px;
   }
 
   input {
@@ -335,6 +511,10 @@ const handleApplicationSubmit = async () => {
     font-style: normal;
     word-break: break-all;
   }
+}
+
+.privacy-item {
+  margin-top: 14px;
 }
 
 .error-text {

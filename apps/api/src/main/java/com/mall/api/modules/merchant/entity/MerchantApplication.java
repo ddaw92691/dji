@@ -32,6 +32,9 @@ public class MerchantApplication implements Serializable {
     @TableField("home_address")
     private String homeAddress;
 
+    @TableField("document_type")
+    private String documentType;
+
     @TableField("id_card_front_url")
     private String idCardFrontUrl;
 
@@ -51,6 +54,18 @@ public class MerchantApplication implements Serializable {
 
     @TableField("review_remark")
     private String reviewRemark;
+
+    @TableField("reviewed_by")
+    private Long reviewedBy;
+
+    @TableField("reviewed_at")
+    private LocalDateTime reviewedAt;
+
+    @TableField("user_id")
+    private Long userId;
+
+    @TableField("merchant_id")
+    private Long merchantId;
 
     @TableField("created_at")
     private LocalDateTime createdAt;

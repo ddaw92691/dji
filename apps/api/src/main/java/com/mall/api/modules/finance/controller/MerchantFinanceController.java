@@ -1,8 +1,15 @@
 package com.mall.api.modules.finance.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mall.api.common.enums.ResultCode;
+import com.mall.api.common.exception.BusinessException;
 import com.mall.api.common.response.ApiResponse;
 import com.mall.api.modules.commission.CommissionService;
 import com.mall.api.modules.finance.FinanceService;
+import com.mall.api.modules.merchant.entity.Merchant;
+import com.mall.api.modules.merchant.entity.MerchantFundLog;
+import com.mall.api.modules.merchant.mapper.MerchantMapper;
+import com.mall.api.modules.merchant.service.MerchantFundService;
 import com.mall.api.modules.withdrawal.WithdrawalService;
 import com.mall.api.modules.withdrawal.entity.Withdrawal;
 import com.mall.api.security.SecurityUtils;
@@ -12,6 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -23,13 +31,43 @@ public class MerchantFinanceController {
     private final FinanceService financeService;
     private final CommissionService commissionService;
     private final WithdrawalService withdrawalService;
+    private final MerchantFundService merchantFundService;
+    private final MerchantMapper merchantMapper;
 
     public MerchantFinanceController(FinanceService financeService,
                                       CommissionService commissionService,
-                                      WithdrawalService withdrawalService) {
+                                      WithdrawalService withdrawalService,
+                                      MerchantFundService merchantFundService,
+                                      MerchantMapper merchantMapper) {
         this.financeService = financeService;
         this.commissionService = commissionService;
         this.withdrawalService = withdrawalService;
+        this.merchantFundService = merchantFundService;
+        this.merchantMapper = merchantMapper;
+    }
+
+    @GetMapping("/fund-logs")
+    @Operation(summary = "我的资金流水")
+    public ApiResponse<Map<String, Object>> getFundLogs(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        if (!SecurityUtils.hasRole("MERCHANT")) {
+            throw new BusinessException(ResultCode.FORBIDDEN.getCode(), "仅商家可查看资金流水");
+        }
+        Long userId = SecurityUtils.getCurrentUserId();
+        Merchant merchant = userId == null ? null : merchantMapper.selectByUserId(userId);
+        if (merchant == null) {
+            throw new BusinessException(ResultCode.FORBIDDEN.getCode(), "Merchant profile not found");
+        }
+        Page<MerchantFundLog> pg = merchantFundService.getFundLogs(merchant.getId(), page, pageSize);
+        Map<String, Object> result = new HashMap<>();
+        result.put("list", pg.getRecords());
+        result.put("total", pg.getTotal());
+        result.put("page", page);
+        result.put("pageSize", pageSize);
+        result.put("balance", merchant.getBalance());
+        result.put("frozenBalance", merchant.getFrozenBalance());
+        return ApiResponse.success(result);
     }
 
     @GetMapping("/summary")

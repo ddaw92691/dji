@@ -39,4 +39,5 @@ export const financeApi = {
   rejectWithdrawal: (id: number, rejectReason: string) => request.put<ICommonResponse<any>>('/admin/withdrawals/' + id + '/reject', { rejectReason }),
   getCommissions: (params: any) => request.get<ICommonResponse<{list:IAdminCommission[];total:number}>>('/admin/commissions', { params }),
   getPayments: (params: any) => request.get<ICommonResponse<{list:IAdminPayment[];total:number}>>('/admin/payments', { params }),
+  getFundLogs: (params: any) => request.get<ICommonResponse<{list:any[];total:number}>>('/admin/finance/fund-logs', { params }),
 }

@@ -21,6 +21,31 @@
         >
           Ship
         </el-button>
+        <el-button
+          v-if="isAdvanceOrder(row) && row.merchantPaidStatus === 'UNPAID'"
+          type="warning"
+          link
+          @click="openPayGoods(row)"
+        >
+          支付货款
+        </el-button>
+      </template>
+      <template #advance="{ row }">
+        <template v-if="isAdvanceOrder(row)">
+          <BaseTag
+            :type="row.settleStatus === 'SETTLED' ? 'success' : row.merchantPaidStatus === 'PAID' ? 'warning' : 'info'"
+            :text="advanceText(row)"
+          />
+        </template>
+        <span v-else>-</span>
+      </template>
+      <template #arrival="{ row }">
+        <template v-if="isAdvanceOrder(row)">
+          <span v-if="row.merchantPaidStatus !== 'PAID'">-</span>
+          <span v-else-if="row.arrivalStatus === 'ARRIVED'">已到货</span>
+          <span v-else>{{ row.expectedArrivalAt || '等待平台设置' }}</span>
+        </template>
+        <span v-else>-</span>
       </template>
       <template #status="{ row }">
         <BaseTag
@@ -120,6 +145,23 @@
         <el-button type="primary" :loading="shipLoading" @click="handleShip">Confirm Ship</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="payGoodsVisible" title="支付货款" width="460px">
+      <p class="pay-goods-tip">
+        将从可用余额扣除货款 <strong>{{ payGoodsRow?.goodsCost ?? 0 }}</strong>，
+        到货并经平台结算后返还货款+利润。
+      </p>
+      <el-form label-width="120px">
+        <el-form-item label="预计到货天数">
+          <el-input-number v-model="expectedDays" :min="0" :max="180" />
+          <span style="margin-left: 8px; color: var(--el-text-color-secondary)">天后到货</span>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="payGoodsVisible = false">取消</el-button>
+        <el-button type="primary" :loading="payGoodsLoading" @click="handlePayGoods">确认支付</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -146,6 +188,20 @@ const shipVisible = ref(false)
 const shipLoading = ref(false)
 const shippingId = ref<number | null>(null)
 const shipForm = reactive({ logisticsCompany: '', trackingNo: '' })
+
+const payGoodsVisible = ref(false)
+const payGoodsLoading = ref(false)
+const payGoodsRow = ref<IMerchantOrder | null>(null)
+const expectedDays = ref(7)
+
+const isAdvanceOrder = (row: IMerchantOrder) =>
+  !!row.orderSource && row.orderSource !== 'CUSTOMER'
+
+const advanceText = (row: IMerchantOrder) => {
+  if (row.settleStatus === 'SETTLED') return '已结算'
+  if (row.merchantPaidStatus === 'PAID') return '已垫付'
+  return '待垫付'
+}
 
 const searchFormConfig = ref<IFormConfig[]>([
   {
@@ -174,6 +230,8 @@ const columns = ref([
   { prop: 'payAmount', label: 'Amount', width: 100 },
   { prop: 'status', label: 'Status', width: 110 },
   { prop: 'payStatus', label: 'Payment', width: 110 },
+  { prop: 'advance', label: '垫付/结算', width: 110 },
+  { prop: 'arrival', label: '预计到货/到货', minWidth: 150 },
   { prop: 'logistics', label: 'Logistics', minWidth: 180 },
   { prop: 'createdAt', label: 'Created', minWidth: 160 },
   { prop: 'operation', label: 'Actions', width: 160, fixed: 'right' },
@@ -234,6 +292,31 @@ const resetShipForm = () => {
   shipFormRef.value?.resetFields()
 }
 
+const openPayGoods = (row: IMerchantOrder) => {
+  payGoodsRow.value = row
+  expectedDays.value = 7
+  payGoodsVisible.value = true
+}
+
+const handlePayGoods = async () => {
+  if (!payGoodsRow.value) return
+  payGoodsLoading.value = true
+  try {
+    const { data: res } = await orderApi.payGoods(payGoodsRow.value.id, {
+      expectedDays: expectedDays.value,
+    })
+    if (res.code !== 200) {
+      ElMessage.error(res.message || '支付失败')
+      return
+    }
+    ElMessage.success('货款已支付')
+    payGoodsVisible.value = false
+    basePageRef.value?.refreshCurrentPage()
+  } finally {
+    payGoodsLoading.value = false
+  }
+}
+
 onMounted(() => {
   getOrderList({}, 1, 10)
 })
@@ -242,4 +325,5 @@ onMounted(() => {
 <style scoped>
 .order-detail p { margin: 4px 0; }
 .address-info { background: #f5f7fa; padding: 12px; border-radius: 6px; }
+.pay-goods-tip { margin: 0 0 12px; color: var(--el-text-color-regular); line-height: 1.6; }
 </style>

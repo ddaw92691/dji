@@ -5,14 +5,20 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mall.api.common.enums.ResultCode;
 import com.mall.api.common.exception.BusinessException;
 import com.mall.api.common.response.ApiResponse;
+import com.mall.api.modules.log.annotation.Audit;
 import com.mall.api.modules.merchant.entity.Merchant;
+import com.mall.api.modules.merchant.entity.MerchantFundLog;
+import com.mall.api.modules.merchant.entity.WithdrawAccount;
 import com.mall.api.modules.merchant.mapper.MerchantMapper;
+import com.mall.api.modules.merchant.mapper.WithdrawAccountMapper;
+import com.mall.api.modules.merchant.service.MerchantFundService;
 import com.mall.api.modules.system.entity.SysRole;
 import com.mall.api.modules.system.entity.SysUserRole;
 import com.mall.api.modules.system.mapper.SysRoleMapper;
 import com.mall.api.modules.system.mapper.SysUserRoleMapper;
 import com.mall.api.modules.user.entity.User;
 import com.mall.api.modules.user.mapper.UserMapper;
+import com.mall.api.security.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,7 +31,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/admin/merchants")
+@RequestMapping({"/api/admin/merchants", "/api/v1/admin/merchants"})
 @Tag(name = "Admin 商家管理")
 @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
 public class AdminMerchantController {
@@ -35,15 +41,21 @@ public class AdminMerchantController {
     private final PasswordEncoder passwordEncoder;
     private final SysRoleMapper sysRoleMapper;
     private final SysUserRoleMapper sysUserRoleMapper;
+    private final MerchantFundService merchantFundService;
+    private final WithdrawAccountMapper withdrawAccountMapper;
 
     public AdminMerchantController(UserMapper userMapper, MerchantMapper merchantMapper,
                                    PasswordEncoder passwordEncoder, SysRoleMapper sysRoleMapper,
-                                   SysUserRoleMapper sysUserRoleMapper) {
+                                   SysUserRoleMapper sysUserRoleMapper,
+                                   MerchantFundService merchantFundService,
+                                   WithdrawAccountMapper withdrawAccountMapper) {
         this.userMapper = userMapper;
         this.merchantMapper = merchantMapper;
         this.passwordEncoder = passwordEncoder;
         this.sysRoleMapper = sysRoleMapper;
         this.sysUserRoleMapper = sysUserRoleMapper;
+        this.merchantFundService = merchantFundService;
+        this.withdrawAccountMapper = withdrawAccountMapper;
     }
 
     @GetMapping
@@ -207,5 +219,184 @@ public class AdminMerchantController {
             }
         }
         return ApiResponse.success();
+    }
+
+    @GetMapping("/{id}/fund-logs")
+    @Operation(summary = "商家资金流水")
+    public ApiResponse<Map<String, Object>> fundLogs(@PathVariable Long id,
+                                                     @RequestParam(defaultValue = "1") int page,
+                                                     @RequestParam(defaultValue = "10") int pageSize) {
+        Merchant merchant = merchantMapper.selectById(id);
+        if (merchant == null || Boolean.TRUE.equals(merchant.getDeleted())) {
+            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "商家不存在");
+        }
+        Page<MerchantFundLog> pg = merchantFundService.getFundLogs(id, page, pageSize);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("list", pg.getRecords());
+        result.put("total", pg.getTotal());
+        result.put("page", page);
+        result.put("pageSize", pageSize);
+        result.put("balance", merchant.getBalance());
+        result.put("frozenBalance", merchant.getFrozenBalance());
+        return ApiResponse.success(result);
+    }
+
+    @PostMapping("/{id}/fund-adjust")
+    @Operation(summary = "调整商家资金（增加/扣减）")
+    @Audit(module = "商家管理", action = "调整资金", description = "总后台手动调整商家可用余额")
+    public ApiResponse<MerchantFundLog> fundAdjust(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        BigDecimal amount = toAmount(body.get("amount"));
+        String direction = String.valueOf(body.getOrDefault("direction", "INCREASE"));
+        boolean increase = !"DECREASE".equalsIgnoreCase(direction);
+        String remark = requireReason(body);
+        String type = increase ? "admin_add" : "admin_subtract";
+        MerchantFundLog log = merchantFundService.adjust(
+                id, amount, increase, type, remark, SecurityUtils.getCurrentUserId(), "ADMIN_ADJUST", null);
+        return ApiResponse.success(log);
+    }
+
+    @GetMapping("/{id}/wallet")
+    @Operation(summary = "Wallet summary")
+    public ApiResponse<Map<String, Object>> wallet(@PathVariable Long id) {
+        return ApiResponse.success(merchantFundService.walletSummary(id));
+    }
+
+    @PostMapping("/{id}/wallet/add")
+    @Operation(summary = "Admin add merchant funds")
+    @Audit(module = "Merchant", action = "Add funds", description = "Admin adds available balance to merchant")
+    public ApiResponse<MerchantFundLog> addWallet(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        MerchantFundLog log = merchantFundService.adjust(id, toAmount(body.get("amount")), true,
+                "admin_add", requireReason(body), SecurityUtils.getCurrentUserId(), "ADMIN_ADJUST", null);
+        return ApiResponse.success(log);
+    }
+
+    @PostMapping("/{id}/wallet/subtract")
+    @Operation(summary = "Admin subtract merchant funds")
+    @Audit(module = "Merchant", action = "Subtract funds", description = "Admin subtracts available balance from merchant")
+    public ApiResponse<MerchantFundLog> subtractWallet(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        MerchantFundLog log = merchantFundService.adjust(id, toAmount(body.get("amount")), false,
+                "admin_subtract", requireReason(body), SecurityUtils.getCurrentUserId(), "ADMIN_ADJUST", null);
+        return ApiResponse.success(log);
+    }
+
+    @PostMapping("/{id}/wallet/freeze")
+    @Operation(summary = "Admin freeze merchant funds")
+    @Audit(module = "Merchant", action = "Freeze funds", description = "Admin freezes merchant available balance")
+    public ApiResponse<MerchantFundLog> freezeWallet(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        MerchantFundLog log = merchantFundService.freeze(id, toAmount(body.get("amount")),
+                "freeze", requireReason(body), SecurityUtils.getCurrentUserId(), "ADMIN_ADJUST", null);
+        return ApiResponse.success(log);
+    }
+
+    @PostMapping("/{id}/wallet/unfreeze")
+    @Operation(summary = "Admin unfreeze merchant funds")
+    @Audit(module = "Merchant", action = "Unfreeze funds", description = "Admin unfreezes merchant frozen balance")
+    public ApiResponse<MerchantFundLog> unfreezeWallet(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        MerchantFundLog log = merchantFundService.unfreeze(id, toAmount(body.get("amount")),
+                "unfreeze", requireReason(body), SecurityUtils.getCurrentUserId(), "ADMIN_ADJUST", null);
+        return ApiResponse.success(log);
+    }
+
+    @PutMapping("/{id}/login-password")
+    @Operation(summary = "重置商家登录密码")
+    @Audit(module = "商家管理", action = "重置登录密码", description = "总后台重置商家登录密码")
+    public ApiResponse<Void> resetLoginPassword(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        String password = body.get("password");
+        if (password == null || password.length() < 6) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "密码长度至少6位");
+        }
+        Merchant merchant = merchantMapper.selectById(id);
+        if (merchant == null || Boolean.TRUE.equals(merchant.getDeleted()) || merchant.getUserId() == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "商家不存在");
+        }
+        User user = userMapper.selectById(merchant.getUserId());
+        if (user == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "商家账号不存在");
+        }
+        user.setPassword(passwordEncoder.encode(password));
+        user.setUpdatedAt(LocalDateTime.now());
+        userMapper.updateById(user);
+        return ApiResponse.success();
+    }
+
+    @PutMapping("/{id}/withdraw-password")
+    @Operation(summary = "重置商家提现密码")
+    @Audit(module = "商家管理", action = "重置提现密码", description = "总后台重置商家提现密码")
+    public ApiResponse<Void> resetWithdrawPassword(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        String password = body.get("password");
+        if (password == null || password.length() < 6) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "提现密码长度至少6位");
+        }
+        Merchant merchant = merchantMapper.selectById(id);
+        if (merchant == null || Boolean.TRUE.equals(merchant.getDeleted())) {
+            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "商家不存在");
+        }
+        merchant.setWithdrawPassword(passwordEncoder.encode(password));
+        merchant.setUpdatedAt(LocalDateTime.now());
+        merchantMapper.updateById(merchant);
+        return ApiResponse.success();
+    }
+
+    @GetMapping("/{id}/withdraw-accounts")
+    @Operation(summary = "商家提款账户（只读）")
+    public ApiResponse<List<Map<String, Object>>> withdrawAccounts(@PathVariable Long id) {
+        Merchant merchant = merchantMapper.selectById(id);
+        if (merchant == null || Boolean.TRUE.equals(merchant.getDeleted())) {
+            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "商家不存在");
+        }
+        List<WithdrawAccount> list = withdrawAccountMapper.selectList(new LambdaQueryWrapper<WithdrawAccount>()
+                .eq(WithdrawAccount::getMerchantId, id)
+                .eq(WithdrawAccount::getDeleted, false)
+                .orderByDesc(WithdrawAccount::getIsDefault)
+                .orderByDesc(WithdrawAccount::getCreatedAt));
+        return ApiResponse.success(list.stream().map(account -> {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("id", account.getId());
+            item.put("merchantId", account.getMerchantId());
+            item.put("type", account.getType());
+            item.put("chain", account.getChain());
+            item.put("address", maskSensitive(account.getAddress(), 6, 4));
+            item.put("bankName", account.getBankName());
+            item.put("accountNo", maskSensitive(account.getAccountNo(), 4, 4));
+            item.put("accountName", account.getAccountName());
+            item.put("swiftCode", account.getSwiftCode());
+            item.put("country", account.getCountry());
+            item.put("remark", account.getRemark());
+            item.put("isDefault", account.getIsDefault());
+            item.put("status", account.getStatus());
+            item.put("createdAt", account.getCreatedAt());
+            return item;
+        }).toList());
+    }
+
+    private BigDecimal toAmount(Object value) {
+        if (value == null) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "金额不能为空");
+        }
+        try {
+            BigDecimal amount = new BigDecimal(String.valueOf(value).trim());
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Amount must be greater than 0");
+            }
+            return amount;
+        } catch (NumberFormatException e) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "金额格式不正确");
+        }
+    }
+
+    private String requireReason(Map<String, Object> body) {
+        Object value = body == null ? null : body.getOrDefault("reason", body.get("remark"));
+        String reason = value == null ? "" : String.valueOf(value).trim();
+        if (reason.isEmpty()) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Reason is required");
+        }
+        return reason;
+    }
+
+    private String maskSensitive(String value, int prefix, int suffix) {
+        if (value == null || value.isBlank()) return value;
+        String text = value.trim();
+        if (text.length() <= prefix + suffix) return "****";
+        return text.substring(0, prefix) + "****" + text.substring(text.length() - suffix);
     }
 }

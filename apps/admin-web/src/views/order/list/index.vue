@@ -68,11 +68,55 @@
           </el-tag>
         </template>
       </el-table-column>
+      <el-table-column label="垫付/结算" width="110" align="center">
+        <template #default="{ row }">
+          <el-tag
+            v-if="isAdvanceOrder(row)"
+            :type="row.settleStatus === 'SETTLED' ? 'success' : row.merchantPaidStatus === 'PAID' ? 'warning' : 'info'"
+          >
+            {{ advanceText(row) }}
+          </el-tag>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="expectedArrivalAt" label="预计到货" width="170" />
+      <el-table-column label="到货状态" width="110" align="center">
+        <template #default="{ row }">
+          <el-tag v-if="isAdvanceOrder(row)" :type="row.arrivalStatus === 'ARRIVED' ? 'success' : 'info'">
+            {{ row.arrivalStatus === 'ARRIVED' ? '已到货' : '等待到货' }}
+          </el-tag>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="createdAt" label="创建时间" width="180" />
-      <el-table-column label="操作" width="180" fixed="right">
+      <el-table-column label="操作" width="330" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" v-permission="'order:view'" @click="openDetail(row.id)">详情</el-button>
           <el-button link type="warning" v-permission="'order:edit'" @click="openStatusEdit(row)">更新</el-button>
+          <el-button
+            v-if="isAdvanceOrder(row) && row.merchantPaidStatus === 'PAID' && row.settleStatus !== 'SETTLED'"
+            link
+            type="primary"
+            v-permission="'order:edit'"
+            @click="handleSetEstimatedArrival(row)"
+            >预计到货</el-button
+          >
+          <el-button
+            v-if="isAdvanceOrder(row) && row.merchantPaidStatus === 'PAID' && row.arrivalStatus !== 'ARRIVED'"
+            link
+            type="info"
+            v-permission="'order:edit'"
+            @click="handleMarkArrived(row)"
+            >到货</el-button
+          >
+          <el-button
+            v-if="isAdvanceOrder(row) && row.merchantPaidStatus === 'PAID' && row.arrivalStatus === 'ARRIVED' && row.settleStatus !== 'SETTLED'"
+            link
+            type="success"
+            v-permission="'order:edit'"
+            @click="handleSettle(row)"
+            >结算</el-button
+          >
         </template>
       </el-table-column>
     </el-table>
@@ -203,6 +247,74 @@ const editingOrderId = ref<number | null>(null)
 const EDITABLE_STATUS_OPTIONS = ORDER_STATUS_OPTIONS.filter(
   (o) => o.value !== 'pendingPayment'
 )
+
+const isAdvanceOrder = (row: IAdminOrder) =>
+  !!row.orderSource && row.orderSource !== 'CUSTOMER'
+
+const advanceText = (row: IAdminOrder) => {
+  if (row.settleStatus === 'SETTLED') return '已结算'
+  if (row.merchantPaidStatus === 'PAID') return '待结算'
+  return '待垫付'
+}
+
+const handleSetEstimatedArrival = async (row: IAdminOrder) => {
+  try {
+    const defaultValue =
+      row.expectedArrivalAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 19)
+    const { value } = await ElMessageBox.prompt(
+      '请输入预计到货时间，格式：YYYY-MM-DDTHH:mm:ss',
+      '设置预计到货',
+      { confirmButtonText: '保存', cancelButtonText: '取消', inputValue: defaultValue },
+    )
+    const { data: res } = await orderApi.setEstimatedArrival(row.id, { expectedArrivalAt: value })
+    if (res.code === 200) {
+      ElMessage.success('预计到货时间已更新')
+      fetchData()
+    } else {
+      ElMessage.error(res.message || '设置失败')
+    }
+  } catch {
+    /* canceled */
+  }
+}
+
+const handleMarkArrived = async (row: IAdminOrder) => {
+  try {
+    await ElMessageBox.confirm(`确认订单 ${row.orderNo} 已到货？`, '标记到货', {
+      confirmButtonText: '确认到货',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    const { data: res } = await orderApi.markArrived(row.id)
+    if (res.code === 200) {
+      ElMessage.success('已标记到货')
+      fetchData()
+    } else {
+      ElMessage.error(res.message || '标记失败')
+    }
+  } catch {
+    /* canceled */
+  }
+}
+
+const handleSettle = async (row: IAdminOrder) => {
+  try {
+    await ElMessageBox.confirm(
+      `确认结算订单 ${row.orderNo}？货款 ${row.goodsCost ?? 0} + 利润 ${row.merchantProfit ?? 0} 将返还商家余额。`,
+      '结算货款',
+      { confirmButtonText: '确认结算', cancelButtonText: '取消', type: 'warning' },
+    )
+    const { data: res } = await orderApi.settle(row.id)
+    if (res.code === 200) {
+      ElMessage.success('已结算')
+      fetchData()
+    } else {
+      ElMessage.error(res.message || '结算失败')
+    }
+  } catch {
+    /* canceled */
+  }
+}
 
 const statusStep = computed(() => {
   if (!detail.value) return 0

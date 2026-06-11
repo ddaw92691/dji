@@ -52,6 +52,9 @@ public class AuthServiceImpl implements AuthService {
 
     private static final String CUSTOMER_ROLE = "CUSTOMER";
     private static final String PENDING_STATUS = "PENDING";
+    private static final String DOC_ID_CARD = "id_card";
+    private static final String DOC_PASSPORT = "passport";
+    private static final String DOC_DRIVER_LICENSE = "driver_license";
 
     public AuthServiceImpl(UserMapper userMapper, JwtTokenProvider jwtTokenProvider,
                            PasswordEncoder passwordEncoder, CountryMapper countryMapper,
@@ -148,17 +151,20 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "This phone number is already registered");
         }
 
-        MerchantApplication latest = merchantApplicationMapper.selectLatestByEmail(request.getEmail());
-        if (latest != null && PENDING_STATUS.equals(latest.getStatus())) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "A pending application already exists for this email");
+        MerchantApplication latest = merchantApplicationMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<MerchantApplication>()
+                        .eq(MerchantApplication::getDeleted, false)
+                        .eq(MerchantApplication::getStatus, PENDING_STATUS)
+                        .and(w -> w.eq(MerchantApplication::getEmail, request.getEmail())
+                                .or()
+                                .eq(MerchantApplication::getPhone, request.getPhone()))
+                        .orderByDesc(MerchantApplication::getCreatedAt)
+                        .last("LIMIT 1"));
+        if (latest != null) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "A pending application already exists for this email or phone");
         }
 
-        boolean hasIdCard = hasText(request.getIdCardFrontUrl()) && hasText(request.getIdCardBackUrl());
-        boolean hasPassport = hasText(request.getPassportPageUrl());
-        boolean hasDriverLicense = hasText(request.getDriverLicenseUrl());
-        if (!hasIdCard && !hasPassport && !hasDriverLicense) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Please upload ID card front/back, passport page, or driver license");
-        }
+        validateMerchantApplicationDocument(request);
 
         MerchantApplication application = new MerchantApplication();
         application.setEmail(request.getEmail());
@@ -167,6 +173,7 @@ public class AuthServiceImpl implements AuthService {
         application.setFullName(request.getFullName());
         application.setAge(request.getAge());
         application.setHomeAddress(request.getHomeAddress());
+        application.setDocumentType(request.getDocumentType());
         application.setIdCardFrontUrl(request.getIdCardFrontUrl());
         application.setIdCardBackUrl(request.getIdCardBackUrl());
         application.setPassportPageUrl(request.getPassportPageUrl());
@@ -324,6 +331,27 @@ public class AuthServiceImpl implements AuthService {
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private void validateMerchantApplicationDocument(MerchantApplicationRequest request) {
+        String documentType = request.getDocumentType();
+        if (!DOC_ID_CARD.equals(documentType) && !DOC_PASSPORT.equals(documentType)
+                && !DOC_DRIVER_LICENSE.equals(documentType)) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Invalid document type");
+        }
+        if (DOC_ID_CARD.equals(documentType)
+                && (!hasText(request.getIdCardFrontUrl()) || !hasText(request.getIdCardBackUrl()))) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Please upload ID card front and back");
+        }
+        if (DOC_PASSPORT.equals(documentType) && !hasText(request.getPassportPageUrl())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Please upload passport page");
+        }
+        if (DOC_DRIVER_LICENSE.equals(documentType) && !hasText(request.getDriverLicenseUrl())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Please upload driver license");
+        }
+        if (!hasText(request.getHandheldDocumentVideoUrl())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Please upload handheld document video");
+        }
     }
 
     private UserInfo toUserInfo(User user) {

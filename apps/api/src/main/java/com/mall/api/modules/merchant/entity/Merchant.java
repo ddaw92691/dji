@@ -42,6 +42,9 @@ public class Merchant implements Serializable {
     @TableField("total_withdrawn")
     private BigDecimal totalWithdrawn;
 
+    @TableField("withdraw_password")
+    private String withdrawPassword;
+
     private String status;
     private Boolean deleted;
     private LocalDateTime createdAt;

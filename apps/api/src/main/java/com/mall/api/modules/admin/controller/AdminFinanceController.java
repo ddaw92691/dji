@@ -4,6 +4,10 @@ import com.mall.api.common.response.ApiResponse;
 import com.mall.api.modules.commission.CommissionService;
 import com.mall.api.modules.export.ExportService;
 import com.mall.api.modules.finance.FinanceService;
+import com.mall.api.modules.merchant.entity.Merchant;
+import com.mall.api.modules.merchant.entity.MerchantFundLog;
+import com.mall.api.modules.merchant.mapper.MerchantFundLogMapper;
+import com.mall.api.modules.merchant.mapper.MerchantMapper;
 import com.mall.api.modules.payment.entity.Payment;
 import com.mall.api.modules.payment.mapper.PaymentMapper;
 import com.mall.api.modules.withdrawal.WithdrawalService;
@@ -18,7 +22,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -32,23 +39,77 @@ public class AdminFinanceController {
     private final CommissionService commissionService;
     private final PaymentMapper paymentMapper;
     private final ExportService exportService;
+    private final MerchantFundLogMapper merchantFundLogMapper;
+    private final MerchantMapper merchantMapper;
 
     public AdminFinanceController(FinanceService financeService,
                                    WithdrawalService withdrawalService,
                                    CommissionService commissionService,
                                    PaymentMapper paymentMapper,
-                                   ExportService exportService) {
+                                   ExportService exportService,
+                                   MerchantFundLogMapper merchantFundLogMapper,
+                                   MerchantMapper merchantMapper) {
         this.financeService = financeService;
         this.withdrawalService = withdrawalService;
         this.commissionService = commissionService;
         this.paymentMapper = paymentMapper;
         this.exportService = exportService;
+        this.merchantFundLogMapper = merchantFundLogMapper;
+        this.merchantMapper = merchantMapper;
     }
 
     @GetMapping("/finance/overview")
     @Operation(summary = "平台财务概览")
     public ApiResponse<Map<String, Object>> getOverview() {
         return ApiResponse.success(financeService.getAdminOverview());
+    }
+
+    @GetMapping("/finance/fund-logs")
+    @Operation(summary = "对账：商家资金流水（全局）")
+    public ApiResponse<Map<String, Object>> getFundLogs(
+            @RequestParam(required = false) Long merchantId,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        LambdaQueryWrapper<MerchantFundLog> wrapper = Wrappers.<MerchantFundLog>lambdaQuery()
+                .eq(merchantId != null, MerchantFundLog::getMerchantId, merchantId)
+                .eq(type != null && !type.isBlank(), MerchantFundLog::getType, type)
+                .ge(startDate != null && !startDate.isBlank(), MerchantFundLog::getCreatedAt, startDate)
+                .le(endDate != null && !endDate.isBlank(), MerchantFundLog::getCreatedAt, endDate)
+                .orderByDesc(MerchantFundLog::getCreatedAt);
+        Page<MerchantFundLog> pg = merchantFundLogMapper.selectPage(new Page<>(page, pageSize), wrapper);
+
+        List<Map<String, Object>> list = new ArrayList<>();
+        Map<Long, String> shopNameCache = new HashMap<>();
+        for (MerchantFundLog logItem : pg.getRecords()) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("id", logItem.getId());
+            item.put("merchantId", logItem.getMerchantId());
+            item.put("type", logItem.getType());
+            item.put("amount", logItem.getAmount());
+            item.put("balanceBefore", logItem.getBalanceBefore());
+            item.put("balanceAfter", logItem.getBalanceAfter());
+            item.put("refType", logItem.getRefType());
+            item.put("refId", logItem.getRefId());
+            item.put("remark", logItem.getRemark());
+            item.put("createdAt", logItem.getCreatedAt());
+            Long mid = logItem.getMerchantId();
+            String shopName = shopNameCache.computeIfAbsent(mid, k -> {
+                Merchant m = merchantMapper.selectById(k);
+                return m != null ? m.getShopName() : null;
+            });
+            item.put("shopName", shopName);
+            list.add(item);
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("list", list);
+        result.put("total", pg.getTotal());
+        result.put("page", page);
+        result.put("pageSize", pageSize);
+        return ApiResponse.success(result);
     }
 
     @GetMapping("/withdrawals")

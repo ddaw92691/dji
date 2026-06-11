@@ -114,6 +114,77 @@ CREATE TABLE IF NOT EXISTS merchant (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS uk_merchant_user ON merchant(user_id);
 
+-- 商家独立提现密码（与登录密码分离）
+ALTER TABLE merchant ADD COLUMN IF NOT EXISTS withdraw_password VARCHAR(255);
+
+-- 商家资金流水
+CREATE TABLE IF NOT EXISTS merchant_fund_log (
+    id              BIGINT          PRIMARY KEY,
+    merchant_id     BIGINT          NOT NULL,
+    type            VARCHAR(40)     NOT NULL,
+    amount          NUMERIC(18,2)   NOT NULL,
+    balance_before  NUMERIC(18,2),
+    balance_after   NUMERIC(18,2),
+    frozen_balance_before NUMERIC(18,2),
+    frozen_balance_after  NUMERIC(18,2),
+    operator_type   VARCHAR(20),
+    reason          VARCHAR(500),
+    related_order_id BIGINT,
+    related_recharge_id BIGINT,
+    ref_type        VARCHAR(50),
+    ref_id          BIGINT,
+    remark          VARCHAR(500),
+    operator_id     BIGINT,
+    created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_merchant_fund_log_merchant ON merchant_fund_log(merchant_id);
+CREATE INDEX IF NOT EXISTS idx_merchant_fund_log_created ON merchant_fund_log(created_at);
+
+-- 提款账户（加密货币 / 银行）
+CREATE TABLE IF NOT EXISTS withdraw_account (
+    id              BIGINT          PRIMARY KEY,
+    merchant_id     BIGINT          NOT NULL,
+    user_id         BIGINT,
+    type            VARCHAR(20)     NOT NULL,
+    chain           VARCHAR(50),
+    address         VARCHAR(255),
+    bank_name       VARCHAR(200),
+    account_no      VARCHAR(100),
+    account_name    VARCHAR(100),
+    swift_code      VARCHAR(50),
+    country         VARCHAR(100),
+    remark          VARCHAR(500),
+    is_default      BOOLEAN         NOT NULL DEFAULT FALSE,
+    status          VARCHAR(20)     NOT NULL DEFAULT 'ENABLE',
+    deleted         BOOLEAN         NOT NULL DEFAULT FALSE,
+    created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_withdraw_account_merchant ON withdraw_account(merchant_id);
+
+-- 商家充值订单
+CREATE TABLE IF NOT EXISTS recharge_order (
+    id              BIGINT          PRIMARY KEY,
+    recharge_no     VARCHAR(50)     NOT NULL,
+    merchant_id     BIGINT          NOT NULL,
+    user_id         BIGINT,
+    amount          NUMERIC(18,2)   NOT NULL,
+    currency        VARCHAR(10)     NOT NULL DEFAULT 'JPY',
+    method          VARCHAR(50),
+    proof_url       VARCHAR(500),
+    status          VARCHAR(20)     NOT NULL DEFAULT 'PENDING',
+    remark          VARCHAR(500),
+    reject_reason   VARCHAR(500),
+    reviewed_by     BIGINT,
+    reviewed_at     TIMESTAMP,
+    deleted         BOOLEAN         NOT NULL DEFAULT FALSE,
+    created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_recharge_no ON recharge_order(recharge_no);
+CREATE INDEX IF NOT EXISTS idx_recharge_merchant ON recharge_order(merchant_id);
+CREATE INDEX IF NOT EXISTS idx_recharge_status ON recharge_order(status);
+
 -- Merchant Application
 CREATE TABLE IF NOT EXISTS merchant_application (
     id                          BIGINT          PRIMARY KEY,
@@ -123,6 +194,7 @@ CREATE TABLE IF NOT EXISTS merchant_application (
     full_name                   VARCHAR(100)    NOT NULL,
     age                         INTEGER         NOT NULL,
     home_address                VARCHAR(500)    NOT NULL,
+    document_type               VARCHAR(30)     NOT NULL DEFAULT 'id_card',
     id_card_front_url           VARCHAR(500),
     id_card_back_url            VARCHAR(500),
     passport_page_url           VARCHAR(500),
@@ -130,12 +202,17 @@ CREATE TABLE IF NOT EXISTS merchant_application (
     handheld_document_video_url VARCHAR(500)    NOT NULL,
     status                      VARCHAR(30)     NOT NULL DEFAULT 'PENDING',
     review_remark               VARCHAR(500),
+    reviewed_by                 BIGINT,
+    reviewed_at                 TIMESTAMP,
+    user_id                     BIGINT,
+    merchant_id                 BIGINT,
     deleted                     BOOLEAN         NOT NULL DEFAULT FALSE,
     created_at                  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at                  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_merchant_application_email ON merchant_application(email);
 CREATE INDEX IF NOT EXISTS idx_merchant_application_status ON merchant_application(status);
+CREATE INDEX IF NOT EXISTS idx_merchant_application_merchant ON merchant_application(merchant_id);
 
 -- 8. Agent
 CREATE TABLE IF NOT EXISTS agent (
@@ -901,6 +978,37 @@ ALTER TABLE product ADD COLUMN IF NOT EXISTS listed_at TIMESTAMP;
 ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS order_source VARCHAR(50) DEFAULT 'CUSTOMER';
 ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS created_by_admin BIGINT;
 ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS virtual_customer_id BIGINT;
+
+-- 订单：商家垫付货款 / 结算（双订单模型）
+ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS goods_cost NUMERIC(18,2);
+ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS merchant_profit NUMERIC(18,2);
+ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS merchant_paid_status VARCHAR(20) DEFAULT 'UNPAID';
+ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS merchant_paid_at TIMESTAMP;
+ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS expected_arrival_at TIMESTAMP;
+ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS arrival_status VARCHAR(20) DEFAULT 'WAITING';
+ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS arrived_at TIMESTAMP;
+ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS settlement_amount NUMERIC(18,2);
+ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS settle_status VARCHAR(20) DEFAULT 'NONE';
+ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS settled_at TIMESTAMP;
+ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS settlement_operator_id BIGINT;
+ALTER TABLE mall_order ADD COLUMN IF NOT EXISTS settlement_remark VARCHAR(500);
+
+CREATE TABLE IF NOT EXISTS order_settlement_record (
+    id                  BIGINT          PRIMARY KEY,
+    order_id            BIGINT          NOT NULL,
+    merchant_id         BIGINT          NOT NULL,
+    goods_cost          NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    merchant_profit     NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    settlement_amount   NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    status              VARCHAR(20)     NOT NULL DEFAULT 'SETTLED',
+    operator_id         BIGINT,
+    remark              VARCHAR(500),
+    settled_at          TIMESTAMP,
+    created_at          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_order_settlement_order ON order_settlement_record(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_settlement_merchant ON order_settlement_record(merchant_id);
 
 ALTER TABLE sys_user ADD COLUMN IF NOT EXISTS is_virtual BOOLEAN DEFAULT FALSE;
 ALTER TABLE sys_user ADD COLUMN IF NOT EXISTS virtual_remark VARCHAR(500);

@@ -17,13 +17,16 @@ import com.mall.api.modules.commission.CommissionService;
 import com.mall.api.modules.coupon.CouponService;
 import com.mall.api.modules.merchant.entity.Merchant;
 import com.mall.api.modules.merchant.mapper.MerchantMapper;
+import com.mall.api.modules.merchant.service.MerchantFundService;
 import com.mall.api.modules.notification.NotificationService;
 import com.mall.api.modules.order.dto.CreateOrderRequest;
 import com.mall.api.modules.order.dto.OrderResponse;
 import com.mall.api.modules.order.entity.MallOrder;
 import com.mall.api.modules.order.entity.OrderItem;
+import com.mall.api.modules.order.entity.OrderSettlementRecord;
 import com.mall.api.modules.order.mapper.MallOrderMapper;
 import com.mall.api.modules.order.mapper.OrderItemMapper;
+import com.mall.api.modules.order.mapper.OrderSettlementRecordMapper;
 import com.mall.api.modules.payment.entity.Payment;
 import com.mall.api.modules.payment.mapper.PaymentMapper;
 import com.mall.api.modules.product.entity.Product;
@@ -64,6 +67,8 @@ public class OrderService {
     private final NotificationService notificationService;
     private final RealtimeService realtimeService;
     private final CountryMapper countryMapper;
+    private final MerchantFundService merchantFundService;
+    private final OrderSettlementRecordMapper settlementRecordMapper;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public OrderService(MallOrderMapper orderMapper, OrderItemMapper orderItemMapper,
@@ -73,7 +78,8 @@ public class OrderService {
                         MerchantMapper merchantMapper,
                         CommissionService commissionService, CouponService couponService,
                         NotificationService notificationService, RealtimeService realtimeService,
-                        CountryMapper countryMapper) {
+                        CountryMapper countryMapper, MerchantFundService merchantFundService,
+                        OrderSettlementRecordMapper settlementRecordMapper) {
         this.orderMapper = orderMapper;
         this.orderItemMapper = orderItemMapper;
         this.cartItemMapper = cartItemMapper;
@@ -88,6 +94,8 @@ public class OrderService {
         this.notificationService = notificationService;
         this.realtimeService = realtimeService;
         this.countryMapper = countryMapper;
+        this.merchantFundService = merchantFundService;
+        this.settlementRecordMapper = settlementRecordMapper;
     }
 
     // ==================== CUSTOMER METHODS ====================
@@ -405,6 +413,42 @@ public class OrderService {
                 "ORDER_SHIPPED", "order", orderId);
     }
 
+    /**
+     * 商家垫付货款（双订单模型）：从商家可用余额扣除货款，标记已垫付并写入预计到货时间。
+     * 仅对 order_source != CUSTOMER 的垫付单生效；真实客户单不走此流程。
+     */
+    @Transactional
+    public void merchantPayGoods(Long merchantId, Long orderId, LocalDateTime expectedArrivalAt) {
+        MallOrder order = orderMapper.selectById(orderId);
+        if (order == null || !merchantId.equals(order.getMerchantId()) || Boolean.TRUE.equals(order.getDeleted())) {
+            throw new BusinessException(400, "error.order.notFound");
+        }
+        if (!isMerchantAdvanceOrder(order)) {
+            throw new BusinessException(400, "该订单不需要商家垫付货款");
+        }
+        if ("PAID".equals(order.getMerchantPaidStatus())) {
+            throw new BusinessException(400, "货款已支付");
+        }
+        BigDecimal goodsCost = order.getGoodsCost() != null ? order.getGoodsCost() : BigDecimal.ZERO;
+        if (goodsCost.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException(400, "货款金额无效");
+        }
+        // 扣减商家可用余额（余额不足会抛出“可用余额不足”）并写资金流水
+        merchantFundService.adjust(merchantId, goodsCost, false, "purchase_payment",
+                "Pay goods cost for order #" + order.getOrderNo(), merchantId, "ORDER", order.getId());
+
+        order.setMerchantPaidStatus("PAID");
+        order.setMerchantPaidAt(LocalDateTime.now());
+        order.setExpectedArrivalAt(expectedArrivalAt);
+        order.setArrivalStatus("WAITING");
+        order.setUpdatedAt(LocalDateTime.now());
+        orderMapper.updateById(order);
+    }
+
+    private boolean isMerchantAdvanceOrder(MallOrder order) {
+        return order.getOrderSource() != null && !"CUSTOMER".equals(order.getOrderSource());
+    }
+
     // ==================== ADMIN METHODS ====================
 
     public Map<String, Object> getAllOrders(String orderNo, Long userId, Long merchantId, String status,
@@ -567,6 +611,12 @@ public class OrderService {
             order.setOrderSource("ADMIN_CREATED");
             order.setCreatedByAdmin(adminId);
             order.setVirtualCustomerId(customer.getIsVirtual() != null && customer.getIsVirtual() ? customerId : null);
+            // 双订单模型：管理员/虚拟单走商家垫付货款流程
+            BigDecimal[] costProfit = computeGoodsCostAndProfit(orderItems);
+            order.setGoodsCost(costProfit[0]);
+            order.setMerchantProfit(costProfit[1]);
+            order.setMerchantPaidStatus("UNPAID");
+            order.setSettleStatus("NONE");
             order.setDeleted(false);
             order.setCreatedAt(LocalDateTime.now());
             order.setUpdatedAt(LocalDateTime.now());
@@ -597,13 +647,16 @@ public class OrderService {
                 deductStockForItem(product, oi.getQuantity());
             }
 
-            if (merchantId != null) {
-                BigDecimal frozen = merchant.getFrozenBalance() != null ? merchant.getFrozenBalance() : BigDecimal.ZERO;
-                merchant.setFrozenBalance(frozen.add(order.getPayAmount()));
-                merchantMapper.updateById(merchant);
+            // 垫付单不走客户付款经济模型：不冻结商家余额、不预生成佣金，
+            // 货款由商家垫付、利润在总后台结算时返还。
+            if (!isMerchantAdvanceOrder(order)) {
+                if (merchantId != null) {
+                    BigDecimal frozen = merchant.getFrozenBalance() != null ? merchant.getFrozenBalance() : BigDecimal.ZERO;
+                    merchant.setFrozenBalance(frozen.add(order.getPayAmount()));
+                    merchantMapper.updateById(merchant);
+                }
+                commissionService.createFrozenCommission(order);
             }
-
-            commissionService.createFrozenCommission(order);
 
             if (merchantId != null) {
                 String title = "Admin created Order #" + order.getOrderNo();
@@ -625,7 +678,144 @@ public class OrderService {
         }
     }
 
+    /**
+     * 总后台结算：到货后把货款+利润返还商家可用余额。
+     * 前置：该单为垫付单、商家已支付货款、尚未结算。
+     */
+    @Transactional
+    public void setEstimatedArrival(Long orderId, LocalDateTime expectedArrivalAt) {
+        MallOrder order = requireOrder(orderId);
+        if (!isMerchantAdvanceOrder(order)) {
+            throw new BusinessException(400, "Order does not require merchant advance payment");
+        }
+        if (!"PAID".equals(order.getMerchantPaidStatus())) {
+            throw new BusinessException(400, "Merchant has not paid goods cost");
+        }
+        order.setExpectedArrivalAt(expectedArrivalAt);
+        if (order.getArrivalStatus() == null) {
+            order.setArrivalStatus("WAITING");
+        }
+        order.setUpdatedAt(LocalDateTime.now());
+        orderMapper.updateById(order);
+    }
+
+    @Transactional
+    public void markArrived(Long orderId) {
+        MallOrder order = requireOrder(orderId);
+        if (!isMerchantAdvanceOrder(order)) {
+            throw new BusinessException(400, "Order does not require merchant advance payment");
+        }
+        if (!"PAID".equals(order.getMerchantPaidStatus())) {
+            throw new BusinessException(400, "Merchant has not paid goods cost");
+        }
+        order.setArrivalStatus("ARRIVED");
+        order.setArrivedAt(LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
+        orderMapper.updateById(order);
+    }
+
+    @Transactional
+    public void settleToMerchant(Long orderId) {
+        settleToMerchant(orderId, null, null);
+    }
+
+    @Transactional
+    public void settleToMerchant(Long orderId, Long operatorId, String remark) {
+        MallOrder order = orderMapper.selectById(orderId);
+        if (order == null || Boolean.TRUE.equals(order.getDeleted())) {
+            throw new BusinessException(400, "error.order.notFound");
+        }
+        if (!isMerchantAdvanceOrder(order)) {
+            throw new BusinessException(400, "该订单不需要结算货款");
+        }
+        if (!"PAID".equals(order.getMerchantPaidStatus())) {
+            throw new BusinessException(400, "商家尚未支付货款");
+        }
+        if ("SETTLED".equals(order.getSettleStatus())) {
+            throw new BusinessException(400, "该订单已结算");
+        }
+        if (!"ARRIVED".equals(order.getArrivalStatus())) {
+            throw new BusinessException(400, "Order has not arrived");
+        }
+        if (order.getMerchantId() == null) {
+            throw new BusinessException(400, "订单未关联商家");
+        }
+        BigDecimal goodsCost = order.getGoodsCost() != null ? order.getGoodsCost() : BigDecimal.ZERO;
+        BigDecimal profit = order.getMerchantProfit() != null ? order.getMerchantProfit() : BigDecimal.ZERO;
+        BigDecimal payback = goodsCost.add(profit);
+        if (payback.compareTo(BigDecimal.ZERO) > 0) {
+            merchantFundService.adjust(order.getMerchantId(), payback, true, "order_settlement",
+                    "Settle goods cost and profit for order #" + order.getOrderNo(), operatorId, "ORDER", order.getId());
+        }
+        order.setSettleStatus("SETTLED");
+        order.setSettlementAmount(payback);
+        order.setSettlementOperatorId(operatorId);
+        order.setSettlementRemark(remark);
+        order.setSettledAt(LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
+        orderMapper.updateById(order);
+
+        OrderSettlementRecord record = new OrderSettlementRecord();
+        record.setOrderId(order.getId());
+        record.setMerchantId(order.getMerchantId());
+        record.setGoodsCost(goodsCost);
+        record.setMerchantProfit(profit);
+        record.setSettlementAmount(payback);
+        record.setStatus("SETTLED");
+        record.setOperatorId(operatorId);
+        record.setRemark(remark);
+        record.setSettledAt(order.getSettledAt());
+        record.setCreatedAt(LocalDateTime.now());
+        record.setUpdatedAt(LocalDateTime.now());
+        settlementRecordMapper.insert(record);
+
+        String title = "Order #" + order.getOrderNo() + " settled";
+        notificationService.createMerchantNotification(order.getMerchantId(), title,
+                "货款+利润已结算到您的余额：" + payback + " " + order.getCurrency(),
+                "ORDER_SETTLED", "order", order.getId());
+    }
+
+    public List<OrderSettlementRecord> getSettlementRecords(Long orderId) {
+        return settlementRecordMapper.selectList(new LambdaQueryWrapper<OrderSettlementRecord>()
+                .eq(OrderSettlementRecord::getOrderId, orderId)
+                .orderByDesc(OrderSettlementRecord::getCreatedAt));
+    }
+
     // ==================== HELPER METHODS ====================
+
+    private MallOrder requireOrder(Long orderId) {
+        MallOrder order = orderMapper.selectById(orderId);
+        if (order == null || Boolean.TRUE.equals(order.getDeleted())) {
+            throw new BusinessException(400, "error.order.notFound");
+        }
+        return order;
+    }
+
+    /** 根据订单明细计算货款（商家进货成本）与商家利润，来源于平台商品 merchant_price / sale_price。 */
+    private BigDecimal[] computeGoodsCostAndProfit(List<OrderItem> items) {
+        BigDecimal goodsCost = BigDecimal.ZERO;
+        BigDecimal profit = BigDecimal.ZERO;
+        for (OrderItem oi : items) {
+            BigDecimal qty = BigDecimal.valueOf(oi.getQuantity());
+            BigDecimal unitCost = null;
+            BigDecimal unitSale = oi.getPrice();
+            Product product = productMapper.selectById(oi.getProductId());
+            if (product != null && product.getPlatformProductId() != null) {
+                PlatformProduct pp = platformProductMapper.selectById(product.getPlatformProductId());
+                if (pp != null) {
+                    if (pp.getMerchantPrice() != null) unitCost = pp.getMerchantPrice();
+                    if (pp.getSalePrice() != null) unitSale = pp.getSalePrice();
+                }
+            }
+            if (unitCost == null) {
+                // 无平台成本信息时，货款按售价计、利润为0（保守处理）
+                unitCost = unitSale;
+            }
+            goodsCost = goodsCost.add(unitCost.multiply(qty));
+            profit = profit.add(unitSale.subtract(unitCost).max(BigDecimal.ZERO).multiply(qty));
+        }
+        return new BigDecimal[]{goodsCost, profit};
+    }
 
     private String generateOrderNo() {
         String ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
@@ -748,6 +938,19 @@ public class OrderService {
         map.put("refundStatus", order.getRefundStatus());
         map.put("refundAmount", order.getRefundAmount());
         map.put("refundedAt", order.getRefundedAt());
+        map.put("orderSource", order.getOrderSource());
+        map.put("goodsCost", order.getGoodsCost());
+        map.put("merchantProfit", order.getMerchantProfit());
+        map.put("merchantPaidStatus", order.getMerchantPaidStatus());
+        map.put("merchantPaidAt", order.getMerchantPaidAt());
+        map.put("expectedArrivalAt", order.getExpectedArrivalAt());
+        map.put("arrivalStatus", order.getArrivalStatus());
+        map.put("arrivedAt", order.getArrivedAt());
+        map.put("settlementAmount", order.getSettlementAmount());
+        map.put("settleStatus", order.getSettleStatus());
+        map.put("settledAt", order.getSettledAt());
+        map.put("settlementOperatorId", order.getSettlementOperatorId());
+        map.put("settlementRemark", order.getSettlementRemark());
         return map;
     }
 

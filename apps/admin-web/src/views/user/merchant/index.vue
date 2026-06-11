@@ -18,6 +18,21 @@
         >
           新增商家
         </el-button>
+        <el-tooltip
+          :disabled="pendingApplicationCount <= 0"
+          :content="applicationButtonTip"
+          placement="top"
+        >
+          <el-badge :value="pendingApplicationCount" :hidden="pendingApplicationCount <= 0">
+            <el-button
+              type="success"
+              v-permission="'admin:merchantApplication:view'"
+              @click="goApplications"
+            >
+              商家申请
+            </el-button>
+          </el-badge>
+        </el-tooltip>
       </template>
       <template #status="{ row }">
         <BaseTag
@@ -29,6 +44,21 @@
         <el-button type="primary" link v-permission="['merchant:edit']" @click="openEdit(row)"
           >编辑</el-button
         >
+        <el-button
+          type="warning"
+          link
+          v-permission="'admin:user:merchant:fund'"
+          @click="openFund(row)"
+          >资金</el-button
+        >
+        <el-button
+          type="info"
+          link
+          v-permission="'admin:user:merchant:resetPwd'"
+          @click="openPassword(row)"
+          >改密码</el-button
+        >
+        <el-button type="primary" link @click="openAccounts(row)">提款账户</el-button>
         <el-popconfirm
           :title="row.status === 'ENABLE' ? '确定要禁用该商家吗？' : '确定要启用该商家吗？'"
           :placement="POPCONFIRM_CONFIG.placement"
@@ -74,9 +104,162 @@
         <el-form-item label="联系人"><el-input v-model="editForm.contactName" /></el-form-item>
         <el-form-item label="联系电话"><el-input v-model="editForm.contactPhone" /></el-form-item>
       </el-form>
+
+      <template v-if="editForm.id && applicationInfo">
+        <el-divider content-position="left">商家申请资料</el-divider>
+        <el-descriptions :column="1" border size="small">
+          <el-descriptions-item label="姓名">{{ applicationInfo.fullName || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="年龄">{{ applicationInfo.age ?? '-' }}</el-descriptions-item>
+          <el-descriptions-item label="申请邮箱">{{ applicationInfo.email || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="申请手机号">{{ applicationInfo.phone || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="家庭地址">{{ applicationInfo.homeAddress || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="证件正面"><MerchantAppFile :application-id="applicationInfo.id" field="idCardFront" :has="!!applicationInfo.idCardFrontUrl" kind="image" /></el-descriptions-item>
+          <el-descriptions-item label="证件背面"><MerchantAppFile :application-id="applicationInfo.id" field="idCardBack" :has="!!applicationInfo.idCardBackUrl" kind="image" /></el-descriptions-item>
+          <el-descriptions-item label="护照页"><MerchantAppFile :application-id="applicationInfo.id" field="passport" :has="!!applicationInfo.passportPageUrl" kind="image" /></el-descriptions-item>
+          <el-descriptions-item label="驾驶证"><MerchantAppFile :application-id="applicationInfo.id" field="driverLicense" :has="!!applicationInfo.driverLicenseUrl" kind="image" /></el-descriptions-item>
+          <el-descriptions-item label="手持证件视频"><MerchantAppFile :application-id="applicationInfo.id" field="handheldVideo" :has="!!applicationInfo.handheldDocumentVideoUrl" kind="video" /></el-descriptions-item>
+          <el-descriptions-item label="审核备注">{{ applicationInfo.reviewRemark || '-' }}</el-descriptions-item>
+        </el-descriptions>
+      </template>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="submitLoading" @click="handleSubmit">保存</el-button>
+      </template>
+    </BaseDialog>
+
+    <!-- 资金管理 -->
+    <BaseDialog v-model="fundVisible" title="商家资金" width="760" @close="fundVisible = false">
+      <el-descriptions :column="2" border size="small" style="margin-bottom: 12px">
+        <el-descriptions-item label="店铺">{{ fundMerchant.shopName }}</el-descriptions-item>
+        <el-descriptions-item label="可用余额">{{ fundMerchant.balance ?? 0 }}</el-descriptions-item>
+        <el-descriptions-item label="冻结余额">{{ fundMerchant.frozenBalance ?? 0 }}</el-descriptions-item>
+      </el-descriptions>
+
+      <el-form :inline="true" :model="fundForm" class="fund-form">
+        <el-form-item label="方向">
+          <el-select v-model="fundForm.direction" style="width: 120px">
+            <el-option label="增加" value="INCREASE" />
+            <el-option label="扣减" value="DECREASE" />
+            <el-option label="冻结" value="FREEZE" />
+            <el-option label="解冻" value="UNFREEZE" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="金额">
+          <el-input-number v-model="fundForm.amount" :min="0.01" :precision="2" :step="100" />
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="fundForm.remark" placeholder="必填，请填写资金调整原因" style="width: 260px" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" :loading="fundSubmitting" @click="handleAdjustFund">提交调整</el-button>
+        </el-form-item>
+      </el-form>
+
+      <el-table :data="fundLogs" border size="small" v-loading="fundLoading" max-height="320">
+        <el-table-column prop="createdAt" label="时间" min-width="160" />
+        <el-table-column prop="type" label="类型" width="140" />
+        <el-table-column prop="balanceBefore" label="变动前" width="110" />
+        <el-table-column prop="amount" label="金额" width="110" />
+        <el-table-column prop="balanceAfter" label="变动后余额" width="120" />
+        <el-table-column prop="frozenBalanceBefore" label="冻结前" width="110" />
+        <el-table-column prop="frozenBalanceAfter" label="冻结后" width="110" />
+        <el-table-column prop="remark" label="备注" min-width="140" />
+      </el-table>
+      <div class="fund-pager">
+        <el-pagination
+          v-model:current-page="fundPage"
+          :page-size="fundPageSize"
+          :total="fundTotal"
+          layout="total, prev, pager, next"
+          @current-change="loadFundLogs"
+        />
+      </div>
+    </BaseDialog>
+
+    <!-- 改密码 -->
+    <BaseDialog v-model="pwdVisible" title="修改商家密码" width="480" @close="pwdVisible = false">
+      <el-form ref="pwdFormRef" :model="pwdForm" :rules="pwdRules" label-width="110px">
+        <el-form-item label="密码类型" prop="type">
+          <el-radio-group v-model="pwdForm.type">
+            <el-radio label="LOGIN">登录密码</el-radio>
+            <el-radio label="WITHDRAW">提现密码</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="新密码" prop="password">
+          <el-input v-model="pwdForm.password" type="password" show-password placeholder="至少6位" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="pwdVisible = false">取消</el-button>
+        <el-button type="primary" :loading="pwdSubmitting" @click="handleResetPassword">保存</el-button>
+      </template>
+    </BaseDialog>
+
+    <!-- 提款账户 -->
+    <BaseDialog v-model="accountsVisible" title="商家提款账户" width="720" @close="accountsVisible = false">
+      <div class="account-toolbar">
+        <el-button type="primary" size="small" @click="openAccountCreate">新增提款账户</el-button>
+      </div>
+      <el-table :data="accounts" border size="small" v-loading="accountsLoading">
+        <el-table-column prop="type" label="类型" width="90">
+          <template #default="{ row }">{{ row.type === 'CRYPTO' ? '加密货币' : '银行' }}</template>
+        </el-table-column>
+        <el-table-column label="账户信息" min-width="280">
+          <template #default="{ row }">
+            <template v-if="row.type === 'CRYPTO'">{{ row.chain }} · {{ row.address }}</template>
+            <template v-else>{{ row.bankName }} · {{ row.accountNo }} · {{ row.accountName }}</template>
+          </template>
+        </el-table-column>
+        <el-table-column label="默认" width="70">
+          <template #default="{ row }">
+            <el-tag v-if="row.isDefault" type="success" size="small">默认</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="remark" label="备注" min-width="120" />
+        <el-table-column label="操作" width="120" fixed="right">
+          <template #default="{ row }">
+            <el-button link type="primary" @click="openAccountEdit(row)">编辑</el-button>
+            <el-popconfirm title="确定禁用该提款账户吗？" @confirm="handleDeleteAccount(row)">
+              <template #reference>
+                <el-button link type="danger">禁用</el-button>
+              </template>
+            </el-popconfirm>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-empty v-if="!accountsLoading && accounts.length === 0" description="该商家暂未绑定提款账户" />
+    </BaseDialog>
+
+    <BaseDialog v-model="accountFormVisible" :title="accountForm.id ? '编辑提款账户' : '新增提款账户'" width="560">
+      <el-form :model="accountForm" label-width="110px">
+        <el-form-item label="账户类型">
+          <el-radio-group v-model="accountForm.type">
+            <el-radio label="CRYPTO">加密货币</el-radio>
+            <el-radio label="BANK">银行账户</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <template v-if="accountForm.type === 'CRYPTO'">
+          <el-form-item label="链类型" required><el-input v-model="accountForm.chain" /></el-form-item>
+          <el-form-item label="钱包地址" required><el-input v-model="accountForm.address" /></el-form-item>
+        </template>
+        <template v-else>
+          <el-form-item label="银行名称" required><el-input v-model="accountForm.bankName" /></el-form-item>
+          <el-form-item label="银行卡号" required><el-input v-model="accountForm.accountNo" /></el-form-item>
+          <el-form-item label="开户名" required><el-input v-model="accountForm.accountName" /></el-form-item>
+          <el-form-item label="国家/地区"><el-input v-model="accountForm.country" /></el-form-item>
+        </template>
+        <el-form-item label="状态">
+          <el-select v-model="accountForm.status" style="width: 100%">
+            <el-option label="启用" value="ENABLE" />
+            <el-option label="禁用" value="DISABLE" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="设为默认"><el-switch v-model="accountForm.isDefault" /></el-form-item>
+        <el-form-item label="备注"><el-input v-model="accountForm.remark" /></el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="accountFormVisible = false">取消</el-button>
+        <el-button type="primary" :loading="accountSubmitting" @click="handleSaveAccount">保存</el-button>
       </template>
     </BaseDialog>
   </div>
@@ -84,6 +267,7 @@
 
 <script setup lang="ts">
 import { merchantApi } from '@/api/merchant'
+import { merchantApplicationApi } from '@/api/merchantApplication'
 import { POPCONFIRM_CONFIG } from '@/config/elementConfig'
 import { STATUS_OPTIONS, getLabelByValue, getColorByValue } from '@/constants/dict'
 import type { IFormConfig } from '@/types/components/page'
@@ -92,6 +276,7 @@ import type { FormInstance, FormRules } from 'element-plus'
 defineOptions({ name: 'MerchantListView' })
 
 const menuStore = useMenuStore()
+const router = useRouter()
 const basePageRef = useTemplateRef('basePageRef')
 const formRef = useTemplateRef<FormInstance>('formRef')
 
@@ -100,6 +285,67 @@ const total = ref(0)
 const loading = ref(false)
 const dialogVisible = ref(false)
 const submitLoading = ref(false)
+const applicationInfo = ref<any>(null)
+const pendingApplicationCount = ref(0)
+const applicationButtonTip = computed(() =>
+  pendingApplicationCount.value > 0 ? `${pendingApplicationCount.value} 条新商家申请` : '有新商家申请',
+)
+
+// 资金管理
+const fundVisible = ref(false)
+const fundMerchant = reactive<{ id: string | number; shopName: string; balance?: number; frozenBalance?: number }>({
+  id: '',
+  shopName: '',
+})
+const fundForm = reactive<{ direction: string; amount?: number; remark: string }>({
+  direction: 'INCREASE',
+  amount: undefined,
+  remark: '',
+})
+const fundSubmitting = ref(false)
+const fundLogs = ref<any[]>([])
+const fundLoading = ref(false)
+const fundPage = ref(1)
+const fundPageSize = ref(10)
+const fundTotal = ref(0)
+
+// 改密码
+const pwdVisible = ref(false)
+const pwdFormRef = useTemplateRef<FormInstance>('pwdFormRef')
+const pwdForm = reactive<{ id: string | number; type: string; password: string }>({
+  id: '',
+  type: 'LOGIN',
+  password: '',
+})
+const pwdSubmitting = ref(false)
+const pwdRules: FormRules = {
+  password: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, message: '密码长度至少6位', trigger: 'blur' },
+  ],
+}
+
+// 提款账户（只读查看）
+const accountsVisible = ref(false)
+const accounts = ref<any[]>([])
+const accountsLoading = ref(false)
+const accountMerchantId = ref<string | number>('')
+const accountFormVisible = ref(false)
+const accountSubmitting = ref(false)
+const emptyAccountForm = () => ({
+  id: '',
+  type: 'CRYPTO',
+  chain: '',
+  address: '',
+  bankName: '',
+  accountNo: '',
+  accountName: '',
+  country: '',
+  status: 'ENABLE',
+  remark: '',
+  isDefault: false,
+})
+const accountForm = reactive<any>(emptyAccountForm())
 
 const editForm = reactive({
   id: '' as string | number,
@@ -185,9 +431,38 @@ const resetForm = () => {
   formRef.value?.resetFields()
 }
 
+const loadApplication = async (merchantId: string | number) => {
+  applicationInfo.value = null
+  if (!merchantId) return
+  try {
+    const { data: res } = await merchantApplicationApi.getByMerchant(merchantId)
+    if (res.code === 200 && res.data && res.data.id) {
+      applicationInfo.value = res.data
+    }
+  } catch {
+    /* 无关联申请资料时忽略 */
+  }
+}
+
+const loadPendingApplicationCount = async () => {
+  try {
+    const { data: res } = await merchantApplicationApi.getPendingCount()
+    if (res.code === 200) {
+      pendingApplicationCount.value = Number(res.data?.pendingCount || 0)
+    }
+  } catch {
+    pendingApplicationCount.value = 0
+  }
+}
+
 const openCreate = () => {
   resetForm()
+  applicationInfo.value = null
   dialogVisible.value = true
+}
+
+const goApplications = () => {
+  router.push('/user/merchant-application')
 }
 
 const openEdit = async (row: any) => {
@@ -208,6 +483,7 @@ const openEdit = async (row: any) => {
       contactName: d.contactName || row.contactName || '',
       contactPhone: d.contactPhone || row.contactPhone || '',
     })
+    loadApplication(d.merchantId || d.id || row.id)
     dialogVisible.value = true
   } catch {
     Object.assign(editForm, {
@@ -218,6 +494,7 @@ const openEdit = async (row: any) => {
       country: row.country || '',
       language: row.language || '',
     })
+    loadApplication(row.merchantId || row.id)
     dialogVisible.value = true
   }
 }
@@ -258,6 +535,181 @@ const handleSubmit = async () => {
   }
 }
 
+const openFund = (row: any) => {
+  fundMerchant.id = row.merchantId || row.id
+  fundMerchant.shopName = row.shopName || ''
+  fundMerchant.balance = row.balance
+  fundMerchant.frozenBalance = row.frozenBalance
+  fundForm.direction = 'INCREASE'
+  fundForm.amount = undefined
+  fundForm.remark = ''
+  fundPage.value = 1
+  fundVisible.value = true
+  loadFundLogs()
+}
+
+const loadFundLogs = async () => {
+  if (!fundMerchant.id) return
+  fundLoading.value = true
+  try {
+    const { data: res } = await merchantApi.getFundLogs(fundMerchant.id, {
+      page: fundPage.value,
+      pageSize: fundPageSize.value,
+    })
+    if (res.code === 200) {
+      fundLogs.value = res.data?.list || []
+      fundTotal.value = res.data?.total || 0
+      fundMerchant.balance = res.data?.balance
+      fundMerchant.frozenBalance = res.data?.frozenBalance
+    }
+  } catch {
+    /* ignore */
+  } finally {
+    fundLoading.value = false
+  }
+}
+
+const handleAdjustFund = async () => {
+  if (!fundForm.amount || fundForm.amount <= 0) {
+    ElMessage.warning('请输入大于0的金额')
+    return
+  }
+  if (!fundForm.remark.trim()) {
+    ElMessage.warning('请填写资金调整原因')
+    return
+  }
+  fundSubmitting.value = true
+  try {
+    const payload = {
+      amount: fundForm.amount,
+      reason: fundForm.remark,
+      remark: fundForm.remark,
+      direction: fundForm.direction,
+    }
+    const actionMap: Record<string, typeof merchantApi.addFund> = {
+      INCREASE: merchantApi.addFund,
+      DECREASE: merchantApi.subtractFund,
+      FREEZE: merchantApi.freezeFund,
+      UNFREEZE: merchantApi.unfreezeFund,
+    }
+    const action = actionMap[fundForm.direction] || merchantApi.adjustFund
+    const { data: res } = await action(fundMerchant.id, payload)
+    if (res.code === 200) {
+      ElMessage.success('资金调整成功')
+      fundForm.amount = undefined
+      fundForm.remark = ''
+      fundPage.value = 1
+      loadFundLogs()
+      basePageRef.value?.refreshCurrentPage()
+    } else {
+      ElMessage.error(res.message || '调整失败')
+    }
+  } catch {
+    /* 错误已由拦截器提示 */
+  } finally {
+    fundSubmitting.value = false
+  }
+}
+
+const openPassword = (row: any) => {
+  pwdForm.id = row.merchantId || row.id
+  pwdForm.type = 'LOGIN'
+  pwdForm.password = ''
+  pwdFormRef.value?.resetFields()
+  pwdVisible.value = true
+}
+
+const handleResetPassword = async () => {
+  await pwdFormRef.value?.validate()
+  pwdSubmitting.value = true
+  try {
+    const { data: res } =
+      pwdForm.type === 'WITHDRAW'
+        ? await merchantApi.resetWithdrawPassword(pwdForm.id, pwdForm.password)
+        : await merchantApi.resetLoginPassword(pwdForm.id, pwdForm.password)
+    if (res.code === 200) {
+      ElMessage.success(pwdForm.type === 'WITHDRAW' ? '提现密码已重置' : '登录密码已重置')
+      pwdVisible.value = false
+    } else {
+      ElMessage.error(res.message || '重置失败')
+    }
+  } catch {
+    /* 校验失败或请求错误 */
+  } finally {
+    pwdSubmitting.value = false
+  }
+}
+
+const openAccounts = async (row: any) => {
+  accounts.value = []
+  accountMerchantId.value = row.merchantId || row.id
+  accountsVisible.value = true
+  accountsLoading.value = true
+  try {
+    const { data: res } = await merchantApi.getWithdrawAccounts(accountMerchantId.value)
+    if (res.code === 200) {
+      accounts.value = res.data || []
+    }
+  } catch {
+    /* ignore */
+  } finally {
+    accountsLoading.value = false
+  }
+}
+
+const openAccountCreate = () => {
+  Object.assign(accountForm, emptyAccountForm())
+  accountFormVisible.value = true
+}
+
+const openAccountEdit = (row: any) => {
+  Object.assign(accountForm, emptyAccountForm(), row, {
+    address: '',
+    accountNo: '',
+  })
+  accountFormVisible.value = true
+}
+
+const handleSaveAccount = async () => {
+  if (accountForm.type === 'CRYPTO' && (!accountForm.chain || !accountForm.address)) {
+    ElMessage.warning('请填写链类型和钱包地址')
+    return
+  }
+  if (accountForm.type === 'BANK' && (!accountForm.bankName || !accountForm.accountNo || !accountForm.accountName)) {
+    ElMessage.warning('请填写银行名称、银行卡号和开户名')
+    return
+  }
+  accountSubmitting.value = true
+  try {
+    const payload = { ...accountForm }
+    delete payload.id
+    const { data: res } = accountForm.id
+      ? await merchantApi.updateWithdrawAccount(accountForm.id, payload)
+      : await merchantApi.createWithdrawAccount(accountMerchantId.value, payload)
+    if (res.code === 200) {
+      ElMessage.success('提款账户已保存')
+      accountFormVisible.value = false
+      const { data: listRes } = await merchantApi.getWithdrawAccounts(accountMerchantId.value)
+      accounts.value = listRes.code === 200 ? listRes.data || [] : accounts.value
+    } else {
+      ElMessage.error(res.message || '保存失败')
+    }
+  } finally {
+    accountSubmitting.value = false
+  }
+}
+
+const handleDeleteAccount = async (row: any) => {
+  const { data: res } = await merchantApi.deleteWithdrawAccount(row.id)
+  if (res.code === 200) {
+    ElMessage.success('提款账户已禁用')
+    const { data: listRes } = await merchantApi.getWithdrawAccounts(accountMerchantId.value)
+    accounts.value = listRes.code === 200 ? listRes.data || [] : accounts.value
+  } else {
+    ElMessage.error(res.message || '禁用失败')
+  }
+}
+
 const handleToggleStatus = async (row: any) => {
   const newStatus = row.status === 'ENABLE' ? 'DISABLE' : 'ENABLE'
   try {
@@ -272,4 +724,17 @@ const handleToggleStatus = async (row: any) => {
     ElMessage.error('状态更新失败')
   }
 }
+
+onMounted(loadPendingApplicationCount)
 </script>
+
+<style scoped>
+.fund-form {
+  margin-bottom: 12px;
+}
+.fund-pager {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+</style>

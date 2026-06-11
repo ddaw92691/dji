@@ -8,10 +8,22 @@ export interface IMerchantOrder {
   paidAt: string; shippedAt: string; createdAt: string
   items: { productId: number; productTitle: string; productImage: string; price: number; quantity: number }[]
   addressSnapshot: any; remark: string
+  orderSource?: string
+  goodsCost?: number
+  merchantProfit?: number
+  merchantPaidStatus?: string
+  merchantPaidAt?: string
+  expectedArrivalAt?: string
+  arrivalStatus?: string
+  arrivedAt?: string
+  settlementAmount?: number
+  settleStatus?: string
+  settledAt?: string
 }
 
 export const orderApi = {
   getOrders: (params: any) => request.get<ICommonResponse<{list:IMerchantOrder[];total:number}>>('/merchant/orders', { params }),
   getOrderDetail: (id: number) => request.get<ICommonResponse<IMerchantOrder>>('/merchant/orders/' + id),
   shipOrder: (id: number, data: {logisticsCompany: string; trackingNo: string}) => request.post<ICommonResponse<any>>('/merchant/orders/' + id + '/ship', data),
+  payGoods: (id: number, data: { expectedDays: number }) => request.post<ICommonResponse<any>>('/merchant/orders/' + id + '/pay-cost', data),
 }

@@ -25,6 +25,7 @@ com\mall\api\modules\customer\entity\CustomerProfile.class
 com\mall\api\modules\customer\controller\CustomerCouponController.class
 com\mall\api\modules\system\PermissionService.class
 com\mall\api\modules\customer\controller\AddressController.class
+com\mall\api\modules\merchant\entity\MerchantFundLog.class
 com\mall\api\modules\commission\mapper\CommissionMapper.class
 com\mall\api\config\RailwayDatabaseEnvironmentPostProcessor.class
 com\mall\api\modules\export\ExportService.class
@@ -84,6 +85,7 @@ com\mall\api\modules\catalog\mapper\PlatformProductMapper.class
 com\mall\api\modules\language\entity\Language.class
 com\mall\api\modules\language\mapper\LanguageMapper.class
 com\mall\api\modules\system\entity\SysRoleMenu.class
+com\mall\api\modules\system\controller\AdminMerchantApplicationController.class
 com\mall\api\modules\category\mapper\CategoryMapper.class
 com\mall\api\security\UserPrincipal.class
 com\mall\api\modules\admin\controller\AdminI18nController.class
@@ -151,6 +153,7 @@ com\mall\api\modules\country\mapper\CountryMapper.class
 com\mall\api\modules\catalog\controller\MerchantCatalogController.class
 com\mall\api\modules\admin\controller\AdminBannerController.class
 com\mall\api\modules\upload\UploadService.class
+com\mall\api\modules\merchant\service\MerchantFundService.class
 com\mall\api\modules\i18n\entity\I18nNamespace.class
 com\mall\api\modules\support\dto\ScoreInspectionRequest.class
 com\mall\api\modules\support\entity\SupportMessage.class
@@ -199,6 +202,7 @@ com\mall\api\modules\auth\dto\UserInfo$UserInfoBuilder.class
 com\mall\api\modules\product\mapper\ProductTranslationMapper.class
 com\mall\api\modules\auth\dto\MerchantApplicationResponse.class
 com\mall\api\modules\dashboard\controller\MerchantDashboardController.class
+com\mall\api\modules\merchant\mapper\MerchantFundLogMapper.class
 com\mall\api\modules\merchant\mapper\MerchantApplicationMapper.class
 com\mall\api\modules\realtime\RealtimeService.class
 com\mall\api\modules\payment\entity\Payment.class

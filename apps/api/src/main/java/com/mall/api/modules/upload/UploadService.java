@@ -28,9 +28,9 @@ public class UploadService {
 
     private static final Set<String> DEFAULT_ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp");
     private static final Set<String> MERCHANT_APPLICATION_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp", "mp4", "mov", "webm");
-    private static final Set<String> ALLOWED_BIZ_TYPES = Set.of("product", "avatar", "banner", "category", "review", "support", "common");
+    private static final Set<String> ALLOWED_BIZ_TYPES = Set.of("product", "avatar", "banner", "category", "review", "support", "common", "recharge_proof");
     private static final long DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
-    private static final long MERCHANT_APPLICATION_MAX_SIZE = 100 * 1024 * 1024;
+    private static final long MERCHANT_APPLICATION_MAX_SIZE = 50 * 1024 * 1024;
 
     public UploadService(FileResourceMapper fileResourceMapper, SystemSettingService systemSettingService) {
         this.fileResourceMapper = fileResourceMapper;

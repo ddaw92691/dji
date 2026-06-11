@@ -31,6 +31,9 @@ public class MerchantApplicationRequest {
     @NotBlank(message = "家庭地址不能为空")
     private String homeAddress;
 
+    @NotBlank(message = "请选择证件类型")
+    private String documentType;
+
     private String idCardFrontUrl;
     private String idCardBackUrl;
     private String passportPageUrl;

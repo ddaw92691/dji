@@ -56,4 +56,9 @@ export const financeApi = {
     ),
   applyWithdrawal: (data: any) =>
     request.post<ICommonResponse<any>>('/merchant/finance/withdrawals', data),
+  getFundLogs: (params: any) =>
+    request.get<ICommonResponse<{ list: any[]; total: number; balance: number; frozenBalance: number }>>(
+      '/merchant/finance/fund-logs',
+      { params },
+    ),
 }
