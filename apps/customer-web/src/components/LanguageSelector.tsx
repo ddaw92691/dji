@@ -13,8 +13,26 @@ function GlobeIcon() {
 export default function LanguageSelector({ onChanged }: { onChanged?: () => void }) {
   const { localeId, locales, regions, setLocaleById } = useI18nStore()
   const [open, setOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const current = useMemo(() => locales.find((l) => l.id === localeId), [locales, localeId])
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 720px)')
+
+    const syncMobile = () => {
+      setIsMobile(mediaQuery.matches)
+    }
+
+    syncMobile()
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', syncMobile)
+      return () => mediaQuery.removeEventListener('change', syncMobile)
+    }
+
+    mediaQuery.addListener(syncMobile)
+    return () => mediaQuery.removeListener(syncMobile)
+  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -45,28 +63,61 @@ export default function LanguageSelector({ onChanged }: { onChanged?: () => void
   }
 
   return (
-    <div ref={rootRef} style={{ position: 'relative', display: 'inline-flex' }}>
+    <div ref={rootRef} style={{ position: 'relative', display: 'inline-flex', maxWidth: '100%' }}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
         style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none',
-          border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer', padding: 0,
+          display: 'inline-flex',
+          minHeight: 36,
+          maxWidth: isMobile ? 120 : 220,
+          alignItems: 'center',
+          gap: 6,
+          background: 'none',
+          border: 'none',
+          color: 'inherit',
+          font: 'inherit',
+          cursor: 'pointer',
+          padding: 0,
         }}
       >
         <GlobeIcon />
-        <span>{current ? `${current.country} (${current.language})` : 'Region'}</span>
+        <span
+          style={{
+            minWidth: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontSize: isMobile ? 12 : undefined,
+            lineHeight: isMobile ? '16px' : undefined,
+          }}
+        >
+          {current ? `${current.country} (${current.language})` : 'Region'}
+        </span>
       </button>
 
       {open && (
         <div
           role="listbox"
           style={{
-            position: 'absolute', right: 0, top: '100%', marginTop: 8, zIndex: 1000,
-            width: 300, maxWidth: '88vw', maxHeight: '70vh', overflowY: 'auto',
-            background: '#fff', color: '#1f1f1f', borderRadius: 12, padding: 8,
+            position: isMobile ? 'fixed' : 'absolute',
+            right: isMobile ? 14 : 0,
+            left: isMobile ? 14 : 'auto',
+            top: isMobile ? 58 : '100%',
+            marginTop: isMobile ? 0 : 8,
+            zIndex: 1000,
+            width: isMobile ? 'auto' : 'min(300px, calc(100vw - 28px))',
+            maxWidth: isMobile ? 'none' : 'calc(100vw - 28px)',
+            maxHeight: isMobile ? 'min(70dvh, 520px)' : '70vh',
+            overflowY: 'auto',
+            overscrollBehavior: 'contain',
+            WebkitOverflowScrolling: 'touch',
+            background: '#fff',
+            color: '#1f1f1f',
+            borderRadius: 12,
+            padding: 8,
             boxShadow: '0 16px 40px rgba(0,0,0,0.18)',
           }}
         >
@@ -85,14 +136,46 @@ export default function LanguageSelector({ onChanged }: { onChanged?: () => void
                     aria-selected={active}
                     onClick={() => choose(l)}
                     style={{
-                      display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between',
-                      gap: 12, padding: '8px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                      fontSize: 13, background: active ? '#eef4ff' : 'transparent',
-                      color: active ? '#0a84ff' : '#1f1f1f', fontWeight: active ? 600 : 400, textAlign: 'left',
+                      display: 'flex',
+                      width: '100%',
+                      minHeight: isMobile ? 42 : 36,
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                      padding: isMobile ? '10px 12px' : '8px 12px',
+                      borderRadius: 8,
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: isMobile ? 14 : 13,
+                      lineHeight: isMobile ? '20px' : undefined,
+                      background: active ? '#eef4ff' : 'transparent',
+                      color: active ? '#0a84ff' : '#1f1f1f',
+                      fontWeight: active ? 600 : 400,
+                      textAlign: 'left',
                     }}
                   >
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.country}</span>
-                    <span style={{ flexShrink: 0, color: active ? '#0a84ff' : '#888' }}>{l.language}</span>
+                    <span
+                      style={{
+                        minWidth: 0,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {l.country}
+                    </span>
+                    <span
+                      style={{
+                        flexShrink: 0,
+                        maxWidth: isMobile ? 110 : 130,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        color: active ? '#0a84ff' : '#888',
+                      }}
+                    >
+                      {l.language}
+                    </span>
                   </button>
                 )
               })}

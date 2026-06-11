@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useI18nStore } from '../stores/i18nStore'
 import { useAuthStore } from '../stores/authStore'
 
 type AuthMode = 'login' | 'register'
@@ -16,6 +17,7 @@ export default function LoginPage() {
   const [marketingOptIn, setMarketingOptIn] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
+  const { t } = useI18nStore()
   const { login, googleLogin, register, loading } = useAuthStore()
   const merchantLoginUrl = import.meta.env.VITE_MERCHANT_WEB_URL || 'http://localhost:5174/login'
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -47,7 +49,7 @@ export default function LoginPage() {
       await login({ account, password, loginType: 'password' })
       navigate('/')
     } catch (err: any) {
-      setError(err.message || 'Login failed')
+      setError(err.message || t('auth.loginFailed', 'Login failed'))
     }
   }
 
@@ -64,26 +66,26 @@ export default function LoginPage() {
       })
       navigate('/')
     } catch (err: any) {
-      setError(err.message || 'Registration failed')
+      setError(err.message || t('auth.registerFailed', 'Registration failed'))
     }
   }
 
   const handleGoogleLogin = () => {
     setError('')
     if (!googleClientId) {
-      setError('Google login is not configured. Please set VITE_GOOGLE_CLIENT_ID.')
+      setError(t('auth.googleNotConfigured', 'Google login is not configured. Please set VITE_GOOGLE_CLIENT_ID.'))
       return
     }
     const google = (window as any).google
     if (!google?.accounts?.id) {
-      setError('Google login is still loading. Please try again in a moment.')
+      setError(t('auth.googleLoading', 'Google login is still loading. Please try again in a moment.'))
       return
     }
     google.accounts.id.initialize({
       client_id: googleClientId,
       callback: async (response: { credential?: string }) => {
         if (!response.credential) {
-          setError('Google did not return a credential.')
+          setError(t('auth.googleNoCredential', 'Google did not return a credential.'))
           return
         }
         try {
@@ -94,7 +96,7 @@ export default function LoginPage() {
           })
           navigate('/')
         } catch (err: any) {
-          setError(err.message || 'Google login failed')
+          setError(err.message || t('auth.googleLoginFailed', 'Google login failed'))
         }
       },
     })
@@ -113,7 +115,7 @@ export default function LoginPage() {
           </Link>
 
           <h1 className="mb-5 text-[24px] font-semibold leading-tight tracking-normal text-[#1f1f1f]">
-            {mode === 'login' ? 'Log in to Mall' : 'Create Your Mall Account'}
+            {mode === 'login' ? t('auth.login.heading', 'Log in to Mall') : t('auth.register.heading', 'Create Your Mall Account')}
           </h1>
 
           {mode === 'login' ? (
@@ -149,13 +151,13 @@ export default function LoginPage() {
       </section>
 
       <p className="pointer-events-none absolute bottom-4 left-4 z-10 text-[11px] leading-4 text-white/90">
-        Shot on Mall System
+        {t('auth.watermark.brand', 'Shot on Mall System')}
         <br />
-        Client Login
+        {t('auth.watermark.clientLogin', 'Client Login')}
       </p>
 
       <p className="pointer-events-none absolute bottom-4 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap text-[11px] text-white/90 md:block">
-        2026 (c) Mall Privacy Policy Terms of Use Accessibility Statement FAQ Support Site Map
+        {t('auth.footer.links', '2026 (c) Mall Privacy Policy Terms of Use Accessibility Statement FAQ Support Site Map')}
       </p>
     </main>
   )
@@ -188,6 +190,7 @@ function LoginForm({
   onSwitchToRegister: () => void
   merchantLoginUrl: string
 }) {
+  const { t } = useI18nStore()
   return (
     <form onSubmit={onSubmit}>
       <button
@@ -196,33 +199,33 @@ function LoginForm({
         className="flex h-12 w-full items-center justify-center gap-2 border border-[#d8d8d8] bg-white text-[14px] font-normal text-[#555] transition hover:border-[#b8b8b8] hover:bg-[#fafafa]"
       >
         <img src="/login/google-logo.svg" alt="" aria-hidden="true" className="h-[18px] w-[18px]" />
-        <span>Continue With Google</span>
+        <span>{t('auth.continueWithGoogle', 'Continue With Google')}</span>
       </button>
 
       <div className="my-4 flex items-center gap-4 text-xs text-[#777]">
         <span className="h-px flex-1 bg-[#ececec]" />
-        <span>or</span>
+        <span>{t('auth.or', 'or')}</span>
         <span className="h-px flex-1 bg-[#ececec]" />
       </div>
 
       <div className="space-y-4">
-        <Field label="email address">
+        <Field label={t('auth.field.email', 'email address')}>
           <input
             type="text"
             value={account}
             onChange={(e) => onAccountChange(e.target.value)}
             className="h-10 w-full border border-[#d8d8d8] px-3 text-[14px] outline-none transition focus:border-[#111]"
-            placeholder="Email or phone"
+            placeholder={t('auth.placeholder.emailOrPhone', 'Email or phone')}
             required
           />
         </Field>
-        <Field label="Password">
+        <Field label={t('auth.field.password', 'Password')}>
           <input
             type="password"
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
             className="h-10 w-full border border-[#d8d8d8] px-3 text-[14px] outline-none transition focus:border-[#111]"
-            placeholder="Password"
+            placeholder={t('auth.field.password', 'Password')}
             required
           />
         </Field>
@@ -232,7 +235,7 @@ function LoginForm({
 
       <div className="mt-3">
         <button type="button" className="text-[13px] text-[#0066cc] hover:underline">
-          Forgot password? Go to reset &gt;
+          {t('auth.forgotPassword', 'Forgot password? Go to reset')} &gt;
         </button>
       </div>
 
@@ -243,7 +246,7 @@ function LoginForm({
           onChange={(e) => onMarketingOptInChange(e.target.checked)}
           className="mt-[2px] h-4 w-4 rounded border-[#d8d8d8] text-[#0066cc] focus:ring-[#0066cc]"
         />
-        <span>Click to get exclusive Mall benefits, latest offers, and updates.</span>
+        <span>{t('auth.marketingOptIn', 'Click to get exclusive Mall benefits, latest offers, and updates.')}</span>
       </label>
 
       <button
@@ -251,13 +254,13 @@ function LoginForm({
         disabled={loading}
         className="mt-6 h-11 w-full border border-[#d8d8d8] bg-[#f7f7f7] text-[14px] font-normal text-[#999] transition hover:border-[#bdbdbd] hover:bg-[#f2f2f2] disabled:cursor-not-allowed disabled:opacity-70"
       >
-        {loading ? 'Logging in...' : 'Log In'}
+        {loading ? t('auth.loggingIn', 'Logging in...') : t('auth.logIn', 'Log In')}
       </button>
 
       <p className="mt-4 text-center text-[13px] text-[#333]">
-        New user?{' '}
+        {t('auth.newUser', 'New user?')}{' '}
         <button type="button" onClick={onSwitchToRegister} className="text-[#0066cc] hover:underline">
-          Create Your Mall Account
+          {t('auth.register.heading', 'Create Your Mall Account')}
         </button>
       </p>
 
@@ -267,11 +270,11 @@ function LoginForm({
         rel="noopener noreferrer"
         className="mt-4 flex h-11 w-full items-center justify-center border border-[#1f1f1f] bg-white text-[14px] font-medium text-[#1f1f1f] transition hover:bg-[#1f1f1f] hover:text-white"
       >
-        商家后台登录
+        {t('auth.merchantLogin', 'Merchant Portal Login')}
       </a>
 
       <p className="mx-auto mt-4 max-w-[310px] text-center text-[12px] leading-5 text-[#777]">
-        By continuing, you hereby agree to the Privacy Policy and Terms of Use.
+        {t('auth.agreeTerms', 'By continuing, you hereby agree to the Privacy Policy and Terms of Use.')}
       </p>
     </form>
   )
@@ -300,20 +303,21 @@ function RegisterForm({
   onSubmit: (e: React.FormEvent) => void
   onSwitchToLogin: () => void
 }) {
+  const { t } = useI18nStore()
   return (
     <form onSubmit={onSubmit}>
       <div className="space-y-4">
-        <Field label="email address">
+        <Field label={t('auth.field.email', 'email address')}>
           <input
             type="email"
             value={email}
             onChange={(e) => onEmailChange(e.target.value)}
             className="h-10 w-full border border-[#d8d8d8] px-3 text-[14px] outline-none transition focus:border-[#111]"
-            placeholder="your@email.com"
+            placeholder={t('auth.placeholder.email', 'your@email.com')}
             required
           />
         </Field>
-        <Field label="phone number">
+        <Field label={t('auth.field.phone', 'phone number')}>
           <input
             type="tel"
             value={phone}
@@ -322,13 +326,13 @@ function RegisterForm({
             placeholder="+81 90 0000 0000"
           />
         </Field>
-        <Field label="Password">
+        <Field label={t('auth.field.password', 'Password')}>
           <input
             type="password"
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
             className="h-10 w-full border border-[#d8d8d8] px-3 text-[14px] outline-none transition focus:border-[#111]"
-            placeholder="Min 6 characters"
+            placeholder={t('auth.placeholder.passwordMin', 'Min 6 characters')}
             required
             minLength={6}
           />
@@ -342,18 +346,18 @@ function RegisterForm({
         disabled={loading}
         className="mt-6 h-11 w-full border border-[#1f1f1f] bg-[#1f1f1f] text-[14px] font-medium text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
       >
-        {loading ? 'Creating...' : 'Create Account'}
+        {loading ? t('auth.creating', 'Creating...') : t('auth.createAccountBtn', 'Create Account')}
       </button>
 
       <p className="mt-4 text-center text-[13px] text-[#333]">
-        Already have an account?{' '}
+        {t('auth.alreadyHaveAccount', 'Already have an account?')}{' '}
         <button type="button" onClick={onSwitchToLogin} className="text-[#0066cc] hover:underline">
-          Log In
+          {t('auth.logIn', 'Log In')}
         </button>
       </p>
 
       <p className="mx-auto mt-5 max-w-[310px] text-center text-[12px] leading-5 text-[#777]">
-        By continuing, you hereby agree to the Privacy Policy and Terms of Use.
+        {t('auth.agreeTerms', 'By continuing, you hereby agree to the Privacy Policy and Terms of Use.')}
       </p>
     </form>
   )

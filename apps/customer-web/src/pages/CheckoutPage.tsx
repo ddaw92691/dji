@@ -74,7 +74,7 @@ export default function CheckoutPage() {
         } catch { /* coupon fetch is optional */ }
       }
     } catch {
-      setError('Failed to load data')
+      setError(t('mall.checkout.loadFailed', 'Failed to load data'))
     } finally {
       setLoading(false)
     }
@@ -104,7 +104,7 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     if (!selectedAddressId) {
-      setError('Please select a shipping address')
+      setError(t('mall.checkout.selectAddress', 'Please select a shipping address'))
       return
     }
 
@@ -128,7 +128,7 @@ export default function CheckoutPage() {
         )
         if (changedItems.length > 0) {
           const names = changedItems.map((i) => i.title).join(', ')
-          setPriceWarning(`Prices have changed for: ${names}. Please review before placing order.`)
+          setPriceWarning(`${t('mall.checkout.priceChangedPrefix', 'Prices have changed for:')} ${names}. ${t('mall.checkout.priceChangedSuffix', 'Please review before placing order.')}`)
           setSubmitting(false)
           return
         }
@@ -155,10 +155,10 @@ export default function CheckoutPage() {
           navigate(`/payment/${orders[0].id}`)
         }
       } else {
-        setError('Failed to create order')
+        setError(t('mall.checkout.createFailed', 'Failed to create order'))
       }
     } catch {
-      setError('Failed to create order')
+      setError(t('mall.checkout.createFailed', 'Failed to create order'))
     } finally {
       setSubmitting(false)
     }
@@ -167,7 +167,7 @@ export default function CheckoutPage() {
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen">
-        <Header title="Checkout" onBack={() => navigate(-1)} />
+        <Header title={t('mall.checkout.title', 'Checkout')} onBack={() => navigate(-1)} />
         <div className="flex items-center justify-center flex-1">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent" />
         </div>
@@ -191,20 +191,20 @@ export default function CheckoutPage() {
             <button
               onClick={() => { setPriceWarning(''); window.location.reload() }}
               className="text-xs bg-yellow-200 px-2 py-1 rounded"
-            >Refresh</button>
+            >{t('mall.checkout.refresh', 'Refresh')}</button>
           </div>
         )}
 
         <div className="p-4 border-b bg-white">
-          <h2 className="text-sm font-semibold text-gray-700 mb-2">Shipping Address</h2>
+          <h2 className="text-sm font-semibold text-gray-700 mb-2">{t('mall.checkout.shippingAddress', 'Shipping Address')}</h2>
           {addresses.length === 0 ? (
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-400">No address</span>
+              <span className="text-sm text-gray-400">{t('mall.checkout.noAddress', 'No address')}</span>
               <button
                 onClick={() => navigate('/addresses')}
                 className="text-sm text-blue-500"
               >
-                + Add Address
+                {t('mall.checkout.addAddress', '+ Add Address')}
               </button>
             </div>
           ) : (
@@ -216,7 +216,7 @@ export default function CheckoutPage() {
               {addresses.map((addr) => (
                 <option key={addr.id} value={addr.id}>
                   {addr.receiverName} {addr.phone} - {[addr.province, addr.city, addr.detail].filter(Boolean).join(', ')}
-                  {addr.isDefault ? ' [Default]' : ''}
+                  {addr.isDefault ? ` [${t('mall.checkout.default', 'Default')}]` : ''}
                 </option>
               ))}
             </select>
@@ -225,20 +225,20 @@ export default function CheckoutPage() {
             onClick={() => navigate('/addresses')}
             className="text-sm text-blue-500 mt-2 inline-block"
           >
-            + Add New Address
+            {t('mall.checkout.addNewAddress', '+ Add New Address')}
           </button>
         </div>
 
         {!isBuyNow && selectedItems.length > 0 && (
           <div className="p-4 bg-white border-b">
-            <h2 className="text-sm font-semibold text-gray-700 mb-2">Order Items</h2>
+            <h2 className="text-sm font-semibold text-gray-700 mb-2">{t('mall.checkout.orderItems', 'Order Items')}</h2>
             {selectedItems.map((item) => (
               <div key={item.id} className="flex items-center gap-3 py-2 border-b last:border-0">
                 <div className="w-14 h-14 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
                   {item.coverImage ? (
                     <img src={item.coverImage} alt={item.title} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">Img</div>
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">{t('common.imgPlaceholder', 'Img')}</div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -258,24 +258,24 @@ export default function CheckoutPage() {
 
         {isBuyNow && (
           <div className="p-4 bg-white border-b">
-            <h2 className="text-sm font-semibold text-gray-700 mb-2">Buy Now</h2>
-            <p className="text-xs text-gray-500">Product #{productId} × {qty || 1}</p>
+            <h2 className="text-sm font-semibold text-gray-700 mb-2">{t('mall.checkout.buyNow', 'Buy Now')}</h2>
+            <p className="text-xs text-gray-500">{t('mall.checkout.product', 'Product')} #{productId} × {qty || 1}</p>
           </div>
         )}
 
         {!isBuyNow && usableCoupons.length > 0 && (
           <div className="p-4 bg-white border-b">
-            <h2 className="text-sm font-semibold text-gray-700 mb-2">Select Coupon</h2>
+            <h2 className="text-sm font-semibold text-gray-700 mb-2">{t('mall.checkout.selectCoupon', 'Select Coupon')}</h2>
             <select
               value={selectedUserCouponId || ''}
               onChange={(e) => setSelectedUserCouponId(e.target.value ? Number(e.target.value) : null)}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
             >
-              <option value="">No coupon</option>
+              <option value="">{t('mall.checkout.noCoupon', 'No coupon')}</option>
               {usableCoupons.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} ({c.type === 'PERCENTAGE' || c.type === 'DISCOUNT' ? `${c.discountRate}% off` : `¥${c.amount} off`})
-                  {c.minSpend > 0 ? ` · Min ¥${c.minSpend}` : ''}
+                  {c.name} ({c.type === 'PERCENTAGE' || c.type === 'DISCOUNT' ? `${c.discountRate}% ${t('mall.checkout.off', 'off')}` : `¥${c.amount} ${t('mall.checkout.off', 'off')}`})
+                  {c.minSpend > 0 ? ` · ${t('mall.checkout.min', 'Min')} ¥${c.minSpend}` : ''}
                 </option>
               ))}
             </select>
@@ -283,11 +283,11 @@ export default function CheckoutPage() {
         )}
 
         <div className="p-4 bg-white border-b">
-          <h2 className="text-sm font-semibold text-gray-700 mb-2">Remark</h2>
+          <h2 className="text-sm font-semibold text-gray-700 mb-2">{t('mall.checkout.remark', 'Remark')}</h2>
           <textarea
             value={remark}
             onChange={(e) => setRemark(e.target.value)}
-            placeholder="Leave a message for the seller..."
+            placeholder={t('mall.checkout.remarkPlaceholder', 'Leave a message for the seller...')}
             rows={3}
             className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 resize-none"
           />
@@ -295,19 +295,19 @@ export default function CheckoutPage() {
 
         <div className="p-4 bg-white">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Order Total</span>
+            <span className="text-sm text-gray-600">{t('mall.checkout.orderTotal', 'Order Total')}</span>
             <span className="text-sm">
               ¥{isBuyNow ? '---' : totalAmount.toFixed(2)}
             </span>
           </div>
           {couponDiscount > 0 && (
             <div className="flex items-center justify-between mt-1">
-              <span className="text-sm text-gray-600">Coupon Discount</span>
+              <span className="text-sm text-gray-600">{t('mall.checkout.couponDiscount', 'Coupon Discount')}</span>
               <span className="text-sm text-red-500">-¥{couponDiscount.toFixed(2)}</span>
             </div>
           )}
           <div className="flex items-center justify-between mt-1 pt-1 border-t">
-            <span className="text-sm font-semibold text-gray-800">Pay Amount</span>
+            <span className="text-sm font-semibold text-gray-800">{t('mall.checkout.payAmount', 'Pay Amount')}</span>
             <span className="text-xl font-bold text-red-500">
               ¥{isBuyNow ? '---' : finalPayAmount.toFixed(2)}
             </span>
@@ -321,7 +321,7 @@ export default function CheckoutPage() {
           disabled={submitting || !selectedAddressId}
           className="w-full py-3 rounded-lg bg-orange-500 text-white font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {submitting ? 'Placing Order...' : 'Place Order'}
+          {submitting ? t('mall.checkout.placingOrder', 'Placing Order...') : t('mall.checkout.placeOrder', 'Place Order')}
         </button>
       </div>
     </div>

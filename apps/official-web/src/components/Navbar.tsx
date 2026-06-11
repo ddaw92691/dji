@@ -47,7 +47,7 @@ const navItems: NavItem[] = [
   { labelKey: 'website.nav.whereToBuy', to: '/where-to-buy' },
 ]
 
-const shellClass = 'mx-auto w-full max-w-[1210px] px-5 xl:px-0'
+const shellClass = 'mx-auto w-full max-w-[1210px] px-4 sm:px-5 xl:px-0'
 
 export default function Navbar() {
   const location = useLocation()
@@ -80,7 +80,7 @@ export default function Navbar() {
           type="button"
           aria-label={t('website.nav.menuAria')}
           onClick={() => setOpen((value) => !value)}
-          className="mr-3 flex h-9 w-9 flex-col justify-center gap-[7px] md:hidden"
+          className="-ml-2 mr-2 flex h-10 w-10 flex-col justify-center gap-[7px] rounded-full px-2 md:hidden"
         >
           <span className="block h-[2px] w-6 bg-current" />
           <span className="block h-[2px] w-6 bg-current" />
@@ -132,7 +132,7 @@ export default function Navbar() {
           </a>
         </div>
 
-        <div className="flex items-center gap-5 justify-self-end md:hidden">
+        <div className="flex items-center gap-4 justify-self-end md:hidden">
           <Link to="/products" aria-label={t('website.nav.searchAria')}>
             <SearchIcon />
           </Link>
@@ -143,7 +143,7 @@ export default function Navbar() {
       </div>
 
       {open && (
-        <div className="border-t border-black/10 bg-white px-6 py-3 text-[#1f1f1f] shadow-lg md:hidden">
+        <div className="max-h-[calc(100vh-56px)] overflow-y-auto border-t border-black/10 bg-white px-5 py-3 pb-[calc(20px+env(safe-area-inset-bottom))] text-[#1f1f1f] shadow-lg md:hidden">
           {navItems.map((item) => (
             <div key={item.labelKey || item.label} className="border-b border-black/5 py-3">
               <NavLink item={item} onClick={() => setOpen(false)} className="block py-1 text-[13px]" />

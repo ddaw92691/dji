@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { notificationApi, type NotificationItem } from '../services/notification'
+import { useI18nStore } from '../stores/i18nStore'
 import { useAuthStore } from '../stores/authStore'
 
 const TYPE_BADGES: Record<string, string> = {
@@ -13,6 +14,7 @@ const TYPE_BADGES: Record<string, string> = {
 
 export default function NotificationPage() {
   const navigate = useNavigate()
+  const { t } = useI18nStore()
   const { token } = useAuthStore()
 
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
@@ -107,9 +109,9 @@ export default function NotificationPage() {
     const d = new Date(dateStr)
     const now = new Date()
     const diff = now.getTime() - d.getTime()
-    if (diff < 60000) return 'Just now'
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`
+    if (diff < 60000) return t('notification.time.justNow', 'Just now')
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}${t('notification.time.minute', 'm ago')}`
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}${t('notification.time.hour', 'h ago')}`
     return d.toLocaleDateString()
   }
 
@@ -117,13 +119,13 @@ export default function NotificationPage() {
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 bg-white border-b z-10 p-4 flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="text-lg">←</button>
-        <h1 className="text-base font-semibold flex-1">Notifications</h1>
+        <h1 className="text-base font-semibold flex-1">{t('notification.title', 'Notifications')}</h1>
         {unreadCount > 0 && (
           <button
             onClick={handleMarkAllAsRead}
             className="text-xs text-blue-500"
           >
-            Mark all read
+            {t('notification.markAllRead', 'Mark all read')}
           </button>
         )}
       </header>
@@ -135,7 +137,7 @@ export default function NotificationPage() {
             tab === 'all' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500'
           }`}
         >
-          All
+          {t('notification.tab.all', 'All')}
         </button>
         <button
           onClick={() => { setTab('unread'); setPage(1) }}
@@ -143,7 +145,7 @@ export default function NotificationPage() {
             tab === 'unread' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500'
           }`}
         >
-          Unread
+          {t('notification.tab.unread', 'Unread')}
           {unreadCount > 0 && (
             <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-xs">
               {unreadCount}
@@ -160,7 +162,7 @@ export default function NotificationPage() {
         ) : notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
             <span className="text-lg mb-2">●</span>
-            <p className="text-sm">No notifications</p>
+            <p className="text-sm">{t('notification.empty', 'No notifications')}</p>
           </div>
         ) : (
           <>
@@ -176,7 +178,7 @@ export default function NotificationPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className={`text-[10px] px-1.5 py-0.5 rounded ${TYPE_BADGES[item.type] || 'bg-gray-100 text-gray-500'}`}>
-                        {item.type}
+                        {t(`notification.type.${item.type}`, item.type)}
                       </span>
                       {!item.isRead && (
                         <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
@@ -201,7 +203,7 @@ export default function NotificationPage() {
                   onClick={loadMore}
                   className="text-sm text-blue-500"
                 >
-                  Load more
+                  {t('notification.loadMore', 'Load more')}
                 </button>
               </div>
             )}

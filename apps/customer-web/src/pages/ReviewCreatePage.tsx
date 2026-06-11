@@ -3,11 +3,13 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { reviewApi } from '../services/review'
 import { productApi } from '../services/product'
 import uploadApi from '../services/upload'
+import { useI18nStore } from '../stores/i18nStore'
 import { useAuthStore } from '../stores/authStore'
 
 export default function ReviewCreatePage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { t } = useI18nStore()
   const { token } = useAuthStore()
 
   const orderId = Number(searchParams.get('orderId'))
@@ -26,7 +28,7 @@ export default function ReviewCreatePage() {
   useEffect(() => {
     if (!token) { navigate('/login'); return }
     if (!orderId || !orderItemId || !productId) {
-      setError('Missing required parameters')
+      setError(t('review.errMissingParams', 'Missing required parameters'))
       setLoadingProduct(false)
       return
     }
@@ -40,7 +42,7 @@ export default function ReviewCreatePage() {
         setProductTitle(res.data.data.title || '')
       }
     } catch {
-      setError('Failed to load product')
+      setError(t('review.errLoadProduct', 'Failed to load product'))
     } finally {
       setLoadingProduct(false)
     }
@@ -50,7 +52,7 @@ export default function ReviewCreatePage() {
     const files = e.target.files
     if (!files || files.length === 0) return
     if (images.length + files.length > 3) {
-      setError('Maximum 3 images allowed')
+      setError(t('review.errMaxImages', 'Maximum 3 images allowed'))
       return
     }
     setUploading(true)
@@ -63,7 +65,7 @@ export default function ReviewCreatePage() {
         }
       }
     } catch {
-      setError('Image upload failed')
+      setError(t('review.errUpload', 'Image upload failed'))
     } finally {
       setUploading(false)
     }
@@ -75,11 +77,11 @@ export default function ReviewCreatePage() {
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      setError('Please select a rating')
+      setError(t('review.errSelectRating', 'Please select a rating'))
       return
     }
     if (!content.trim()) {
-      setError('Please enter review content')
+      setError(t('review.errEnterContent', 'Please enter review content'))
       return
     }
     setSubmitting(true)
@@ -96,10 +98,10 @@ export default function ReviewCreatePage() {
       if (res.data.code === 200) {
         navigate(`/orders/${orderId}`, { replace: true })
       } else {
-        setError((res.data as any).message || 'Failed to submit review')
+        setError((res.data as any).message || t('review.errSubmit', 'Failed to submit review'))
       }
     } catch {
-      setError('Failed to submit review')
+      setError(t('review.errSubmit', 'Failed to submit review'))
     } finally {
       setSubmitting(false)
     }
@@ -112,7 +114,7 @@ export default function ReviewCreatePage() {
       <div className="flex flex-col min-h-screen">
         <header className="sticky top-0 bg-white border-b z-10 p-4 flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="text-lg">←</button>
-          <h1 className="text-base font-semibold">Write Review</h1>
+          <h1 className="text-base font-semibold">{t('review.title', 'Write Review')}</h1>
         </header>
         <div className="flex items-center justify-center flex-1">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent" />
@@ -140,7 +142,7 @@ export default function ReviewCreatePage() {
         </div>
 
         <div className="mb-6">
-          <p className="text-sm text-gray-500 mb-2">Rating</p>
+          <p className="text-sm text-gray-500 mb-2">{t('review.rating', 'Rating')}</p>
           <div className="flex gap-1">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -157,18 +159,18 @@ export default function ReviewCreatePage() {
         </div>
 
         <div className="mb-6">
-          <p className="text-sm text-gray-500 mb-2">Content</p>
+          <p className="text-sm text-gray-500 mb-2">{t('review.content', 'Content')}</p>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Share your experience with this product..."
+            placeholder={t('review.contentPlaceholder', 'Share your experience with this product...')}
             rows={4}
             className="w-full border border-gray-200 rounded-lg p-3 text-sm resize-none focus:outline-none focus:border-blue-500"
           />
         </div>
 
         <div className="mb-6">
-          <p className="text-sm text-gray-500 mb-2">Images (optional, up to 3)</p>
+          <p className="text-sm text-gray-500 mb-2">{t('review.images', 'Images (optional, up to 3)')}</p>
           <div className="flex flex-wrap gap-2">
             {images.map((img, idx) => (
               <div key={idx} className="relative w-20 h-20 rounded overflow-hidden bg-gray-100">
@@ -205,7 +207,7 @@ export default function ReviewCreatePage() {
           disabled={submitting || rating === 0}
           className="w-full py-3 bg-blue-500 text-white rounded-lg font-semibold text-sm disabled:opacity-50"
         >
-          {submitting ? 'Submitting...' : 'Submit Review'}
+          {submitting ? t('review.submitting', 'Submitting...') : t('review.submit', 'Submit Review')}
         </button>
       </main>
     </div>
