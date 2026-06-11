@@ -31,7 +31,7 @@
         <el-button type="primary" @click="handleSearch">搜索</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="success" v-permission="'tax:create'" @click="openCreate"
+        <el-button type="success" v-permission="'admin:tax:create'" @click="openCreate"
           >+ 新建通知</el-button
         >
       </el-form-item>
@@ -71,14 +71,14 @@
       <el-table-column prop="dueAt" label="应缴" width="160" />
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" v-permission="'tax:view'" @click="openDetail(row)"
+          <el-button link type="primary" v-permission="'admin:tax:view'" @click="openDetail(row)"
             >详情</el-button
           >
           <el-button
             v-if="row.status === 'PENDING' || row.status === 'OVERDUE'"
             link
             type="warning"
-            v-permission="'tax:edit'"
+            v-permission="'admin:tax:create'"
             @click="handleCancel(row)"
             >取消</el-button
           >
@@ -218,13 +218,13 @@
           <div style="margin-top: 8px; display: flex; gap: 8px">
             <el-button
               type="success"
-              v-permission="'tax:review'"
+              v-permission="'admin:tax:review'"
               @click="handleReview(detailItem, true)"
               >通过</el-button
             >
             <el-button
               type="danger"
-              v-permission="'tax:review'"
+              v-permission="'admin:tax:review'"
               @click="openRejectReview(detailItem)"
               >拒绝</el-button
             >

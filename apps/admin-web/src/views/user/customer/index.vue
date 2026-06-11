@@ -20,7 +20,7 @@
       </template>
       <template #operation="{ row }">
         <el-button type="primary" link @click="openDetail(row)">详情</el-button>
-        <el-button type="warning" link v-permission="['customer:edit']" @click="openEdit(row)"
+        <el-button type="warning" link v-permission="['admin:user:customer:edit']" @click="openEdit(row)"
           >编辑</el-button
         >
         <el-popconfirm
@@ -33,7 +33,7 @@
             <el-button
               link
               :type="row.status === 1 ? 'danger' : 'success'"
-              v-permission="['customer:edit']"
+              v-permission="['admin:user:customer:edit']"
             >
               {{ row.status === 1 ? '禁用' : '启用' }}
             </el-button>

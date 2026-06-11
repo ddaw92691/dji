@@ -13,7 +13,7 @@
       @refresh="fetchData"
     >
       <template #tableOperationLeft>
-        <el-button type="primary" :icon="menuStore.iconComponents.Plus" v-permission="['menu:add']" @click="openCreate">
+        <el-button type="primary" :icon="menuStore.iconComponents.Plus" v-permission="['sys:menu:add']" @click="openCreate">
           新增菜单
         </el-button>
       </template>
@@ -35,7 +35,7 @@
         <BaseTag :type="row.visible !== false ? 'success' : 'info'" :text="row.visible !== false ? '显示' : '隐藏'" />
       </template>
       <template #operation="{ row }">
-        <el-button type="primary" link v-permission="['menu:edit']" @click="openEdit(row)">编辑</el-button>
+        <el-button type="primary" link v-permission="['sys:menu:edit']" @click="openEdit(row)">编辑</el-button>
         <el-popconfirm
           title="确定要删除该菜单吗？"
           :placement="POPCONFIRM_CONFIG.placement"
@@ -43,7 +43,7 @@
           @confirm="handleDelete(row.id)"
         >
           <template #reference>
-            <el-button type="danger" link v-permission="['menu:delete']">删除</el-button>
+            <el-button type="danger" link v-permission="['sys:menu:delete']">删除</el-button>
           </template>
         </el-popconfirm>
       </template>

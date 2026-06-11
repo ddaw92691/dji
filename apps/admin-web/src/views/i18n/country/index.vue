@@ -17,7 +17,7 @@
         <el-button @click="handleReset">重置</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" v-permission="'i18n:add'" @click="handleCreate">新增国家</el-button>
+        <el-button type="primary" v-permission="'i18n:country:add'" @click="handleCreate">新增国家</el-button>
       </el-form-item>
     </el-form>
 
@@ -41,13 +41,13 @@
       <el-table-column prop="sort" label="排序" width="70" align="center" />
       <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" v-permission="'i18n:edit'" @click="handleEdit(row)">编辑</el-button>
-          <el-button link :type="row.status === 'ENABLE' ? 'warning' : 'success'" v-permission="'i18n:edit'" @click="handleToggleStatus(row)">
+          <el-button link type="primary" v-permission="'i18n:country:edit'" @click="handleEdit(row)">编辑</el-button>
+          <el-button link :type="row.status === 'ENABLE' ? 'warning' : 'success'" v-permission="'i18n:country:edit'" @click="handleToggleStatus(row)">
             {{ row.status === 'ENABLE' ? '禁用' : '启用' }}
           </el-button>
           <el-popconfirm title="确定要删除该国家吗？" confirm-button-text="确认" cancel-button-text="取消" @confirm="handleDelete(row)">
             <template #reference>
-              <el-button link type="danger" v-permission="'i18n:delete'">删除</el-button>
+              <el-button link type="danger" v-permission="'i18n:country:delete'">删除</el-button>
             </template>
           </el-popconfirm>
         </template>

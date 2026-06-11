@@ -13,7 +13,7 @@
         <el-button
           type="primary"
           :icon="menuStore.iconComponents.Plus"
-          v-permission="['agent:add']"
+          v-permission="['admin:user:agent:add']"
           @click="openCreate"
         >
           新增代理
@@ -26,7 +26,7 @@
         />
       </template>
       <template #operation="{ row }">
-        <el-button type="primary" link v-permission="['agent:edit']" @click="openEdit(row)"
+        <el-button type="primary" link v-permission="['admin:user:agent:edit']" @click="openEdit(row)"
           >编辑</el-button
         >
         <el-button type="info" link @click="openCustomers(row)">客户</el-button>
@@ -41,7 +41,7 @@
             <el-button
               link
               :type="row.status === 'ENABLE' ? 'danger' : 'success'"
-              v-permission="['agent:edit']"
+              v-permission="['admin:user:agent:edit']"
             >
               {{ row.status === 'ENABLE' ? '禁用' : '启用' }}
             </el-button>

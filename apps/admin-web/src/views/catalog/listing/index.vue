@@ -46,7 +46,7 @@
             @confirm="handleDelist(row)"
           >
             <template #reference>
-              <el-button link type="danger" v-permission="'catalog:edit'">强制下架</el-button>
+              <el-button link type="danger" v-permission="'admin:catalog:disable'">强制下架</el-button>
             </template>
           </el-popconfirm>
         </template>

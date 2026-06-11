@@ -13,7 +13,7 @@
         <el-button
           type="primary"
           :icon="menuStore.iconComponents.Plus"
-          v-permission="['merchant:add']"
+          v-permission="['admin:user:merchant:add']"
           @click="openCreate"
         >
           新增商家
@@ -41,7 +41,7 @@
         />
       </template>
       <template #operation="{ row }">
-        <el-button type="primary" link v-permission="['merchant:edit']" @click="openEdit(row)"
+        <el-button type="primary" link v-permission="['admin:user:merchant:edit']" @click="openEdit(row)"
           >编辑</el-button
         >
         <el-button
@@ -69,7 +69,7 @@
             <el-button
               link
               :type="row.status === 'ENABLE' ? 'danger' : 'success'"
-              v-permission="['merchant:edit']"
+              v-permission="['admin:user:merchant:edit']"
             >
               {{ row.status === 'ENABLE' ? '禁用' : '启用' }}
             </el-button>

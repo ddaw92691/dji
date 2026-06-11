@@ -40,10 +40,10 @@
         <el-button @click="handleReset">重置</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" v-permission="'i18n:add'" @click="onCreate">新增翻译</el-button>
+        <el-button type="primary" v-permission="'i18n:translation:add'" @click="onCreate">新增翻译</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="success" :disabled="currentDirty === 0" :loading="batchLoading" v-permission="'i18n:edit'" @click="onBatchSave">
+        <el-button type="success" :disabled="currentDirty === 0" :loading="batchLoading" v-permission="'i18n:translation:edit'" @click="onBatchSave">
           批量保存{{ currentDirty ? `（${currentDirty}）` : '' }}
         </el-button>
       </el-form-item>
@@ -53,7 +53,7 @@
           plain
           :disabled="selectedCount === 0"
           :loading="batchDeleteLoading"
-          v-permission="'i18n:delete'"
+          v-permission="'i18n:translation:delete'"
           @click="handleBatchDelete"
         >
           删除所选{{ selectedCount ? `（${selectedCount}）` : '' }}
@@ -63,10 +63,10 @@
         <el-button @click="handleOpenMissing">缺失翻译检测</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="success" plain v-permission="'i18n:import'" @click="handleOpenImport">批量导入</el-button>
+        <el-button type="success" plain v-permission="'i18n:translation:add'" @click="handleOpenImport">批量导入</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="warning" plain v-permission="'i18n:export'" @click="handleOpenExport">导出 JSON</el-button>
+        <el-button type="warning" plain v-permission="'i18n:translation:view'" @click="handleOpenExport">导出 JSON</el-button>
       </el-form-item>
     </el-form>
 
@@ -116,7 +116,7 @@
         <template #default="{ row }">
           <el-popconfirm title="删除该 Key 的全部语言翻译？" confirm-button-text="确认" cancel-button-text="取消" @confirm="handleMatrixDelete(row)">
             <template #reference>
-              <el-button link type="danger" v-permission="'i18n:delete'">删除</el-button>
+              <el-button link type="danger" v-permission="'i18n:translation:delete'">删除</el-button>
             </template>
           </el-popconfirm>
         </template>
@@ -153,13 +153,13 @@
       <el-table-column prop="updatedAt" label="更新时间" width="160" />
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" v-permission="'i18n:edit'" @click="handleEdit(row)">编辑</el-button>
-          <el-button link :type="row.status === 'ENABLE' ? 'warning' : 'success'" v-permission="'i18n:edit'" @click="handleToggleStatus(row)">
+          <el-button link type="primary" v-permission="'i18n:translation:edit'" @click="handleEdit(row)">编辑</el-button>
+          <el-button link :type="row.status === 'ENABLE' ? 'warning' : 'success'" v-permission="'i18n:translation:edit'" @click="handleToggleStatus(row)">
             {{ row.status === 'ENABLE' ? '禁用' : '启用' }}
           </el-button>
           <el-popconfirm title="确定要删除该翻译吗？" confirm-button-text="确认" cancel-button-text="取消" @confirm="handleDelete(row)">
             <template #reference>
-              <el-button link type="danger" v-permission="'i18n:delete'">删除</el-button>
+              <el-button link type="danger" v-permission="'i18n:translation:delete'">删除</el-button>
             </template>
           </el-popconfirm>
         </template>

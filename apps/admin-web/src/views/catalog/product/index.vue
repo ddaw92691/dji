@@ -19,7 +19,7 @@
         <el-button type="primary" @click="handleSearch">搜索</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="success" v-permission="'catalog:create'" @click="openCreate">+ Add Product</el-button>
+        <el-button type="success" v-permission="'admin:catalog:add'" @click="openCreate">+ Add Product</el-button>
       </el-form-item>
     </el-form>
 
@@ -57,21 +57,21 @@
       </el-table-column>
       <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" v-permission="'catalog:edit'" @click="openEdit(row)">编辑</el-button>
+          <el-button link type="primary" v-permission="'admin:catalog:edit'" @click="openEdit(row)">编辑</el-button>
           <el-popconfirm
             :title="`Toggle status to ${row.status === 'ENABLE' ? 'DISABLE' : 'ENABLE'}?`"
             placement="top" width="220"
             @confirm="handleToggleStatus(row)"
           >
             <template #reference>
-              <el-button link :type="row.status === 'ENABLE' ? 'warning' : 'success'" v-permission="'catalog:edit'">
+              <el-button link :type="row.status === 'ENABLE' ? 'warning' : 'success'" v-permission="'admin:catalog:edit'">
                 {{ row.status === 'ENABLE' ? 'Disable' : 'Enable' }}
               </el-button>
             </template>
           </el-popconfirm>
           <el-popconfirm title="确定要删除该商品吗？" placement="top" width="200" @confirm="handleDelete(row)">
             <template #reference>
-              <el-button link type="danger" v-permission="'catalog:delete'">删除</el-button>
+              <el-button link type="danger" v-permission="'admin:catalog:disable'">删除</el-button>
             </template>
           </el-popconfirm>
         </template>

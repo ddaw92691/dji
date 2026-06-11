@@ -1,0 +1,20 @@
+import request from '@/utils/request';
+export const merchantApi = {
+    getMerchants: (params) => request.get('/admin/merchants', { params }),
+    createMerchant: (data) => request.post('/admin/merchants', data),
+    updateMerchant: (id, data) => request.put('/admin/merchants/' + id, data),
+    updateMerchantStatus: (id, status) => request.put('/admin/merchants/' + id + '/status', { status }),
+    getFundLogs: (id, params) => request.get('/admin/merchants/' + id + '/fund-logs', { params }),
+    getWallet: (id) => request.get('/admin/merchants/' + id + '/wallet'),
+    adjustFund: (id, data) => request.post('/admin/merchants/' + id + '/fund-adjust', data),
+    addFund: (id, data) => request.post('/admin/merchants/' + id + '/wallet/add', data),
+    subtractFund: (id, data) => request.post('/admin/merchants/' + id + '/wallet/subtract', data),
+    freezeFund: (id, data) => request.post('/admin/merchants/' + id + '/wallet/freeze', data),
+    unfreezeFund: (id, data) => request.post('/admin/merchants/' + id + '/wallet/unfreeze', data),
+    resetLoginPassword: (id, password) => request.put('/admin/merchants/' + id + '/login-password', { password }),
+    resetWithdrawPassword: (id, password) => request.put('/admin/merchants/' + id + '/withdraw-password', { password }),
+    getWithdrawAccounts: (id) => request.get('/admin/merchants/' + id + '/withdraw-accounts'),
+    createWithdrawAccount: (merchantId, data) => request.post('/admin/merchant-withdraw-accounts', data, { params: { merchantId } }),
+    updateWithdrawAccount: (accountId, data) => request.put('/admin/merchant-withdraw-accounts/' + accountId, data),
+    deleteWithdrawAccount: (accountId) => request.delete('/admin/merchant-withdraw-accounts/' + accountId),
+};

@@ -80,7 +80,7 @@
           <el-button
             link
             type="primary"
-            v-permission="'refund:view'"
+            v-permission="'order:detail'"
             @click="openDetail(row.orderId)"
             >详情</el-button
           >
@@ -88,7 +88,7 @@
             link
             type="success"
             v-if="row.refundStatus === 'REQUESTED'"
-            v-permission="'refund:approve'"
+            v-permission="'order:cancel'"
             @click="handleApprove(row)"
             >通过</el-button
           >
@@ -96,7 +96,7 @@
             link
             type="danger"
             v-if="row.refundStatus === 'REQUESTED'"
-            v-permission="'refund:reject'"
+            v-permission="'order:cancel'"
             @click="openReject(row)"
             >拒绝</el-button
           >

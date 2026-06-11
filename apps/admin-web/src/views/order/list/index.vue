@@ -91,13 +91,13 @@
       <el-table-column prop="createdAt" label="创建时间" width="180" />
       <el-table-column label="操作" width="330" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" v-permission="'order:view'" @click="openDetail(row.id)">详情</el-button>
-          <el-button link type="warning" v-permission="'order:edit'" @click="openStatusEdit(row)">更新</el-button>
+          <el-button link type="primary" v-permission="'order:detail'" @click="openDetail(row.id)">详情</el-button>
+          <el-button link type="warning" v-permission="'order:ship'" @click="openStatusEdit(row)">更新</el-button>
           <el-button
             v-if="isAdvanceOrder(row) && row.merchantPaidStatus === 'PAID' && row.settleStatus !== 'SETTLED'"
             link
             type="primary"
-            v-permission="'order:edit'"
+            v-permission="'order:ship'"
             @click="handleSetEstimatedArrival(row)"
             >预计到货</el-button
           >
@@ -105,7 +105,7 @@
             v-if="isAdvanceOrder(row) && row.merchantPaidStatus === 'PAID' && row.arrivalStatus !== 'ARRIVED'"
             link
             type="info"
-            v-permission="'order:edit'"
+            v-permission="'order:ship'"
             @click="handleMarkArrived(row)"
             >到货</el-button
           >
@@ -113,7 +113,7 @@
             v-if="isAdvanceOrder(row) && row.merchantPaidStatus === 'PAID' && row.arrivalStatus === 'ARRIVED' && row.settleStatus !== 'SETTLED'"
             link
             type="success"
-            v-permission="'order:edit'"
+            v-permission="'order:ship'"
             @click="handleSettle(row)"
             >结算</el-button
           >

@@ -13,7 +13,7 @@
         <el-button
           type="primary"
           :icon="menuStore.iconComponents.Plus"
-          v-permission="['admin:add']"
+          v-permission="['admin:user:admin:add']"
           @click="openCreate"
         >
           新增管理员
@@ -29,13 +29,13 @@
         />
       </template>
       <template #operation="{ row }">
-        <el-button type="primary" link v-permission="['admin:edit']" @click="openEdit(row)"
+        <el-button type="primary" link v-permission="['admin:user:admin:edit']" @click="openEdit(row)"
           >编辑</el-button
         >
         <el-button
           type="warning"
           link
-          v-permission="['admin:password']"
+          v-permission="['admin:user:admin:edit']"
           @click="openResetPassword(row)"
           >重置密码</el-button
         >
@@ -49,7 +49,7 @@
             <el-button
               link
               :type="row.status === 1 ? 'danger' : 'success'"
-              v-permission="['admin:edit']"
+              v-permission="['admin:user:admin:edit']"
             >
               {{ row.status === 1 ? '禁用' : '启用' }}
             </el-button>
@@ -62,7 +62,7 @@
           @confirm="handleDelete(row.id)"
         >
           <template #reference>
-            <el-button type="danger" link v-permission="['admin:delete']">删除</el-button>
+            <el-button type="danger" link v-permission="['admin:user:admin:delete']">删除</el-button>
           </template>
         </el-popconfirm>
       </template>

@@ -7,7 +7,7 @@
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" v-permission="'i18n:add'" @click="handleAddLanguage">绑定语言</el-button>
+        <el-button type="primary" v-permission="'i18n:countryLanguage:add'" @click="handleAddLanguage">绑定语言</el-button>
       </el-form-item>
     </el-form>
 
@@ -25,7 +25,7 @@
           <el-button
             link
             type="warning"
-            v-permission="'i18n:edit'"
+            v-permission="'i18n:countryLanguage:edit'"
             :disabled="row.isDefault"
             @click="handleSetDefault(row)"
           >
@@ -33,7 +33,7 @@
           </el-button>
           <el-popconfirm title="确定要删除该语言绑定吗？" confirm-button-text="确认" cancel-button-text="取消" @confirm="handleDelete(row)">
             <template #reference>
-              <el-button link type="danger" v-permission="'i18n:delete'">删除</el-button>
+              <el-button link type="danger" v-permission="'i18n:countryLanguage:delete'">删除</el-button>
             </template>
           </el-popconfirm>
         </template>

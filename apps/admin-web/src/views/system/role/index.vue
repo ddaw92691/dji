@@ -11,11 +11,11 @@
       @selection-change="onSelectionChange"
     >
       <template #tableOperationLeft>
-        <el-button type="primary" :icon="menuStore.iconComponents.Plus" v-permission="['role:add']" @click="openCreate">
+        <el-button type="primary" :icon="menuStore.iconComponents.Plus" v-permission="['sys:role:add']" @click="openCreate">
           新增角色
         </el-button>
         <el-button type="danger" :icon="menuStore.iconComponents.Delete"
-          :disabled="selectedIds.length === 0" v-permission="['role:delete']" @click="batchDelete">
+          :disabled="selectedIds.length === 0" v-permission="['sys:role:delete']" @click="batchDelete">
           批量删除
         </el-button>
       </template>
@@ -23,8 +23,8 @@
         <BaseTag :type="getColorByValue(STATUS_OPTIONS, row.status)" :text="getLabelByValue(STATUS_OPTIONS, row.status)" />
       </template>
       <template #operation="{ row }">
-        <el-button type="primary" link v-permission="['role:edit']" @click="openEdit(row)">编辑</el-button>
-        <el-button type="info" link v-permission="['role:assign']" @click="openAssignMenus(row)">分配菜单</el-button>
+        <el-button type="primary" link v-permission="['sys:role:edit']" @click="openEdit(row)">编辑</el-button>
+        <el-button type="info" link v-permission="['sys:role:edit']" @click="openAssignMenus(row)">分配菜单</el-button>
         <el-popconfirm
           :title="row.status === 'ENABLE' ? '确定禁用该角色吗？' : '确定启用该角色吗？'"
           :placement="POPCONFIRM_CONFIG.placement"
@@ -32,7 +32,7 @@
           @confirm="handleToggleStatus(row)"
         >
           <template #reference>
-            <el-button link :type="row.status === 'ENABLE' ? 'danger' : 'success'" v-permission="['role:edit']">
+            <el-button link :type="row.status === 'ENABLE' ? 'danger' : 'success'" v-permission="['sys:role:edit']">
               {{ row.status === 'ENABLE' ? '禁用' : '启用' }}
             </el-button>
           </template>
@@ -44,7 +44,7 @@
           @confirm="handleDelete(row.id)"
         >
           <template #reference>
-            <el-button type="danger" link v-permission="['role:delete']">删除</el-button>
+            <el-button type="danger" link v-permission="['sys:role:delete']">删除</el-button>
           </template>
         </el-popconfirm>
       </template>

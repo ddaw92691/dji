@@ -20,7 +20,7 @@
         <el-button type="primary" @click="handleSearch">搜索</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" v-permission="'category:add'" @click="handleCreate"
+        <el-button type="primary" v-permission="'product:category:add'" @click="handleCreate"
           >新增</el-button
         >
       </el-form-item>
@@ -45,13 +45,13 @@
       <el-table-column prop="createdAt" label="创建时间" width="180" />
       <el-table-column label="操作" width="280" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" v-permission="'category:edit'" @click="handleEdit(row)"
+          <el-button link type="primary" v-permission="'product:category:edit'" @click="handleEdit(row)"
             >编辑</el-button
           >
           <el-button
             link
             :type="row.status === 'ENABLE' ? 'warning' : 'success'"
-            v-permission="'category:edit'"
+            v-permission="'product:category:edit'"
             @click="handleToggleStatus(row)"
           >
             {{ row.status === 'ENABLE' ? '禁用' : '启用' }}
@@ -59,13 +59,13 @@
           <el-button
             link
             type="info"
-            v-permission="'category:edit'"
+            v-permission="'product:category:edit'"
             @click="handleOpenTranslations(row)"
             >翻译</el-button
           >
           <el-popconfirm title="确定要删除吗？" @confirm="handleDelete(row)">
             <template #reference>
-              <el-button link type="danger" v-permission="'category:delete'">删除</el-button>
+              <el-button link type="danger" v-permission="'product:category:delete'">删除</el-button>
             </template>
           </el-popconfirm>
         </template>
