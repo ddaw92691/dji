@@ -1125,9 +1125,9 @@ function handleOpenAutoTranslate(
     if (!items.length) { ElMessage.warning('请先选择要翻译的内容'); return }
     autoTranslateSelectedItems.value = items
     const countryCodes = Array.from(new Set(items.map((item) => item.countryCode || '')))
-    if (countryCodes.length === 1) autoTranslateForm.countryCode = countryCodes[0]
+    if (countryCodes.length === 1) autoTranslateForm.countryCode = countryCodes[0] ?? ''
     const namespaceCodes = Array.from(new Set(items.map((item) => item.namespaceCode)))
-    if (namespaceCodes.length === 1) autoTranslateForm.namespaceCode = namespaceCodes[0]
+    if (namespaceCodes.length === 1) autoTranslateForm.namespaceCode = namespaceCodes[0] ?? ''
   }
 
   if (scope === 'row') {
