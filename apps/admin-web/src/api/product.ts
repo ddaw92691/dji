@@ -19,6 +19,15 @@ export interface ProductItem {
   auditAt: string | null
   merchantName: string
   categoryName: string
+  platformProductId?: number | null
+  platformProductName?: string
+  platformProductModel?: string
+  productSource?: 'PLATFORM_LIBRARY' | 'MERCHANT_CUSTOM'
+  listingStatus?: string
+  merchantStock?: number
+  merchantPrice?: number
+  profitAmount?: number
+  profitRate?: number
   images: ProductImageItem[]
   translations: ProductTranslationItem[]
   createdAt: string

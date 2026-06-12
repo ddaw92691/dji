@@ -1,10 +1,8 @@
 package com.mall.api.modules.admin.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mall.api.common.response.ApiResponse;
 import com.mall.api.modules.notification.NotificationService;
 import com.mall.api.modules.product.ProductService;
-import com.mall.api.modules.product.entity.Product;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,16 +35,15 @@ public class AdminProductController {
             @RequestParam(required = false) String auditStatus,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize) {
-        Page<Product> pg = productService.getAllProducts(keyword, categoryId, merchantId, status, auditStatus,
-                page, pageSize);
-        return ApiResponse.success(Map.of("list", pg.getRecords(), "total", pg.getTotal(), "page", page, "pageSize", pageSize));
+        return ApiResponse.success(productService.getAdminProductList(keyword, categoryId, merchantId, status, auditStatus,
+                page, pageSize));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "商品详情")
     @PreAuthorize("@perm.has('product:view')")
     public ApiResponse<Map<String, Object>> getProductDetail(@PathVariable Long id) {
-        Map<String, Object> detail = productService.getProductDetail(id, null, null);
+                Map<String, Object> detail = productService.getProductDetail(id, null, null);
         if (detail == null) {
             return ApiResponse.error(404, "商品不存在");
         }
@@ -67,8 +64,7 @@ public class AdminProductController {
     public ApiResponse<Map<String, Object>> getPendingAudit(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize) {
-        Page<Product> pg = productService.getPendingAuditProducts(page, pageSize);
-        return ApiResponse.success(Map.of("list", pg.getRecords(), "total", pg.getTotal(), "page", page, "pageSize", pageSize));
+        return ApiResponse.success(productService.getAdminProductList(null, null, null, null, "PENDING", page, pageSize));
     }
 
     @PutMapping("/{id}/audit")
@@ -80,18 +76,17 @@ public class AdminProductController {
         Long auditBy = body.get("auditBy") != null ? Long.valueOf(body.get("auditBy").toString()) : null;
         productService.auditProduct(id, auditStatus, auditRemark, auditBy);
 
-        Product product = productService.getProductDetail(id, null, null) != null ? null : null;
         Map<String, Object> detail = productService.getProductDetail(id, null, null);
         if (detail != null && detail.get("merchantId") != null) {
             Long merchantId = Long.valueOf(detail.get("merchantId").toString());
             if ("APPROVED".equals(auditStatus)) {
                 notificationService.createMerchantNotification(merchantId,
-                        "Product approved", "Your product has been approved and is now on sale.",
+                        "商品审核通过", "您的商品已审核通过并上架。",
                         "PRODUCT_AUDIT", "product", id);
             } else if ("REJECTED".equals(auditStatus)) {
                 notificationService.createMerchantNotification(merchantId,
-                        "Product rejected", "Your product has been rejected" +
-                                (auditRemark != null ? ": " + auditRemark : ""),
+                        "商品审核拒绝", "您的商品审核未通过" +
+                                (auditRemark != null ? "：" + auditRemark : ""),
                         "PRODUCT_AUDIT", "product", id);
             }
         }

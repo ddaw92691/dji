@@ -3,8 +3,8 @@
     <el-card>
       <template #header>
         <div class="flex items-center justify-between">
-          <span class="text-lg font-semibold">{{ isEdit ? 'Edit Product' : 'Add Product' }}</span>
-          <el-button @click="router.push('/product/list')">Back to List</el-button>
+          <span class="text-lg font-semibold">{{ isEdit ? (isPlatformListing ? '编辑平台商品库存' : '编辑商家自建商品') : '新增商家自建商品' }}</span>
+          <el-button @click="router.push('/product/list')">返回列表</el-button>
         </div>
       </template>
 
@@ -15,8 +15,8 @@
         label-position="right"
         style="max-width: 800px"
       >
-        <el-form-item label="Category" prop="categoryId" required>
-          <el-select v-model="form.categoryId" placeholder="Select category" style="width: 100%">
+        <el-form-item label="分类" prop="categoryId" required>
+          <el-select v-model="form.categoryId" placeholder="选择分类" style="width: 100%" :disabled="isPlatformListing">
             <el-option
               v-for="cat in categories"
               :key="cat.id"
@@ -26,28 +26,30 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="Title" prop="title" required>
-          <el-input v-model="form.title" placeholder="Enter product title" />
+        <el-form-item label="商品名称" prop="title" required>
+          <el-input v-model="form.title" placeholder="请输入商品名称" :disabled="isPlatformListing" />
         </el-form-item>
 
-        <el-form-item label="Description" prop="description">
+        <el-form-item label="商品描述" prop="description">
           <el-input
             v-model="form.description"
+            :disabled="isPlatformListing"
             type="textarea"
             :rows="4"
-            placeholder="Enter product description"
+            placeholder="请输入商品描述"
           />
         </el-form-item>
 
-        <el-form-item label="Cover Image" prop="coverImage">
+        <el-form-item label="封面图" prop="coverImage">
           <div class="upload-wrap">
-            <el-input v-model="form.coverImage" placeholder="Enter cover image URL" style="flex: 1" />
+            <el-input v-model="form.coverImage" placeholder="请输入封面图 URL" style="flex: 1" :disabled="isPlatformListing" />
             <el-upload
+              v-if="!isPlatformListing"
               :show-file-list="false"
               :http-request="handleCoverUpload"
               accept="image/*"
             >
-              <el-button :loading="uploading">Upload</el-button>
+              <el-button :loading="uploading">上传</el-button>
             </el-upload>
           </div>
           <el-image
@@ -58,62 +60,76 @@
           />
         </el-form-item>
 
-        <el-form-item label="Price" prop="price" required>
-          <el-input-number v-model="form.price" :min="0" :precision="2" style="width: 100%" />
+        <el-form-item label="售价" prop="price" required>
+          <el-input-number v-model="form.price" :min="0" :precision="2" style="width: 100%" :disabled="isPlatformListing" />
         </el-form-item>
 
-        <el-form-item label="Original Price" prop="originalPrice">
-          <el-input-number v-model="form.originalPrice" :min="0" :precision="2" style="width: 100%" />
+        <el-form-item label="原价" prop="originalPrice">
+          <el-input-number v-model="form.originalPrice" :min="0" :precision="2" style="width: 100%" :disabled="isPlatformListing" />
         </el-form-item>
 
-        <el-form-item label="Stock" prop="stock" required>
+        <el-form-item label="库存" prop="stock" required>
           <el-input-number v-model="form.stock" :min="0" style="width: 100%" />
         </el-form-item>
 
-        <el-divider>Product Images</el-divider>
+        <template v-if="!isPlatformListing">
+        <el-divider>商品图片</el-divider>
 
         <div v-for="(img, idx) in form.images" :key="idx" class="mb-2">
-          <el-form-item :label="`Image ${idx + 1}`">
+          <el-form-item :label="`图片 ${idx + 1}`">
             <div class="flex items-center gap-2 w-full">
-              <el-input v-model="img.imageUrl" placeholder="Enter image URL" class="flex-1" />
+              <el-input v-model="img.imageUrl" placeholder="请输入图片 URL" class="flex-1" />
               <el-upload
                 :show-file-list="false"
                 :http-request="(options: any) => handleImageItemUpload(options, idx)"
                 accept="image/*"
               >
-                <el-button :loading="uploadingIdx === idx" size="small">Upload</el-button>
+                <el-button :loading="uploadingIdx === idx" size="small">上传</el-button>
               </el-upload>
               <el-button type="danger" :icon="menuStore.iconComponents.Trash" circle @click="removeImage(idx)" />
             </div>
           </el-form-item>
         </div>
         <el-form-item>
-          <el-button type="primary" :icon="menuStore.iconComponents.Plus" @click="addImage">Add Image</el-button>
+          <el-button type="primary" :icon="menuStore.iconComponents.Plus" @click="addImage">添加图片</el-button>
         </el-form-item>
 
-        <el-divider>Translations</el-divider>
+        </template>
+
+        <template v-if="!isPlatformListing">
+        <el-divider>多语言</el-divider>
 
         <el-tabs v-model="translationTab">
           <el-tab-pane v-for="lang in translationLangs" :key="lang.code" :label="lang.label" :name="lang.code">
-            <el-form-item :label="`${lang.label} Title`">
-              <el-input v-model="form.translations[lang.code].title" placeholder="Enter title" />
+            <el-form-item :label="`${lang.label} 商品名称`">
+              <el-input v-model="form.translations[lang.code].title" placeholder="请输入标题" />
             </el-form-item>
-            <el-form-item :label="`${lang.label} Description`">
+            <el-form-item :label="`${lang.label} 商品描述`">
               <el-input
                 v-model="form.translations[lang.code].description"
                 type="textarea"
                 :rows="3"
-                placeholder="Enter description"
+                placeholder="请输入描述"
               />
             </el-form-item>
           </el-tab-pane>
         </el-tabs>
+        </template>
       </el-form>
 
+      <el-alert
+        v-if="isPlatformListing"
+        title="该商品来自平台商品库，商家只能维护库存；名称、价格、图片和翻译由总后台商品库统一维护。"
+        type="info"
+        show-icon
+        :closable="false"
+        class="mt-4"
+      />
+
       <div class="flex justify-center mt-6">
-        <el-button @click="router.push('/product/list')">Cancel</el-button>
+        <el-button @click="router.push('/product/list')">取消</el-button>
         <el-button type="primary" :loading="saving" @click="handleSave">
-          {{ isEdit ? 'Update' : 'Create' }}
+          {{ isEdit ? '保存' : '创建' }}
         </el-button>
       </div>
     </el-card>
@@ -121,7 +137,7 @@
 </template>
 
 <script setup lang="ts">
-import { productApi, type IProduct } from '@/api/product'
+import { productApi } from '@/api/product'
 import { uploadApi } from '@/api/upload'
 
 defineOptions({ name: 'ProductEditView' })
@@ -133,6 +149,7 @@ const formRef = useTemplateRef('formRef')
 
 const isEdit = computed(() => !!route.query.id)
 const productId = computed(() => Number(route.query.id))
+const isPlatformListing = computed(() => !!form.value.platformProductId)
 const saving = ref(false)
 const uploading = ref(false)
 const uploadingIdx = ref(-1)
@@ -165,6 +182,7 @@ const form = ref<{
   price: number
   originalPrice: number
   stock: number
+  platformProductId?: number | null
   images: ImageItem[]
   translations: Record<TranslationCode, TranslationItem>
 }>({
@@ -175,6 +193,7 @@ const form = ref<{
   price: 0,
   originalPrice: 0,
   stock: 0,
+  platformProductId: null,
   images: [],
   translations: {
     ja: { title: '', description: '' },
@@ -199,10 +218,9 @@ const loadCategories = async () => {
 
 const loadProduct = async () => {
   if (!isEdit.value) return
-  const { data: res } = await productApi.getMyProducts({ id: productId.value, page: 1, pageSize: 1 })
-  if (res.code !== 200 || !res.data?.list?.length) return
-  const p = res.data.list[0]
-  if (!p) return
+  const { data: res } = await productApi.getProduct(productId.value)
+  if (res.code !== 200 || !res.data) return
+  const p = res.data
 
   const getTranslation = (code: TranslationCode): TranslationItem => {
     const translation = p.translations?.find((t) => t.languageCode === code)
@@ -219,7 +237,8 @@ const loadProduct = async () => {
     coverImage: p.coverImage,
     price: p.price,
     originalPrice: p.originalPrice,
-    stock: p.stock,
+    stock: p.merchantStock ?? p.stock,
+    platformProductId: p.platformProductId || null,
     images: p.images?.map((img) => ({ imageUrl: img.imageUrl, sort: img.sort })) || [],
     translations: {
       ja: getTranslation('ja'),
@@ -232,20 +251,22 @@ const loadProduct = async () => {
 const handleSave = async () => {
   saving.value = true
   try {
-    const payload = {
-      ...form.value,
-      images: form.value.images.map((img, idx) => ({ imageUrl: img.imageUrl, sort: idx + 1 })),
-      translations: Object.entries(form.value.translations).map(([code, t]) => ({
-        languageCode: code,
-        title: t.title,
-        description: t.description,
-      })),
-    }
+    const payload = isPlatformListing.value
+      ? { stock: form.value.stock }
+      : {
+          ...form.value,
+          images: form.value.images.map((img, idx) => ({ imageUrl: img.imageUrl, sort: idx + 1 })),
+          translations: Object.entries(form.value.translations).map(([code, t]) => ({
+            languageCode: code,
+            title: t.title,
+            description: t.description,
+          })),
+        }
     const { data: res } = isEdit.value
       ? await productApi.updateProduct(productId.value, payload)
       : await productApi.createProduct(payload)
     if (res.code !== 200) return
-    ElMessage.success(isEdit.value ? 'Product updated' : 'Product created')
+    ElMessage.success(isEdit.value ? '商品已更新' : '商品已创建')
     router.push('/product/list')
   } finally {
     saving.value = false
@@ -263,12 +284,12 @@ async function handleCoverUpload(options: any) {
     const { data: res } = await uploadApi.postImage(options.file, 'product')
     if (res.code === 200) {
       form.value.coverImage = res.data?.url || res.data
-      ElMessage.success('Uploaded')
+      ElMessage.success('上传成功')
     } else {
-      ElMessage.error(res.message || 'Upload failed')
+      ElMessage.error(res.message || '上传失败')
     }
   } catch {
-    ElMessage.error('Upload failed')
+    ElMessage.error('上传失败')
   } finally {
     uploading.value = false
   }
@@ -282,12 +303,12 @@ async function handleImageItemUpload(options: any, idx: number) {
       const image = form.value.images[idx]
       if (!image) return
       image.imageUrl = res.data?.url || res.data
-      ElMessage.success('Uploaded')
+      ElMessage.success('上传成功')
     } else {
-      ElMessage.error(res.message || 'Upload failed')
+      ElMessage.error(res.message || '上传失败')
     }
   } catch {
-    ElMessage.error('Upload failed')
+    ElMessage.error('上传失败')
   } finally {
     uploadingIdx.value = -1
   }

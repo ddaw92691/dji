@@ -29,7 +29,7 @@
       <el-table-column prop="listingStatus" label="状态" width="110" align="center">
         <template #default="{ row }">
           <el-tag :type="row.listingStatus === 'ON_SALE' ? 'success' : 'warning'" size="small">
-            {{ row.listingStatus === 'ON_SALE' ? 'On Sale' : 'Off Sale' }}
+            {{ row.listingStatus === 'ON_SALE' ? '在售' : '已下架' }}
           </el-tag>
         </template>
       </el-table-column>

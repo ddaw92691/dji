@@ -25,14 +25,16 @@ export const getLabelByValue = <T extends string | number | boolean>(
 ): string => dict.find((item) => item.value === value)?.label ?? String(value)
 
 export const PRODUCT_STATUS_OPTIONS: DictItem<string>[] = [
-  { label: i18n.global.t('tag.enabled') || 'On Sale', value: 'active', color: 'success' },
-  { label: i18n.global.t('tag.disabled') || 'Off Sale', value: 'inactive', color: 'danger' },
+  { label: '在售', value: 'ON_SALE', color: 'success' },
+  { label: '已下架', value: 'OFF_SALE', color: 'danger' },
+  { label: '草稿', value: 'DRAFT', color: 'info' },
 ]
 
 export const AUDIT_STATUS_OPTIONS: DictItem<string>[] = [
-  { label: 'Pending', value: 'pending', color: 'warning' },
-  { label: 'Approved', value: 'approved', color: 'success' },
-  { label: 'Rejected', value: 'rejected', color: 'danger' },
+  { label: '待审核', value: 'PENDING', color: 'warning' },
+  { label: '已通过', value: 'APPROVED', color: 'success' },
+  { label: '已拒绝', value: 'REJECTED', color: 'danger' },
+  { label: '草稿', value: 'DRAFT', color: 'info' },
 ]
 
 export const ORDER_STATUS_OPTIONS: DictItem<string>[] = [

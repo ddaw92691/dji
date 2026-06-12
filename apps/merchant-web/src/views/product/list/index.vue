@@ -16,7 +16,7 @@
           @click="router.push('/catalog/library')"
           v-permission="['product:add']"
         >
-          From Library
+          从商品库上架
         </el-button>
       </template>
       <template #coverImage="{ row }">
@@ -40,37 +40,42 @@
           :text="getLabelByValue(AUDIT_STATUS_OPTIONS, row.auditStatus)"
         />
       </template>
+      <template #productSource="{ row }">
+        <el-tag :type="row.platformProductId ? 'success' : 'info'" size="small">
+          {{ row.platformProductId ? '平台商品库' : '商家自建' }}
+        </el-tag>
+      </template>
       <template #operation="{ row }">
         <el-button type="primary" link @click="router.push(`/product/edit?id=${row.id}`)" v-permission="['product:edit']">
-          Edit Stock
+          编辑
         </el-button>
         <el-popconfirm
-          title="Are you sure you want to delete this product?"
+          title="确定要删除/下架该商品吗？"
           :placement="POPCONFIRM_CONFIG.placement"
           :width="POPCONFIRM_CONFIG.width"
           @confirm="handleDelete(row.id)"
         >
           <template #reference>
             <el-button type="danger" link v-permission="['product:delete']">
-              Delete
+              删除
             </el-button>
           </template>
         </el-popconfirm>
         <el-popconfirm
-          v-if="row.auditStatus !== 'approved'"
-          title="Submit this product for audit?"
+          v-if="!row.platformProductId && row.auditStatus !== 'APPROVED'"
+          title="确定提交该商品审核吗？"
           :placement="POPCONFIRM_CONFIG.placement"
           :width="POPCONFIRM_CONFIG.width"
           @confirm="handleSubmitAudit(row.id)"
         >
           <template #reference>
             <el-button type="warning" link v-permission="['product:audit']">
-              Submit Audit
+              提交审核
             </el-button>
           </template>
         </el-popconfirm>
-        <el-button type="info" link @click="router.push(`/product/translation?id=${row.id}`)">
-          Translations
+        <el-button v-if="!row.platformProductId" type="info" link @click="router.push(`/product/translation?id=${row.id}`)">
+          翻译
         </el-button>
       </template>
     </BasePage>
@@ -119,37 +124,37 @@ onUnmounted(() => {
 
 const searchFormConfig = ref<IFormConfig[]>([
   {
-    label: 'Keyword',
+    label: '关键词',
     prop: 'keyword',
     type: 'elInput',
-    attrs: { placeholder: 'Search by title...' },
+    attrs: { placeholder: '搜索商品名称...' },
   },
   {
-    label: 'Category',
+    label: '分类',
     prop: 'categoryId',
     type: 'elSelect',
     attrs: {
-      placeholder: 'Select category',
+      placeholder: '选择分类',
       options: [],
       clearable: true,
     },
   },
   {
-    label: 'Status',
+    label: '状态',
     prop: 'status',
     type: 'elSelect',
     attrs: {
-      placeholder: 'Select status',
+      placeholder: '选择状态',
       options: PRODUCT_STATUS_OPTIONS,
       clearable: true,
     },
   },
   {
-    label: 'Audit Status',
+    label: '审核状态',
     prop: 'auditStatus',
     type: 'elSelect',
     attrs: {
-      placeholder: 'Select audit status',
+      placeholder: '选择审核状态',
       options: AUDIT_STATUS_OPTIONS,
       clearable: true,
     },
@@ -158,19 +163,20 @@ const searchFormConfig = ref<IFormConfig[]>([
 
 const columns = ref([
   { type: 'index', label: '#', width: 55, fixed: 'left' },
-  { prop: 'coverImage', label: 'Cover', width: 80 },
-  { prop: 'title', label: 'Title', minWidth: 150 },
-  { prop: 'categoryName', label: 'Category', minWidth: 100 },
-  { prop: 'price', label: 'Sale Price', width: 100 },
-  { prop: 'merchantPrice', label: 'M.Price', width: 90 },
-  { prop: 'profitAmount', label: 'Profit', width: 90 },
-  { prop: 'profitRate', label: 'Profit Rate', width: 100 },
-  { prop: 'stock', label: 'Stock', width: 80 },
-  { prop: 'salesCount', label: 'Sales', width: 80 },
-  { prop: 'status', label: 'Status', width: 100 },
-  { prop: 'auditStatus', label: 'Audit', width: 110 },
-  { prop: 'createdAt', label: 'Created', minWidth: 160 },
-  { prop: 'operation', label: 'Actions', width: 280, fixed: 'right' },
+  { prop: 'coverImage', label: '封面', width: 80 },
+  { prop: 'title', label: '商品名称', minWidth: 150 },
+  { prop: 'productSource', label: '来源', width: 110 },
+  { prop: 'categoryName', label: '分类', minWidth: 100 },
+  { prop: 'price', label: '售价', width: 100 },
+  { prop: 'merchantPrice', label: '货款成本', width: 90 },
+  { prop: 'profitAmount', label: '利润', width: 90 },
+  { prop: 'profitRate', label: '利润率', width: 100 },
+  { prop: 'stock', label: '库存', width: 80 },
+  { prop: 'salesCount', label: '销量', width: 80 },
+  { prop: 'status', label: '状态', width: 100 },
+  { prop: 'auditStatus', label: '审核', width: 110 },
+  { prop: 'createdAt', label: '创建时间', minWidth: 160 },
+  { prop: 'operation', label: '操作', width: 280, fixed: 'right' },
 ])
 
 const getProductList = async (
@@ -196,14 +202,14 @@ const getProductList = async (
 const handleDelete = async (id: number) => {
   const { data: res } = await productApi.deleteProduct(id)
   if (res.code !== 200) return
-  ElMessage.success('Delete successful')
+  ElMessage.success('操作成功')
   basePageRef.value?.refreshAfterDelete(1)
 }
 
 const handleSubmitAudit = async (id: number) => {
   const { data: res } = await productApi.submitAudit(id)
   if (res.code !== 200) return
-  ElMessage.success('Submitted for audit')
+  ElMessage.success('已提交审核')
   basePageRef.value?.refreshCurrentPage()
 }
 

@@ -11099,8 +11099,8 @@ public class DataInitializer implements CommandLineRunner {
         insertMenu(1104L, 1100L, "ADMIN", "MENU", "/user/admin", "管理员管理", null, "admin:user:admin:view", 4, true);
         insertMenu(1105L, 1100L, "ADMIN", "MENU", "/user/merchant-application", "商家申请", null, "admin:merchantApplication:view", 5, true);
 
-        insertMenu(1200L, null, "ADMIN", "DIRECTORY", null, "商品管理", "HOutline:ShoppingBagIcon", null, 3, true);
-        insertMenu(1201L, 1200L, "ADMIN", "MENU", "/product/list", "商品列表", null, "product:view", 1, true);
+        insertMenu(1200L, null, "ADMIN", "DIRECTORY", null, "商家商品管理", "HOutline:ShoppingBagIcon", null, 3, true);
+        insertMenu(1201L, 1200L, "ADMIN", "MENU", "/product/list", "商家商品", null, "product:view", 1, true);
         insertMenu(1202L, 1200L, "ADMIN", "MENU", "/product/audit", "商品审核", null, "product:audit", 2, true);
         insertMenu(1203L, 1200L, "ADMIN", "MENU", "/product/category", "分类管理", null, "product:view", 3, true);
         insertMenu(1204L, 1200L, "ADMIN", "MENU", "/product/banner", "轮播图管理", null, "product:view", 4, true);
@@ -11216,9 +11216,9 @@ public class DataInitializer implements CommandLineRunner {
         insertMenu(2263L, 1704L, "ADMIN", "BUTTON", null, null, null, "support:quickReply:delete", 3, false);
 
         // ===== ADMIN catalog/tax menus (id start 1800) =====
-        insertMenu(1800L, null, "ADMIN", "DIRECTORY", null, "商品库管理", "HOutline:ArchiveBoxIcon", null, 9, true);
-        insertMenu(1801L, 1800L, "ADMIN", "MENU", "/catalog/product", "商品库", null, "admin:catalog:view", 1, true);
-        insertMenu(1802L, 1800L, "ADMIN", "MENU", "/catalog/listing", "上架管理", null, "admin:catalog:view", 2, true);
+        insertMenu(1800L, null, "ADMIN", "DIRECTORY", null, "平台商品库", "HOutline:ArchiveBoxIcon", null, 9, true);
+        insertMenu(1801L, 1800L, "ADMIN", "MENU", "/catalog/product", "平台商品", null, "admin:catalog:view", 1, true);
+        insertMenu(1802L, 1800L, "ADMIN", "MENU", "/catalog/listing", "商家上架商品", null, "admin:catalog:view", 2, true);
 
         insertMenu(1850L, null, "ADMIN", "DIRECTORY", null, "税费管理", "HOutline:ReceiptPercentIcon", null, 10, true);
         insertMenu(1851L, 1850L, "ADMIN", "MENU", "/tax/merchant-tax", "商家税费", null, "admin:tax:view", 1, true);
@@ -11234,7 +11234,7 @@ public class DataInitializer implements CommandLineRunner {
         insertMenu(5000L, null, "MERCHANT", "DIRECTORY", null, "控制台", "HOutline:HomeIcon", null, 1, true);
         insertMenu(5001L, 5000L, "MERCHANT", "MENU", "/dashboard/overview", "数据概览", "HOutline:ChartBarIcon", null, 1, true);
 
-        insertMenu(5100L, null, "MERCHANT", "DIRECTORY", null, "商品管理", "HOutline:ShoppingBagIcon", null, 2, true);
+        insertMenu(5100L, null, "MERCHANT", "DIRECTORY", null, "我的商品", "HOutline:ShoppingBagIcon", null, 2, true);
         insertMenu(5101L, 5100L, "MERCHANT", "MENU", "/product/list", "商品列表", null, null, 1, true);
         insertMenu(5102L, 5100L, "MERCHANT", "MENU", "/product/edit", "商品编辑", null, null, 2, true);
         insertMenu(5103L, 5100L, "MERCHANT", "MENU", "/product/translation", "商品翻译", null, null, 3, true);
@@ -11266,8 +11266,8 @@ public class DataInitializer implements CommandLineRunner {
         insertMenu(5603L, 5600L, "MERCHANT", "MENU", "/support/quick-reply", "快捷回复", null, null, 3, true);
 
         // ===== MERCHANT catalog/tax menus (id start 5700) =====
-        insertMenu(5700L, null, "MERCHANT", "DIRECTORY", null, "商品库", "HOutline:ArchiveBoxIcon", null, 8, true);
-        insertMenu(5701L, 5700L, "MERCHANT", "MENU", "/catalog/library", null, null, "merchant:catalog:view", 1, true);
+        insertMenu(5700L, null, "MERCHANT", "DIRECTORY", null, "平台商品库", "HOutline:ArchiveBoxIcon", null, 8, true);
+        insertMenu(5701L, 5700L, "MERCHANT", "MENU", "/catalog/library", "商品库", null, "merchant:catalog:view", 1, true);
 
         insertMenu(5750L, null, "MERCHANT", "DIRECTORY", null, "税费通知", "HOutline:ReceiptPercentIcon", null, 9, true);
         insertMenu(5751L, 5750L, "MERCHANT", "MENU", "/tax/notices", null, null, "merchant:tax:view", 1, true);

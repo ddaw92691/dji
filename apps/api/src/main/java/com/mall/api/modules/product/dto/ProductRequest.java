@@ -16,6 +16,6 @@ public class ProductRequest {
     private BigDecimal price;
     private BigDecimal originalPrice;
     private Integer stock;
-    private List<String> images;
+    private List<Map<String, Object>> images;
     private List<Map<String, String>> translations;
 }

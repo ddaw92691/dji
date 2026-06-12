@@ -80,7 +80,7 @@ public class CustomerController {
             @PathVariable Long id,
             @RequestHeader(value = "X-Country-Code", required = false) String countryCode,
             @RequestHeader(value = "X-Language-Code", required = false) String languageCode) {
-        Map<String, Object> detail = productService.getProductDetail(id, countryCode, languageCode);
+        Map<String, Object> detail = productService.getPublicProductDetail(id, countryCode, languageCode);
         if (detail == null) {
             return ApiResponse.error(404, "商品不存在");
         }

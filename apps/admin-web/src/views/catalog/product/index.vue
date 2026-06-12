@@ -19,7 +19,7 @@
         <el-button type="primary" @click="handleSearch">搜索</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="success" v-permission="'admin:catalog:add'" @click="openCreate">+ Add Product</el-button>
+        <el-button type="success" v-permission="'admin:catalog:add'" @click="openCreate">新增平台商品</el-button>
       </el-form-item>
     </el-form>
 
@@ -51,7 +51,7 @@
       <el-table-column prop="status" label="状态" width="100" align="center">
         <template #default="{ row }">
           <el-tag :type="row.status === 'ENABLE' ? 'success' : 'info'" size="small">
-            {{ row.status === 'ENABLE' ? 'Enabled' : 'Disabled' }}
+            {{ row.status === 'ENABLE' ? '已启用' : '已禁用' }}
           </el-tag>
         </template>
       </el-table-column>
@@ -59,13 +59,13 @@
         <template #default="{ row }">
           <el-button link type="primary" v-permission="'admin:catalog:edit'" @click="openEdit(row)">编辑</el-button>
           <el-popconfirm
-            :title="`Toggle status to ${row.status === 'ENABLE' ? 'DISABLE' : 'ENABLE'}?`"
+            :title="`确定切换商品状态吗？`"
             placement="top" width="220"
             @confirm="handleToggleStatus(row)"
           >
             <template #reference>
               <el-button link :type="row.status === 'ENABLE' ? 'warning' : 'success'" v-permission="'admin:catalog:edit'">
-                {{ row.status === 'ENABLE' ? 'Disable' : 'Enable' }}
+                {{ row.status === 'ENABLE' ? '禁用' : '启用' }}
               </el-button>
             </template>
           </el-popconfirm>
@@ -90,7 +90,7 @@
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="750px" @close="resetForm">
       <el-form ref="formRef" :model="form" label-width="130px">
         <el-form-item label="品牌">
-          <el-input v-model="form.brand" placeholder="Default: DJI" />
+          <el-input v-model="form.brand" placeholder="默认：DJI" />
         </el-form-item>
         <el-form-item label="名称" required>
           <el-input v-model="form.name" placeholder="商品名称" />
@@ -164,7 +164,7 @@
         <el-row :gutter="12">
           <el-col :span="8" v-for="lang in ['ja','ko','en']" :key="lang">
             <el-form-item :label="lang.toUpperCase()">
-              <el-input v-model="form.translations[lang]" :placeholder="`${lang} name`" />
+              <el-input v-model="form.translations[lang]" :placeholder="`请输入翻译名称`" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -178,7 +178,7 @@
           accept="image/*"
           multiple
         >
-          <el-button>+ Add Image</el-button>
+          <el-button>添加图片</el-button>
         </el-upload>
         <div v-if="form.images.length" class="images-preview" style="margin-top: 8px">
           <div v-for="(img, idx) in form.images" :key="idx" class="image-item">
@@ -196,7 +196,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { catalogApi, type CatalogProduct } from '@/api/catalog'
 import { categoryApi, type CategoryItem } from '@/api/category'
@@ -208,7 +208,7 @@ const loading = ref(false)
 const tableData = ref<CatalogProduct[]>([])
 const total = ref(0)
 const dialogVisible = ref(false)
-const dialogTitle = ref('Create Product')
+const dialogTitle = ref('新增平台商品')
 const submitLoading = ref(false)
 const isEdit = ref(false)
 const editId = ref<number | null>(null)
@@ -305,14 +305,14 @@ function handleSearch() {
 
 function openCreate() {
   resetForm()
-  dialogTitle.value = 'Create Product'
+  dialogTitle.value = '新增平台商品'
   dialogVisible.value = true
 }
 
 function openEdit(row: CatalogProduct) {
   isEdit.value = true
   editId.value = row.id
-  dialogTitle.value = 'Edit Product'
+  dialogTitle.value = '编辑平台商品'
   form.brand = row.brand || 'DJI'
   form.name = row.name
   form.model = row.model

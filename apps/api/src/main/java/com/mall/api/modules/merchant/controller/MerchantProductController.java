@@ -1,7 +1,10 @@
 package com.mall.api.modules.merchant.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mall.api.common.enums.ResultCode;
+import com.mall.api.common.exception.BusinessException;
 import com.mall.api.common.response.ApiResponse;
+import com.mall.api.modules.merchant.entity.Merchant;
+import com.mall.api.modules.merchant.mapper.MerchantMapper;
 import com.mall.api.modules.product.ProductService;
 import com.mall.api.modules.product.dto.ProductRequest;
 import com.mall.api.modules.product.entity.Product;
@@ -21,9 +24,11 @@ import java.util.Map;
 public class MerchantProductController {
 
     private final ProductService productService;
+    private final MerchantMapper merchantMapper;
 
-    public MerchantProductController(ProductService productService) {
+    public MerchantProductController(ProductService productService, MerchantMapper merchantMapper) {
         this.productService = productService;
+        this.merchantMapper = merchantMapper;
     }
 
     @GetMapping("/products")
@@ -34,15 +39,21 @@ public class MerchantProductController {
             @RequestParam(required = false) String auditStatus,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize) {
-        Long merchantId = SecurityUtils.getCurrentUserId();
-        Page<Product> pg = productService.getMerchantProducts(merchantId, keyword, status, auditStatus, page, pageSize);
-        return ApiResponse.success(Map.of("list", pg.getRecords(), "total", pg.getTotal(), "page", page, "pageSize", pageSize));
+        Long merchantId = currentMerchantId();
+        return ApiResponse.success(productService.getMerchantProductList(merchantId, keyword, status, auditStatus, page, pageSize));
+    }
+
+    @GetMapping("/products/{id}")
+    @Operation(summary = "我的商品详情")
+    public ApiResponse<Map<String, Object>> getProductDetail(@PathVariable Long id) {
+        Long merchantId = currentMerchantId();
+        return ApiResponse.success(productService.getMerchantProductDetail(merchantId, id));
     }
 
     @PostMapping("/products")
-    @Operation(summary = "创建商品")
+    @Operation(summary = "创建商家自建商品")
     public ApiResponse<Product> createProduct(@RequestBody ProductRequest request) {
-        Long merchantId = SecurityUtils.getCurrentUserId();
+        Long merchantId = currentMerchantId();
         Product product = new Product();
         product.setMerchantId(merchantId);
         product.setCategoryId(request.getCategoryId());
@@ -67,42 +78,58 @@ public class MerchantProductController {
     }
 
     @PutMapping("/products/{id}")
-    @Operation(summary = "更新商品")
+    @Operation(summary = "更新商家自建商品或平台商品库存")
     public ApiResponse<Product> updateProduct(@PathVariable Long id, @RequestBody ProductRequest request) {
-        Product existing = new Product();
-        existing.setCategoryId(request.getCategoryId());
-        existing.setTitle(request.getTitle());
-        existing.setDescription(request.getDescription());
-        existing.setCoverImage(request.getCoverImage());
-        existing.setPrice(request.getPrice());
-        existing.setOriginalPrice(request.getOriginalPrice());
-        existing.setStock(request.getStock());
-        Product updated = productService.updateProduct(id, existing);
-        if (request.getImages() != null) {
+        Long merchantId = currentMerchantId();
+        Product patch = new Product();
+        patch.setCategoryId(request.getCategoryId());
+        patch.setTitle(request.getTitle());
+        patch.setDescription(request.getDescription());
+        patch.setCoverImage(request.getCoverImage());
+        patch.setPrice(request.getPrice());
+        patch.setOriginalPrice(request.getOriginalPrice());
+        patch.setStock(request.getStock());
+        Product updated = productService.updateMerchantProduct(merchantId, id, patch);
+        if (updated.getPlatformProductId() == null && request.getImages() != null) {
             productService.saveImages(id, request.getImages());
+        }
+        if (updated.getPlatformProductId() == null && request.getTranslations() != null) {
+            productService.saveTranslations(merchantId, id, request.getTranslations());
         }
         return ApiResponse.success(updated);
     }
 
     @DeleteMapping("/products/{id}")
-    @Operation(summary = "删除商品")
+    @Operation(summary = "删除/下架我的商品")
     public ApiResponse<Void> deleteProduct(@PathVariable Long id) {
-        productService.deleteProduct(id);
+        Long merchantId = currentMerchantId();
+        productService.deleteMerchantProduct(merchantId, id);
         return ApiResponse.success();
     }
 
     @PostMapping("/products/{id}/submit-audit")
-    @Operation(summary = "提交审核")
+    @Operation(summary = "提交商家自建商品审核")
     public ApiResponse<Void> submitAudit(@PathVariable Long id) {
-        productService.submitAudit(id);
+        Long merchantId = currentMerchantId();
+        productService.submitAudit(merchantId, id);
         return ApiResponse.success();
     }
 
     @PutMapping("/products/{id}/translations")
-    @Operation(summary = "保存商品翻译")
+    @Operation(summary = "保存商家自建商品翻译")
     public ApiResponse<Void> saveTranslations(@PathVariable Long id,
                                                @RequestBody List<Map<String, String>> translations) {
-        productService.saveTranslations(id, translations);
+        Long merchantId = currentMerchantId();
+        productService.saveTranslations(merchantId, id, translations);
         return ApiResponse.success();
+    }
+
+    private Long currentMerchantId() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        Merchant merchant = userId == null ? null : merchantMapper.selectByUserId(userId);
+        if (merchant == null) {
+            throw new BusinessException(ResultCode.FORBIDDEN.getCode(), "商家资料不存在");
+        }
+        return merchant.getId();
     }
 }
