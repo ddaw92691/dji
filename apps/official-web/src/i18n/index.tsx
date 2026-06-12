@@ -97,13 +97,18 @@ function normalizeLocaleList(list: unknown): LocaleEntry[] {
 function extractMessages(payload: unknown): Dict {
   const data = isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
   if (!isRecord(data)) return {};
+
   const source = data.translations ?? data.messages;
   if (!isRecord(source)) return {};
-  return Object.fromEntries(
-    Object.entries(source).filter(
-      ([, value]) => typeof value === "string" && value.length > 0,
-    ),
-  );
+
+  const messages: Dict = {};
+  Object.entries(source).forEach(([key, value]) => {
+    if (typeof value === "string" && value.length > 0) {
+      messages[key] = value;
+    }
+  });
+
+  return messages;
 }
 
 interface I18nContextValue {
