@@ -1036,7 +1036,7 @@ function LatestAnnouncements() {
         ].map((item) => (
           <article key={item}>
             <img src={fallbackImage(item)} alt={item} />
-            <h3>{item}</h3>
+            <h3>{tr(item)}</h3>
             <p>
               {tr("Access the latest updates and security resources from DJI.")}
             </p>

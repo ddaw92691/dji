@@ -6,7 +6,7 @@ import { useI18nStore } from '../stores/i18nStore'
 export default function ProductListPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { t, countryCode } = useI18nStore()
+  const { t, localeId } = useI18nStore()
   const categoryId = searchParams.get('categoryId') || ''
 
   const [products, setProducts] = useState<ProductItem[]>([])
@@ -21,7 +21,7 @@ export default function ProductListPage() {
     setPage(1)
     setProducts([])
     loadProducts(1, true)
-  }, [categoryId, sort])
+  }, [categoryId, sort, localeId])
 
   const loadProducts = async (pageNum: number, reset = false) => {
     setLoading(true)
@@ -37,7 +37,7 @@ export default function ProductListPage() {
       const res = await productApi.getProducts(params)
       if (res.data.code === 200) {
         const list = res.data.data?.list || []
-        setProducts(reset ? list : [...products, ...list])
+        setProducts((prev) => (reset ? list : [...prev, ...list]))
         setTotal(res.data.data?.total || 0)
         setPage(pageNum)
       }

@@ -4,6 +4,7 @@ import com.mall.api.common.response.ApiResponse;
 import com.mall.api.modules.commission.CommissionService;
 import com.mall.api.modules.export.ExportService;
 import com.mall.api.modules.finance.FinanceService;
+import com.mall.api.modules.finance.MerchantFundReconciliationService;
 import com.mall.api.modules.merchant.entity.Merchant;
 import com.mall.api.modules.merchant.entity.MerchantFundLog;
 import com.mall.api.modules.merchant.mapper.MerchantFundLogMapper;
@@ -22,6 +23,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -41,6 +43,7 @@ public class AdminFinanceController {
     private final ExportService exportService;
     private final MerchantFundLogMapper merchantFundLogMapper;
     private final MerchantMapper merchantMapper;
+    private final MerchantFundReconciliationService reconciliationService;
 
     public AdminFinanceController(FinanceService financeService,
                                    WithdrawalService withdrawalService,
@@ -48,7 +51,8 @@ public class AdminFinanceController {
                                    PaymentMapper paymentMapper,
                                    ExportService exportService,
                                    MerchantFundLogMapper merchantFundLogMapper,
-                                   MerchantMapper merchantMapper) {
+                                   MerchantMapper merchantMapper,
+                                   MerchantFundReconciliationService reconciliationService) {
         this.financeService = financeService;
         this.withdrawalService = withdrawalService;
         this.commissionService = commissionService;
@@ -56,6 +60,7 @@ public class AdminFinanceController {
         this.exportService = exportService;
         this.merchantFundLogMapper = merchantFundLogMapper;
         this.merchantMapper = merchantMapper;
+        this.reconciliationService = reconciliationService;
     }
 
     @GetMapping("/finance/overview")
@@ -112,6 +117,33 @@ public class AdminFinanceController {
         result.put("page", page);
         result.put("pageSize", pageSize);
         return ApiResponse.success(result);
+    }
+
+    @GetMapping("/finance/reconciliation")
+    @Operation(summary = "商家资金账本对账结果")
+    @PreAuthorize("@perm.has('finance:reconcile:view')")
+    public ApiResponse<Map<String, Object>> getReconciliations(
+            @RequestParam(required = false) String date,
+            @RequestParam(required = false) Long merchantId,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        return ApiResponse.success(reconciliationService.page(
+                parseDate(date), merchantId, status, page, pageSize));
+    }
+
+    @GetMapping("/finance/reconciliation/summary")
+    @Operation(summary = "商家资金账本对账汇总")
+    @PreAuthorize("@perm.has('finance:reconcile:view')")
+    public ApiResponse<Map<String, Object>> getReconciliationSummary(@RequestParam(required = false) String date) {
+        return ApiResponse.success(reconciliationService.summary(parseDate(date)));
+    }
+
+    @PostMapping("/finance/reconciliation/run")
+    @Operation(summary = "手动执行商家资金账本对账")
+    @PreAuthorize("@perm.has('finance:reconcile:view')")
+    public ApiResponse<Map<String, Object>> runReconciliation(@RequestParam(required = false) String date) {
+        return ApiResponse.success(reconciliationService.run(parseDate(date)));
     }
 
     @GetMapping("/withdrawals")
@@ -240,5 +272,12 @@ public class AdminFinanceController {
             @RequestParam(required = false) String endDate,
             HttpServletResponse response) {
         exportService.exportCommissions(keyword, agentId, status, startDate, endDate, response);
+    }
+
+    private LocalDate parseDate(String date) {
+        if (date == null || date.isBlank()) {
+            return null;
+        }
+        return LocalDate.parse(date);
     }
 }

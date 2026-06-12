@@ -140,6 +140,43 @@ CREATE TABLE IF NOT EXISTS merchant_fund_log (
 CREATE INDEX IF NOT EXISTS idx_merchant_fund_log_merchant ON merchant_fund_log(merchant_id);
 CREATE INDEX IF NOT EXISTS idx_merchant_fund_log_created ON merchant_fund_log(created_at);
 
+CREATE TABLE IF NOT EXISTS merchant_fund_reconciliation (
+    id                         BIGINT          PRIMARY KEY,
+    reconcile_date             DATE            NOT NULL,
+    merchant_id                BIGINT          NOT NULL,
+    opening_balance            NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    inflow_amount              NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    outflow_amount             NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    expected_closing_balance   NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    ledger_closing_balance     NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    actual_balance             NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    balance_difference         NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    opening_frozen_balance     NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    frozen_inflow_amount       NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    frozen_outflow_amount      NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    expected_closing_frozen    NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    ledger_closing_frozen      NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    actual_frozen_balance      NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    frozen_difference          NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    opening_total_balance      NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    total_inflow_amount        NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    total_outflow_amount       NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    expected_closing_total     NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    ledger_closing_total       NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    actual_total_balance       NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    total_difference           NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    log_count                  INTEGER         NOT NULL DEFAULT 0,
+    issue_count                INTEGER         NOT NULL DEFAULT 0,
+    status                     VARCHAR(20)     NOT NULL DEFAULT 'OK',
+    issue_summary              VARCHAR(1000),
+    checked_at                 TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at                 TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                 TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_merchant_fund_reconciliation_date_merchant ON merchant_fund_reconciliation(reconcile_date, merchant_id);
+CREATE INDEX IF NOT EXISTS idx_merchant_fund_reconciliation_date ON merchant_fund_reconciliation(reconcile_date);
+CREATE INDEX IF NOT EXISTS idx_merchant_fund_reconciliation_status ON merchant_fund_reconciliation(status);
+
 -- 提款账户（加密货币 / 银行）
 CREATE TABLE IF NOT EXISTS withdraw_account (
     id              BIGINT          PRIMARY KEY,

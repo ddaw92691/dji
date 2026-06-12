@@ -98,19 +98,15 @@ public class AdminRechargeController {
     @Transactional
     public ApiResponse<Void> approve(@PathVariable Long id, @RequestBody(required = false) Map<String, Object> body) {
         RechargeOrder order = requireOrder(id);
-        if (!PENDING.equals(order.getStatus())) {
+        Long operatorId = SecurityUtils.getCurrentUserId();
+        LocalDateTime reviewedAt = LocalDateTime.now();
+        int claimed = rechargeMapper.approvePending(id, operatorId, reviewedAt);
+        if (claimed == 0) {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "充值单不是待审核状态");
         }
-        Long operatorId = SecurityUtils.getCurrentUserId();
-        // 入账：增加商家可用余额并写资金流水
+
         merchantFundService.adjust(order.getMerchantId(), order.getAmount(), true,
                 "merchant_recharge", "Recharge approved " + order.getRechargeNo(), operatorId, "RECHARGE", order.getId());
-
-        order.setStatus(PAID);
-        order.setReviewedBy(operatorId);
-        order.setReviewedAt(LocalDateTime.now());
-        order.setUpdatedAt(LocalDateTime.now());
-        rechargeMapper.updateById(order);
         return ApiResponse.success();
     }
 
@@ -118,18 +114,15 @@ public class AdminRechargeController {
     @Operation(summary = "拒绝充值")
     @PreAuthorize("@perm.has('finance:recharge:reject')")
     @Audit(module = "充值记录", action = "拒绝充值", description = "充值审核拒绝")
+    @Transactional
     public ApiResponse<Void> reject(@PathVariable Long id, @RequestBody(required = false) Map<String, Object> body) {
-        RechargeOrder order = requireOrder(id);
-        if (!PENDING.equals(order.getStatus())) {
+        requireOrder(id);
+        String rejectReason = body == null || body.get("rejectReason") == null
+                ? null : String.valueOf(body.get("rejectReason"));
+        int claimed = rechargeMapper.rejectPending(id, rejectReason, SecurityUtils.getCurrentUserId(), LocalDateTime.now());
+        if (claimed == 0) {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "充值单不是待审核状态");
         }
-        order.setStatus(REJECTED);
-        order.setRejectReason(body == null || body.get("rejectReason") == null
-                ? null : String.valueOf(body.get("rejectReason")));
-        order.setReviewedBy(SecurityUtils.getCurrentUserId());
-        order.setReviewedAt(LocalDateTime.now());
-        order.setUpdatedAt(LocalDateTime.now());
-        rechargeMapper.updateById(order);
         return ApiResponse.success();
     }
 

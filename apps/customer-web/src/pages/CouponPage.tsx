@@ -19,7 +19,7 @@ const COUPON_STATUS_COLORS: Record<string, string> = {
 }
 
 export default function CouponPage() {
-  const { t } = useI18nStore()
+  const { t, localeId } = useI18nStore()
   const { token } = useAuthStore()
   const navigate = useNavigate()
 
@@ -48,11 +48,11 @@ export default function CouponPage() {
         setAvailableCoupons(res.data.data.list || [])
       }
     } catch {
-      setAvailableError('Failed to load coupons')
+      setAvailableError(t('coupon.loadFailed', 'Failed to load coupons'))
     } finally {
       setAvailableLoading(false)
     }
-  }, [])
+  }, [t])
 
   const loadMyCoupons = useCallback(async () => {
     setMyLoading(true)
@@ -63,27 +63,27 @@ export default function CouponPage() {
         setMyCoupons(res.data.data.list || [])
       }
     } catch {
-      setMyError('Failed to load coupons')
+      setMyError(t('coupon.loadFailed', 'Failed to load coupons'))
     } finally {
       setMyLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     if (activeTab === 'available') loadAvailable()
     else loadMyCoupons()
-  }, [activeTab])
+  }, [activeTab, localeId, loadAvailable, loadMyCoupons])
 
   const handleReceive = async (coupon: CouponItem) => {
     try {
       const res = await couponApi.receive(coupon.id)
       if (res.data.code === 200) {
-        setSuccessMsg('Coupon received!')
+        setSuccessMsg(t('coupon.received', 'Coupon received!'))
         setTimeout(() => setSuccessMsg(''), 2000)
         loadAvailable()
       }
     } catch {
-      setSuccessMsg('Failed to receive coupon')
+      setSuccessMsg(t('coupon.receiveFailed', 'Failed to receive coupon'))
       setTimeout(() => setSuccessMsg(''), 2000)
     }
   }
@@ -107,7 +107,7 @@ export default function CouponPage() {
             activeTab === 'available' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'
           }`}
         >
-          Available Coupons
+          {t('coupon.available', 'Available Coupons')}
         </button>
         <button
           onClick={() => setActiveTab('my')}
@@ -115,7 +115,7 @@ export default function CouponPage() {
             activeTab === 'my' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'
           }`}
         >
-          My Coupons
+          {t('coupon.mine', 'My Coupons')}
         </button>
       </div>
 
@@ -134,11 +134,11 @@ export default function CouponPage() {
           ) : availableError ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <p className="text-red-500 text-sm">{availableError}</p>
-              <button onClick={loadAvailable} className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm">Retry</button>
+              <button onClick={loadAvailable} className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm">{t('common.retry', 'Retry')}</button>
             </div>
           ) : availableCoupons.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4 text-gray-400">
-              <p className="text-sm">No coupons available</p>
+              <p className="text-sm">{t('coupon.noneAvailable', 'No coupons available')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -158,18 +158,18 @@ export default function CouponPage() {
                       onClick={() => handleReceive(coupon)}
                       className="text-xs px-4 py-1.5 bg-blue-500 text-white rounded font-medium"
                     >
-                      Receive
+                      {t('coupon.receive', 'Receive')}
                     </button>
                   </div>
                   <p className="text-base font-bold text-gray-900">{coupon.name}</p>
                   <p className="text-sm text-red-500 mt-1">
                     {coupon.type === 'PERCENTAGE' || coupon.type === 'DISCOUNT'
-                      ? `${coupon.discountRate}% off`
-                      : `¥${coupon.amount} off`
+                      ? `${coupon.discountRate}% ${t('mall.checkout.off', 'off')}`
+                      : `¥${coupon.amount} ${t('mall.checkout.off', 'off')}`
                     }
                   </p>
                   {coupon.minSpend > 0 && (
-                    <p className="text-xs text-gray-400 mt-1">Min spend: ¥{coupon.minSpend}</p>
+                    <p className="text-xs text-gray-400 mt-1">{t('mall.checkout.min', 'Min')} ¥{coupon.minSpend}</p>
                   )}
                   <p className="text-xs text-gray-400 mt-0.5">
                     {formatDate(coupon.startAt)} ~ {formatDate(coupon.endAt)}
@@ -186,11 +186,11 @@ export default function CouponPage() {
           ) : myError ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <p className="text-red-500 text-sm">{myError}</p>
-              <button onClick={loadMyCoupons} className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm">Retry</button>
+              <button onClick={loadMyCoupons} className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm">{t('common.retry', 'Retry')}</button>
             </div>
           ) : myCoupons.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4 text-gray-400">
-              <p className="text-sm">No coupons yet</p>
+              <p className="text-sm">{t('coupon.noneMine', 'No coupons yet')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -211,19 +211,19 @@ export default function CouponPage() {
                   <p className="text-base font-bold text-gray-900">{coupon.name}</p>
                   <p className="text-sm text-red-500 mt-1">
                     {coupon.type === 'PERCENTAGE' || coupon.type === 'DISCOUNT'
-                      ? `${coupon.discountRate}% off`
-                      : `¥${coupon.amount} off`
+                      ? `${coupon.discountRate}% ${t('mall.checkout.off', 'off')}`
+                      : `¥${coupon.amount} ${t('mall.checkout.off', 'off')}`
                     }
                   </p>
                   {coupon.minSpend > 0 && (
-                    <p className="text-xs text-gray-400 mt-1">Min spend: ¥{coupon.minSpend}</p>
+                    <p className="text-xs text-gray-400 mt-1">{t('mall.checkout.min', 'Min')} ¥{coupon.minSpend}</p>
                   )}
                   <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
-                    <span>Received: {formatDate(coupon.receivedAt)}</span>
-                    {coupon.usedAt && <span>Used: {formatDate(coupon.usedAt)}</span>}
+                    <span>{t('coupon.receivedAt', 'Received')}: {formatDate(coupon.receivedAt)}</span>
+                    {coupon.usedAt && <span>{t('coupon.usedAt', 'Used')}: {formatDate(coupon.usedAt)}</span>}
                   </div>
                   {coupon.endAt && (
-                    <p className="text-xs text-gray-400 mt-0.5">Expires: {formatDate(coupon.endAt)}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{t('coupon.expires', 'Expires')}: {formatDate(coupon.endAt)}</p>
                   )}
                 </div>
               ))}

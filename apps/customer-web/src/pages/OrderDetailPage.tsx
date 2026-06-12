@@ -23,7 +23,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { t } = useI18nStore()
+  const { t, localeId } = useI18nStore()
   const { token } = useAuthStore()
   const navigate = useNavigate()
 
@@ -34,7 +34,7 @@ export default function OrderDetailPage() {
   useEffect(() => {
     if (!token) { navigate('/login'); return }
     if (id) loadOrder(Number(id))
-  }, [token, id])
+  }, [token, id, localeId])
 
   const loadOrder = async (orderId: number) => {
     setLoading(true)

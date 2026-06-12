@@ -7,7 +7,7 @@ import { useI18n } from "../i18n";
 import { getMallUrl } from "../utils/mallUrl";
 
 export default function ProductDetailPage() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<ProductItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -21,7 +21,7 @@ export default function ProductDetailPage() {
         if (r.data.code === 200) setProduct(r.data.data);
       })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, locale.id]);
 
   if (loading)
     return (

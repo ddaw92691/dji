@@ -8,4 +8,7 @@ export const financeApi = {
     getCommissions: (params) => request.get('/admin/commissions', { params }),
     getPayments: (params) => request.get('/admin/payments', { params }),
     getFundLogs: (params) => request.get('/admin/finance/fund-logs', { params }),
+    getReconciliationSummary: (params) => request.get('/admin/finance/reconciliation/summary', { params }),
+    getReconciliations: (params) => request.get('/admin/finance/reconciliation', { params }),
+    runReconciliation: (params) => request.post('/admin/finance/reconciliation/run', null, { params }),
 };

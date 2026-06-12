@@ -18,7 +18,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 
 export default function SupportSessionsPage() {
   const navigate = useNavigate()
-  const { t } = useI18nStore()
+  const { t, localeId } = useI18nStore()
   const { token } = useAuthStore()
   const [sessions, setSessions] = useState<SupportSession[]>([])
   const [loading, setLoading] = useState(true)
@@ -29,7 +29,7 @@ export default function SupportSessionsPage() {
     loadSessions()
     intervalRef.current = setInterval(loadSessions, 15000)
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
-  }, [token])
+  }, [token, localeId])
 
   const loadSessions = async () => {
     try {
@@ -66,7 +66,7 @@ export default function SupportSessionsPage() {
       <header className="sticky top-0 bg-white border-b z-10 p-4 flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="text-lg">←</button>
         <h1 className="text-base font-semibold flex-1">{t('support.title') || 'Customer Service'}</h1>
-        <button onClick={handleRefresh} className="text-blue-500 text-sm">Refresh</button>
+        <button onClick={handleRefresh} className="text-blue-500 text-sm">{t('common.refresh', 'Refresh')}</button>
       </header>
 
       <main className="flex-1 overflow-y-auto">
@@ -88,10 +88,10 @@ export default function SupportSessionsPage() {
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-sm font-semibold truncate">{session.merchantName}</span>
                       <span className={`text-xs px-1.5 py-0.5 rounded ${STATUS_COLORS[session.status] || 'bg-gray-100'}`}>
-                        {session.status}
+                        {t(`support.status.${session.status}`, session.status)}
                       </span>
                       {session.priority === 'HIGH' && (
-                        <span className={`text-xs font-bold ${PRIORITY_COLORS[session.priority] || ''}`}>HIGH</span>
+                        <span className={`text-xs font-bold ${PRIORITY_COLORS[session.priority] || ''}`}>{t('support.priority.high', 'HIGH')}</span>
                       )}
                     </div>
                     <p className="text-xs text-gray-500 mb-1 truncate">{session.title}</p>

@@ -261,13 +261,21 @@ public class OrderService {
         if (!"PENDING_PAYMENT".equals(order.getStatus())) {
             throw new BusinessException(400, "error.order.invalidStatus");
         }
+        LocalDateTime cancelledAt = LocalDateTime.now();
+        int claimed = orderMapper.update(null, Wrappers.<MallOrder>lambdaUpdate()
+                .set(MallOrder::getStatus, "CANCELLED")
+                .set(MallOrder::getCancelledAt, cancelledAt)
+                .set(MallOrder::getUpdatedAt, cancelledAt)
+                .eq(MallOrder::getId, orderId)
+                .eq(MallOrder::getUserId, userId)
+                .eq(MallOrder::getStatus, "PENDING_PAYMENT")
+                .eq(MallOrder::getDeleted, false));
+        if (claimed == 0) {
+            throw new BusinessException(400, "error.order.invalidStatus");
+        }
         if (order.getUserCouponId() != null) {
             couponService.restoreCoupon(order.getUserCouponId());
         }
-        order.setStatus("CANCELLED");
-        order.setCancelledAt(LocalDateTime.now());
-        order.setUpdatedAt(LocalDateTime.now());
-        orderMapper.updateById(order);
     }
 
     @Transactional
@@ -284,6 +292,8 @@ public class OrderService {
                 .set(MallOrder::getPaidAt, LocalDateTime.now())
                 .set(MallOrder::getUpdatedAt, LocalDateTime.now())
                 .eq(MallOrder::getId, orderId)
+                .eq(MallOrder::getUserId, userId)
+                .eq(MallOrder::getDeleted, false)
                 .eq(MallOrder::getStatus, "PENDING_PAYMENT"));
         if (claimed == 0) {
             throw new BusinessException(400, "error.order.invalidStatus");
@@ -321,7 +331,10 @@ public class OrderService {
 
         // 货款进入商家冻结余额（原子）
         if (order.getMerchantId() != null) {
-            merchantMapper.addFrozenBalance(order.getMerchantId(), order.getPayAmount());
+            int rows = merchantMapper.addFrozenBalance(order.getMerchantId(), order.getPayAmount());
+            if (rows == 0) {
+                throw new BusinessException(400, "Merchant is not available");
+            }
         }
 
         commissionService.createFrozenCommission(order);
@@ -342,16 +355,24 @@ public class OrderService {
         if (order == null || !order.getUserId().equals(userId) || Boolean.TRUE.equals(order.getDeleted())) {
             throw new BusinessException(400, "error.order.notFound");
         }
-        if (!"SHIPPED".equals(order.getStatus())) {
+        LocalDateTime completedAt = LocalDateTime.now();
+        int claimed = orderMapper.update(null, Wrappers.<MallOrder>lambdaUpdate()
+                .set(MallOrder::getStatus, "COMPLETED")
+                .set(MallOrder::getCompletedAt, completedAt)
+                .set(MallOrder::getUpdatedAt, completedAt)
+                .eq(MallOrder::getId, orderId)
+                .eq(MallOrder::getUserId, userId)
+                .eq(MallOrder::getStatus, "SHIPPED")
+                .eq(MallOrder::getDeleted, false));
+        if (claimed == 0) {
             throw new BusinessException(400, "error.order.invalidStatus");
         }
-        order.setStatus("COMPLETED");
-        order.setCompletedAt(LocalDateTime.now());
-        order.setUpdatedAt(LocalDateTime.now());
-        orderMapper.updateById(order);
 
         if (order.getMerchantId() != null) {
-            merchantMapper.settleFrozenToBalance(order.getMerchantId(), order.getPayAmount());
+            int rows = merchantMapper.settleFrozenToBalance(order.getMerchantId(), order.getPayAmount());
+            if (rows == 0) {
+                throw new BusinessException(400, "Merchant frozen balance is not enough");
+            }
         }
 
         // Settle commission
@@ -397,15 +418,20 @@ public class OrderService {
         if (order == null || !merchantId.equals(order.getMerchantId()) || Boolean.TRUE.equals(order.getDeleted())) {
             throw new BusinessException(400, "error.order.notFound");
         }
-        if (!"PAID".equals(order.getStatus())) {
+        LocalDateTime shippedAt = LocalDateTime.now();
+        int claimed = orderMapper.update(null, Wrappers.<MallOrder>lambdaUpdate()
+                .set(MallOrder::getStatus, "SHIPPED")
+                .set(MallOrder::getLogisticsCompany, logisticsCompany)
+                .set(MallOrder::getTrackingNo, trackingNo)
+                .set(MallOrder::getShippedAt, shippedAt)
+                .set(MallOrder::getUpdatedAt, shippedAt)
+                .eq(MallOrder::getId, orderId)
+                .eq(MallOrder::getMerchantId, merchantId)
+                .eq(MallOrder::getStatus, "PAID")
+                .eq(MallOrder::getDeleted, false));
+        if (claimed == 0) {
             throw new BusinessException(400, "error.order.invalidStatus");
         }
-        order.setStatus("SHIPPED");
-        order.setLogisticsCompany(logisticsCompany);
-        order.setTrackingNo(trackingNo);
-        order.setShippedAt(LocalDateTime.now());
-        order.setUpdatedAt(LocalDateTime.now());
-        orderMapper.updateById(order);
 
         String title = "Order #" + order.getOrderNo() + " has been shipped";
         String notifyContent = "Your order has been shipped via " + logisticsCompany + ", tracking: " + trackingNo;
@@ -434,15 +460,27 @@ public class OrderService {
             throw new BusinessException(400, "货款金额无效");
         }
         // 扣减商家可用余额（余额不足会抛出“可用余额不足”）并写资金流水
+        LocalDateTime paidAt = LocalDateTime.now();
+        int claimed = orderMapper.update(null, Wrappers.<MallOrder>lambdaUpdate()
+                .set(MallOrder::getMerchantPaidStatus, "PAID")
+                .set(MallOrder::getMerchantPaidAt, paidAt)
+                .set(MallOrder::getExpectedArrivalAt, expectedArrivalAt)
+                .set(MallOrder::getArrivalStatus, "WAITING")
+                .set(MallOrder::getUpdatedAt, paidAt)
+                .eq(MallOrder::getId, orderId)
+                .eq(MallOrder::getMerchantId, merchantId)
+                .eq(MallOrder::getDeleted, false)
+                .isNotNull(MallOrder::getOrderSource)
+                .ne(MallOrder::getOrderSource, "CUSTOMER")
+                .and(w -> w.isNull(MallOrder::getMerchantPaidStatus)
+                        .or()
+                        .ne(MallOrder::getMerchantPaidStatus, "PAID")));
+        if (claimed == 0) {
+            throw new BusinessException(400, "货款已支付或订单状态已变化");
+        }
+
         merchantFundService.adjust(merchantId, goodsCost, false, "purchase_payment",
                 "Pay goods cost for order #" + order.getOrderNo(), merchantId, "ORDER", order.getId());
-
-        order.setMerchantPaidStatus("PAID");
-        order.setMerchantPaidAt(LocalDateTime.now());
-        order.setExpectedArrivalAt(expectedArrivalAt);
-        order.setArrivalStatus("WAITING");
-        order.setUpdatedAt(LocalDateTime.now());
-        orderMapper.updateById(order);
     }
 
     private boolean isMerchantAdvanceOrder(MallOrder order) {
@@ -508,15 +546,32 @@ public class OrderService {
             throw new BusinessException(400, "error.order.invalidStatus");
         }
 
-        order.setStatus(status);
+        LocalDateTime now = LocalDateTime.now();
+        String nextRemark = order.getRemark();
         if (remark != null) {
-            order.setRemark((order.getRemark() != null ? order.getRemark() : "") + "; admin: " + remark);
+            nextRemark = (order.getRemark() != null ? order.getRemark() : "") + "; admin: " + remark;
         }
-        order.setUpdatedAt(LocalDateTime.now());
+
+        var update = Wrappers.<MallOrder>lambdaUpdate()
+                .set(MallOrder::getStatus, status)
+                .set(remark != null, MallOrder::getRemark, nextRemark)
+                .set(MallOrder::getUpdatedAt, now)
+                .eq(MallOrder::getId, orderId)
+                .eq(MallOrder::getStatus, prevStatus)
+                .eq(MallOrder::getDeleted, false);
+
+        switch (status) {
+            case "CANCELLED" -> update.set(MallOrder::getCancelledAt, now);
+            case "COMPLETED" -> update.set(MallOrder::getCompletedAt, now);
+        }
+
+        int claimed = orderMapper.update(null, update);
+        if (claimed == 0) {
+            throw new BusinessException(400, "error.order.invalidStatus");
+        }
 
         switch (status) {
             case "CANCELLED" -> {
-                order.setCancelledAt(LocalDateTime.now());
                 if (order.getUserCouponId() != null) {
                     couponService.restoreCoupon(order.getUserCouponId());
                 }
@@ -524,14 +579,15 @@ public class OrderService {
                 if ("PAID".equals(prevStatus)) {
                     restoreStockForOrder(order);
                     if (order.getMerchantId() != null) {
-                        merchantMapper.reverseFrozenBalance(order.getMerchantId(), order.getPayAmount());
+                        int rows = merchantMapper.reverseFrozenBalance(order.getMerchantId(), order.getPayAmount());
+                        if (rows == 0) {
+                            throw new BusinessException(400, "Merchant frozen balance is not enough");
+                        }
                     }
                     commissionService.cancelCommission(order.getId());
                 }
             }
-            case "COMPLETED" -> order.setCompletedAt(LocalDateTime.now());
         }
-        orderMapper.updateById(order);
     }
 
     @Transactional
@@ -673,9 +729,10 @@ public class OrderService {
             // 货款由商家垫付、利润在总后台结算时返还。
             if (!isMerchantAdvanceOrder(order)) {
                 if (merchantId != null) {
-                    BigDecimal frozen = merchant.getFrozenBalance() != null ? merchant.getFrozenBalance() : BigDecimal.ZERO;
-                    merchant.setFrozenBalance(frozen.add(order.getPayAmount()));
-                    merchantMapper.updateById(merchant);
+                    int rows = merchantMapper.addFrozenBalance(merchantId, order.getPayAmount());
+                    if (rows == 0) {
+                        throw new BusinessException(400, "Merchant is not available");
+                    }
                 }
                 commissionService.createFrozenCommission(order);
             }
@@ -713,12 +770,19 @@ public class OrderService {
         if (!"PAID".equals(order.getMerchantPaidStatus())) {
             throw new BusinessException(400, "Merchant has not paid goods cost");
         }
-        order.setExpectedArrivalAt(expectedArrivalAt);
-        if (order.getArrivalStatus() == null) {
-            order.setArrivalStatus("WAITING");
+        LocalDateTime updatedAt = LocalDateTime.now();
+        int claimed = orderMapper.update(null, Wrappers.<MallOrder>lambdaUpdate()
+                .set(MallOrder::getExpectedArrivalAt, expectedArrivalAt)
+                .set(MallOrder::getUpdatedAt, updatedAt)
+                .setSql("arrival_status = COALESCE(arrival_status, 'WAITING')")
+                .eq(MallOrder::getId, orderId)
+                .eq(MallOrder::getDeleted, false)
+                .isNotNull(MallOrder::getOrderSource)
+                .ne(MallOrder::getOrderSource, "CUSTOMER")
+                .eq(MallOrder::getMerchantPaidStatus, "PAID"));
+        if (claimed == 0) {
+            throw new BusinessException(400, "Order status has changed");
         }
-        order.setUpdatedAt(LocalDateTime.now());
-        orderMapper.updateById(order);
     }
 
     @Transactional
@@ -730,10 +794,22 @@ public class OrderService {
         if (!"PAID".equals(order.getMerchantPaidStatus())) {
             throw new BusinessException(400, "Merchant has not paid goods cost");
         }
-        order.setArrivalStatus("ARRIVED");
-        order.setArrivedAt(LocalDateTime.now());
-        order.setUpdatedAt(LocalDateTime.now());
-        orderMapper.updateById(order);
+        LocalDateTime arrivedAt = LocalDateTime.now();
+        int claimed = orderMapper.update(null, Wrappers.<MallOrder>lambdaUpdate()
+                .set(MallOrder::getArrivalStatus, "ARRIVED")
+                .set(MallOrder::getArrivedAt, arrivedAt)
+                .set(MallOrder::getUpdatedAt, arrivedAt)
+                .eq(MallOrder::getId, orderId)
+                .eq(MallOrder::getDeleted, false)
+                .isNotNull(MallOrder::getOrderSource)
+                .ne(MallOrder::getOrderSource, "CUSTOMER")
+                .eq(MallOrder::getMerchantPaidStatus, "PAID")
+                .and(w -> w.isNull(MallOrder::getArrivalStatus)
+                        .or()
+                        .eq(MallOrder::getArrivalStatus, "WAITING")));
+        if (claimed == 0) {
+            throw new BusinessException(400, "Order status has changed");
+        }
     }
 
     @Transactional
@@ -765,6 +841,23 @@ public class OrderService {
         BigDecimal goodsCost = order.getGoodsCost() != null ? order.getGoodsCost() : BigDecimal.ZERO;
         BigDecimal profit = order.getMerchantProfit() != null ? order.getMerchantProfit() : BigDecimal.ZERO;
         BigDecimal payback = goodsCost.add(profit);
+        LocalDateTime settledAt = LocalDateTime.now();
+        int claimed = orderMapper.update(null, Wrappers.<MallOrder>lambdaUpdate()
+                .set(MallOrder::getSettleStatus, "SETTLED")
+                .set(MallOrder::getSettlementAmount, payback)
+                .set(MallOrder::getSettlementOperatorId, operatorId)
+                .set(MallOrder::getSettlementRemark, remark)
+                .set(MallOrder::getSettledAt, settledAt)
+                .set(MallOrder::getUpdatedAt, settledAt)
+                .eq(MallOrder::getId, orderId)
+                .eq(MallOrder::getDeleted, false)
+                .eq(MallOrder::getMerchantPaidStatus, "PAID")
+                .eq(MallOrder::getArrivalStatus, "ARRIVED")
+                .and(w -> w.isNull(MallOrder::getSettleStatus).or().ne(MallOrder::getSettleStatus, "SETTLED")));
+        if (claimed == 0) {
+            throw new BusinessException(400, "该订单已结算或状态已变化");
+        }
+
         if (payback.compareTo(BigDecimal.ZERO) > 0) {
             merchantFundService.adjust(order.getMerchantId(), payback, true, "order_settlement",
                     "Settle goods cost and profit for order #" + order.getOrderNo(), operatorId, "ORDER", order.getId());
@@ -773,9 +866,8 @@ public class OrderService {
         order.setSettlementAmount(payback);
         order.setSettlementOperatorId(operatorId);
         order.setSettlementRemark(remark);
-        order.setSettledAt(LocalDateTime.now());
-        order.setUpdatedAt(LocalDateTime.now());
-        orderMapper.updateById(order);
+        order.setSettledAt(settledAt);
+        order.setUpdatedAt(settledAt);
 
         OrderSettlementRecord record = new OrderSettlementRecord();
         record.setOrderId(order.getId());

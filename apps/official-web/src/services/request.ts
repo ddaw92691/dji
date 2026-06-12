@@ -8,8 +8,10 @@ const service = axios.create({
 
 service.interceptors.request.use((config) => {
   const locale = localStorage.getItem("mall_locale") || "en-US";
+  const countryCode = localStorage.getItem("mall_countryCode") || "US";
   const languageCode = localStorage.getItem("mall_languageCode") || "en";
   config.headers["X-Locale"] = locale;
+  config.headers["X-Country-Code"] = countryCode;
   config.headers["X-Language-Code"] = languageCode;
   config.headers["Accept-Language"] = locale;
   return config;

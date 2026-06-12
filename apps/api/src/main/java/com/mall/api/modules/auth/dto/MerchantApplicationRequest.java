@@ -41,4 +41,7 @@ public class MerchantApplicationRequest {
 
     @NotBlank(message = "手持证件视频不能为空")
     private String handheldDocumentVideoUrl;
+
+    @Schema(description = "Human verification token")
+    private String captchaToken;
 }

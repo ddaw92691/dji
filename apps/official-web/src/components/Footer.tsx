@@ -1,6 +1,14 @@
 import { useI18n } from '../i18n'
 import { getMallUrl } from '../utils/mallUrl'
 
+function staticKey(text: string) {
+  return `website.static.${text
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '.')
+    .replace(/^\.|\.$/g, '')}`
+}
+
 const footerGroups: { titleKey: string; links: string[] }[] = [
   { titleKey: 'website.footer.colProductCategories', links: ['Camera Drones', 'Handheld', 'Specialized', 'Enterprise', 'Components'] },
   { titleKey: 'website.footer.colWhereToBuy', links: ['DJI Online Store', 'Flagship Stores', 'DJI Experience Stores', 'Retail Stores', 'Enterprise Dealers', 'Agricultural Drone Dealer'] },
@@ -12,6 +20,7 @@ const footerGroups: { titleKey: string; links: string[] }[] = [
 
 export default function Footer() {
   const { t } = useI18n()
+  const tr = (text: string) => t(staticKey(text), text)
   const mallHomeUrl = getMallUrl()
   const mallProductsUrl = getMallUrl('/products')
   const mallSupportUrl = getMallUrl('/support')
@@ -49,7 +58,7 @@ export default function Footer() {
                 {group.links.map((link) => (
                   <p key={link}>
                     <a href={mallProductsUrl} target="_blank" rel="noopener" className="transition-colors hover:text-white">
-                      {link}
+                      {tr(link)}
                     </a>
                   </p>
                 ))}

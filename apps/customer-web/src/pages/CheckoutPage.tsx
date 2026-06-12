@@ -9,7 +9,7 @@ import { useI18nStore } from '../stores/i18nStore'
 import { useAuthStore } from '../stores/authStore'
 
 export default function CheckoutPage() {
-  const { t } = useI18nStore()
+  const { t, localeId } = useI18nStore()
   const { token } = useAuthStore()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -38,7 +38,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (!token) { navigate('/login'); return }
     loadData()
-  }, [token])
+  }, [token, localeId])
 
   const loadData = async () => {
     setLoading(true)
@@ -177,7 +177,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header title="Checkout" onBack={() => navigate(-1)} />
+      <Header title={t('mall.checkout.title', 'Checkout')} onBack={() => navigate(-1)} />
 
       <main className="flex-1 overflow-y-auto">
         {error && (

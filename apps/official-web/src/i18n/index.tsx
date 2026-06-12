@@ -121,11 +121,11 @@ interface I18nContextValue {
 }
 
 const I18nContext = createContext<I18nContextValue | null>(null);
+const initialLocale = resolveInitialLocale();
+persistLocale(initialLocale);
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<LocaleEntry>(() =>
-    resolveInitialLocale(),
-  );
+  const [locale, setLocaleState] = useState<LocaleEntry>(() => initialLocale);
   const [remoteMessages, setRemoteMessages] = useState<Dict>({});
   const [availableLocales, setAvailableLocales] =
     useState<LocaleEntry[]>(LOCALES);

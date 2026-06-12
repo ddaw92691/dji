@@ -1,7 +1,6 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
-import { useLangStore } from '@/stores/lang'
 import { STORAGE_KEYS, storage } from '@/utils/storage'
 
 type ApiResponse<T = any> = {
@@ -20,24 +19,32 @@ const service: AxiosInstance = axios.create({
   },
 })
 
+const LANG_HEADERS: Record<string, { locale: string; countryCode: string; languageCode: string }> = {
+  zhCN: { locale: 'zh-CN', countryCode: 'CN', languageCode: 'zh-Hans' },
+  zhTW: { locale: 'zh-TW', countryCode: 'TW', languageCode: 'zh-Hant' },
+  enUS: { locale: 'en-US', countryCode: 'US', languageCode: 'en' },
+  jaJP: { locale: 'ja-JP', countryCode: 'JP', languageCode: 'ja' },
+  koKR: { locale: 'ko-KR', countryCode: 'KR', languageCode: 'ko' },
+}
+const DEFAULT_LANG_HEADERS = { locale: 'en-US', countryCode: 'US', languageCode: 'en' }
+
 // 请求拦截器
 service.interceptors.request.use(
   (config) => {
     const token = storage.get<string>(STORAGE_KEYS.TOKEN)
-    const langStore = useLangStore()
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
 
-    // 将当前应用语言统一传给后端
-    // Accept-Language 是标准 HTTP 头，后端通常可以直接识别。
-    // X-Locale 是额外补充的业务头，便于后端在需要时做更明确的自定义处理。
-    // 这里统一传递 langStore.currentLang，避免请求层与 i18n 层使用不同的语言参数。
-    config.headers['Accept-Language'] = langStore.currentLang
-    config.headers['X-Locale'] = langStore.currentLang
-    config.headers['X-Country-Code'] = storage.get<string>(STORAGE_KEYS.COUNTRY_CODE) || 'JP'
-    config.headers['X-Language-Code'] = storage.get<string>(STORAGE_KEYS.LANGUAGE_CODE) || 'ja'
+    const lang = storage.get<string>(STORAGE_KEYS.LANG) || 'enUS'
+    const defaults = LANG_HEADERS[lang] || DEFAULT_LANG_HEADERS
+    config.headers['Accept-Language'] = defaults.locale
+    config.headers['X-Locale'] = defaults.locale
+    config.headers['X-Country-Code'] =
+      storage.get<string>(STORAGE_KEYS.COUNTRY_CODE) || defaults.countryCode
+    config.headers['X-Language-Code'] =
+      storage.get<string>(STORAGE_KEYS.LANGUAGE_CODE) || defaults.languageCode
 
     return config
   },

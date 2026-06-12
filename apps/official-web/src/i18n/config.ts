@@ -152,4 +152,5 @@ export function persistLocale(locale: LocaleEntry) {
   localStorage.setItem('countryCode', locale.countryCode)
   localStorage.setItem('languageCode', locale.languageCode)
   localStorage.setItem('locale', locale.id)
+  document.documentElement.lang = locale.id
 }

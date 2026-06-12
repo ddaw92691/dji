@@ -11,7 +11,7 @@ import { wsEventBus } from '../App'
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { t } = useI18nStore()
+  const { t, localeId } = useI18nStore()
   const { token } = useAuthStore()
 
   const [product, setProduct] = useState<ProductItem | null>(null)
@@ -29,12 +29,12 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     if (id) { loadProduct(Number(id)); loadReviews(Number(id), 1) }
-  }, [id])
+  }, [id, localeId])
 
   const onWsEvent = useCallback((e: Event) => {
     const event = e as CustomEvent
     if ((event.type === 'PRODUCT_PRICE_UPDATED' || event.type === 'PRODUCT_STATUS_UPDATED') && Number(id) === event.detail?.productId) {
-      setPriceBanner('Price or status has been updated')
+      setPriceBanner(t('product.priceStatusUpdated', 'Price or status has been updated'))
       loadProduct(Number(id))
     }
   }, [id])
@@ -72,12 +72,12 @@ export default function ProductDetailPage() {
     try {
       const res = await cartApi.addItem(product.id, quantity)
       if (res.data.code === 200) {
-        setMessage({ text: 'Added to cart', type: 'success' })
+        setMessage({ text: t('mall.cart.added', 'Added to cart'), type: 'success' })
       } else {
-        setMessage({ text: (res.data as any).message || 'Failed to add', type: 'error' })
+        setMessage({ text: (res.data as any).message || t('mall.cart.addFailed', 'Failed to add'), type: 'error' })
       }
     } catch {
-      setMessage({ text: 'Failed to add to cart', type: 'error' })
+      setMessage({ text: t('mall.cart.addFailed', 'Failed to add to cart'), type: 'error' })
     } finally {
       setAddingToCart(false)
       setTimeout(() => setMessage(null), 3000)
@@ -188,7 +188,7 @@ export default function ProductDetailPage() {
                 loadProduct(Number(id))
               }}
             >
-              Refresh
+              {t('common.refresh', 'Refresh')}
             </button>
           </div>
         )}
@@ -196,7 +196,7 @@ export default function ProductDetailPage() {
           {mainImage ? (
             <img src={mainImage} alt={product.title} className="h-full w-full object-contain" />
           ) : (
-            <span className="text-gray-400">No Image</span>
+            <span className="text-gray-400">{t('product.noImage', 'No Image')}</span>
           )}
         </div>
 
@@ -229,8 +229,8 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="flex gap-4 mt-3 text-sm text-gray-500">
-            <span>Stock: {product.stock}</span>
-            <span>Sold: {product.salesCount}</span>
+            <span>{t('product.stock', 'Stock')}: {product.stock}</span>
+            <span>{t('product.sold', 'Sold')}: {product.salesCount}</span>
           </div>
 
           {product.categoryName && (
@@ -243,13 +243,13 @@ export default function ProductDetailPage() {
 
           {product.merchantName && (
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-500">
-              <span>Seller: <span className="text-gray-700 font-medium">{product.merchantName}</span></span>
+              <span>{t('product.seller', 'Seller')}: <span className="text-gray-700 font-medium">{product.merchantName}</span></span>
               <button
                 onClick={handleContactMerchant}
                 disabled={contacting}
                 className="text-xs text-blue-500 border border-blue-200 rounded-full px-3 py-1 disabled:opacity-50"
               >
-                {contacting ? '...' : '💬 Contact'}
+                {contacting ? '...' : `💬 ${t('product.contact', 'Contact')}`}
               </button>
             </div>
           )}
@@ -257,7 +257,7 @@ export default function ProductDetailPage() {
           {product.description && (
             <div className="mt-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-1">
-                {t('customer.description') || 'Description'}
+                {t('product.description', 'Description')}
               </h3>
               <p className="break-words whitespace-pre-wrap text-sm leading-relaxed text-gray-600">
                 {product.description}
@@ -267,7 +267,7 @@ export default function ProductDetailPage() {
 
           <div className="mt-6 border-t pt-4">
             <h3 className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-gray-700">
-              <span>Reviews</span>
+              <span>{t('review.plural', 'Reviews')}</span>
               {avgRating > 0 && (
                 <span className="text-yellow-400 font-normal">
                   {'★'.repeat(Math.round(avgRating))}
@@ -280,7 +280,7 @@ export default function ProductDetailPage() {
                 <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent" />
               </div>
             ) : reviews.length === 0 ? (
-              <p className="text-sm text-gray-400 py-4 text-center">No reviews yet</p>
+              <p className="text-sm text-gray-400 py-4 text-center">{t('review.empty', 'No reviews yet')}</p>
             ) : (
               <div className="space-y-3">
                 {reviews.map((review) => (
@@ -319,7 +319,7 @@ export default function ProductDetailPage() {
                       disabled={loadingReviews}
                       className="text-sm text-blue-500 disabled:opacity-50"
                     >
-                      {loadingReviews ? 'Loading...' : 'Load more'}
+                      {loadingReviews ? t('common.loading', 'Loading...') : t('common.loadMore', 'Load more')}
                     </button>
                   </div>
                 )}
@@ -338,7 +338,7 @@ export default function ProductDetailPage() {
           </div>
         )}
         <div className="mb-3 grid grid-cols-[auto_auto_auto_auto_1fr] items-center gap-2">
-          <span className="text-sm text-gray-500">Qty:</span>
+          <span className="text-sm text-gray-500">{t('common.quantity', 'Qty')}:</span>
           <button
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
             className="h-9 w-9 rounded-full border border-gray-200 text-gray-500"
@@ -360,7 +360,7 @@ export default function ProductDetailPage() {
             +
           </button>
           <span className="min-w-0 truncate text-right text-xs text-gray-400">
-            Stock: {product.stock}
+            {t('product.stock', 'Stock')}: {product.stock}
           </span>
         </div>
         <div className="flex gap-3">
@@ -369,14 +369,14 @@ export default function ProductDetailPage() {
             disabled={addingToCart || product.stock <= 0}
             className="min-h-11 flex-1 rounded-full border border-orange-500 px-3 py-3 text-sm font-semibold text-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {addingToCart ? 'Adding...' : 'Add to Cart'}
+            {addingToCart ? t('mall.cart.adding', 'Adding...') : t('mall.cart.addToCart', 'Add to Cart')}
           </button>
           <button
             onClick={handleBuyNow}
             disabled={product.stock <= 0}
             className="min-h-11 flex-1 rounded-full bg-orange-500 px-3 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Buy Now
+            {t('common.buyNow', 'Buy Now')}
           </button>
         </div>
       </div>

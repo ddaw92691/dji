@@ -5,7 +5,7 @@ import { useI18nStore } from '../stores/i18nStore'
 import { useAuthStore } from '../stores/authStore'
 
 export default function CartPage() {
-  const { t } = useI18nStore()
+  const { t, localeId } = useI18nStore()
   const { token } = useAuthStore()
   const navigate = useNavigate()
 
@@ -23,11 +23,11 @@ export default function CartPage() {
         setCart(res.data.data)
       }
     } catch {
-      setError('Failed to load cart')
+      setError(t('mall.cart.loadFailed', 'Failed to load cart'))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     if (!token) {
@@ -35,7 +35,7 @@ export default function CartPage() {
       return
     }
     fetchCart()
-  }, [token])
+  }, [token, localeId, fetchCart])
 
   const handleQuantityChange = async (item: CartItem, delta: number) => {
     const newQty = item.quantity + delta
@@ -119,18 +119,18 @@ export default function CartPage() {
         <div className="flex flex-col items-center justify-center flex-1 gap-3 p-4">
           <p className="text-red-500 text-sm">{error}</p>
           <button onClick={fetchCart} className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm">
-            Retry
+            {t('common.retry', 'Retry')}
           </button>
         </div>
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center justify-center flex-1 gap-4 p-4">
           <span className="text-6xl text-gray-300">🛒</span>
-          <p className="text-gray-400 text-sm">Your cart is empty</p>
+          <p className="text-gray-400 text-sm">{t('mall.cart.empty', 'Your cart is empty')}</p>
           <button
             onClick={() => navigate('/')}
             className="px-6 py-2 bg-blue-500 text-white rounded-lg text-sm"
           >
-            Go Shopping
+            {t('mall.cart.goShopping', 'Go Shopping')}
           </button>
         </div>
       ) : (
@@ -146,7 +146,7 @@ export default function CartPage() {
                 }`}>
                   {allSelected ? '✓' : ''}
                 </span>
-                <span className="text-gray-600">Select All</span>
+                <span className="text-gray-600">{t('mall.cart.selectAll', 'Select All')}</span>
               </button>
             </div>
 
@@ -176,7 +176,7 @@ export default function CartPage() {
                     {item.coverImage ? (
                       <img src={item.coverImage} alt={item.title} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">{t('product.noImage', 'No Image')}</div>
                     )}
                   </div>
 
@@ -185,7 +185,9 @@ export default function CartPage() {
 
                     {!item.available && (
                       <p className="text-xs text-red-400 mt-0.5">
-                        {item.productStatus === 'OFF_SHELF' ? 'Product removed' : 'Out of stock'}
+                        {item.productStatus === 'OFF_SHELF'
+                          ? t('mall.cart.productRemoved', 'Product removed')
+                          : t('mall.cart.outOfStock', 'Out of stock')}
                       </p>
                     )}
 
@@ -223,7 +225,7 @@ export default function CartPage() {
                         onClick={() => handleDelete(item.id)}
                         className="text-xs text-gray-400 hover:text-red-500"
                       >
-                        Delete
+                        {t('common.delete', 'Delete')}
                       </button>
                     </div>
                   </div>
@@ -233,7 +235,7 @@ export default function CartPage() {
 
             {hasUnavailable && (
               <div className="px-4 py-2 bg-gray-50 text-xs text-gray-400 border-b">
-                Some items are no longer available and cannot be purchased.
+                {t('mall.cart.unavailableTip', 'Some items are no longer available and cannot be purchased.')}
               </div>
             )}
           </main>
@@ -241,10 +243,10 @@ export default function CartPage() {
           <div className="bg-white border-t p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="text-sm text-gray-600">
-                Selected: <span className="font-bold text-gray-900">{cart?.selectedCount || 0}</span> items
+                {t('mall.cart.selected', 'Selected')}: <span className="font-bold text-gray-900">{cart?.selectedCount || 0}</span> {t('mall.cart.items', 'items')}
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-sm text-gray-600">Total:</span>
+                <span className="text-sm text-gray-600">{t('common.total', 'Total')}:</span>
                 <span className="text-lg font-bold text-red-500">
                   ¥{(cart?.selectedTotalAmount || 0).toFixed(2)}
                 </span>
@@ -255,7 +257,7 @@ export default function CartPage() {
               disabled={!cart || cart.selectedCount === 0}
               className="w-full py-3 rounded-lg bg-orange-500 text-white font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Checkout
+              {t('mall.cart.checkout', 'Checkout')}
             </button>
           </div>
         </>

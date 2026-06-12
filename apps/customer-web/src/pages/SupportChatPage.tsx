@@ -8,7 +8,7 @@ import { useAuthStore } from '../stores/authStore'
 export default function SupportChatPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { t } = useI18nStore()
+  const { t, localeId } = useI18nStore()
   const { token, user } = useAuthStore()
 
   const [session, setSession] = useState<SupportSession | null>(null)
@@ -33,7 +33,7 @@ export default function SupportChatPage() {
       if (sessionId) loadMessages()
     }, 5000)
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
-  }, [token, sessionId])
+  }, [token, sessionId, localeId])
 
   const loadSession = async () => {
     try {
@@ -94,7 +94,7 @@ export default function SupportChatPage() {
   }
 
   const handleClose = async () => {
-    if (!window.confirm('Close this session?')) return
+    if (!window.confirm(t('support.closeConfirm', 'Close this session?'))) return
     setClosing(true)
     try {
       const res = await supportApi.closeSession(sessionId)
@@ -114,7 +114,7 @@ export default function SupportChatPage() {
       <div className="flex flex-col min-h-screen">
         <header className="sticky top-0 bg-white border-b z-10 p-4 flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="text-lg">←</button>
-          <h1 className="text-base font-semibold">Chat</h1>
+          <h1 className="text-base font-semibold">{t('support.chat', 'Chat')}</h1>
         </header>
         <div className="flex items-center justify-center flex-1">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent" />
@@ -141,7 +141,7 @@ export default function SupportChatPage() {
             disabled={closing}
             className="text-xs text-red-500 border border-red-200 rounded px-3 py-1 disabled:opacity-50"
           >
-            {closing ? 'Closing...' : (t('support.closeSession') || 'Close')}
+            {closing ? t('support.closing', 'Closing...') : t('support.closeSession', 'Close')}
           </button>
         )}
       </header>

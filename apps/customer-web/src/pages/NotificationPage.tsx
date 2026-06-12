@@ -14,7 +14,7 @@ const TYPE_BADGES: Record<string, string> = {
 
 export default function NotificationPage() {
   const navigate = useNavigate()
-  const { t } = useI18nStore()
+  const { t, localeId } = useI18nStore()
   const { token } = useAuthStore()
 
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
@@ -28,7 +28,7 @@ export default function NotificationPage() {
     if (!token) { navigate('/login'); return }
     loadData()
     loadUnreadCount()
-  }, [token, tab])
+  }, [token, tab, localeId])
 
   const loadData = async () => {
     setLoading(true)

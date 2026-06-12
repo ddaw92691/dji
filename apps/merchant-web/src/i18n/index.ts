@@ -1,11 +1,13 @@
 import { createI18n } from 'vue-i18n'
 import enUS from '@/i18n/en-US.json'
+import zhCN from '@/i18n/zh-CN.json'
+import zhTW from '@/i18n/zh-TW.json'
 import { APP_CONFIG } from '@/config/app.config'
 import { STORAGE_KEYS, storage } from '@/utils/storage'
 
 export const messages = {
-  zhCN: {},
-  zhTW: {},
+  zhCN,
+  zhTW,
   enUS,
   jaJP: {},
   koKR: {},

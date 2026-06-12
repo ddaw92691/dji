@@ -6,7 +6,7 @@ import Footer from "../components/Footer";
 import { useI18n } from "../i18n";
 
 export default function ProductListPage() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const [params] = useSearchParams();
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -31,7 +31,7 @@ export default function ProductListPage() {
         }
       })
       .finally(() => setLoading(false));
-  }, [page, sort, categoryId]);
+  }, [page, sort, categoryId, locale.id]);
 
   return (
     <div className="min-h-screen bg-black text-white">

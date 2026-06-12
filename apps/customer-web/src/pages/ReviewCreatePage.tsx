@@ -127,7 +127,7 @@ export default function ReviewCreatePage() {
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 bg-white border-b z-10 p-4 flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="text-lg">←</button>
-        <h1 className="text-base font-semibold">Write Review</h1>
+        <h1 className="text-base font-semibold">{t('review.title', 'Write Review')}</h1>
       </header>
 
       <main className="flex-1 p-4">

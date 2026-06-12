@@ -31,6 +31,47 @@ export interface IAdminPayment {
   transactionNo: string; paidAt: string; createdAt: string
 }
 
+export interface IMerchantFundReconciliation {
+  id: number
+  reconcileDate: string
+  merchantId: number
+  shopName?: string
+  merchantStatus?: string
+  openingBalance: number
+  inflowAmount: number
+  outflowAmount: number
+  expectedClosingBalance: number
+  ledgerClosingBalance: number
+  actualBalance: number
+  balanceDifference: number
+  openingFrozenBalance: number
+  frozenInflowAmount: number
+  frozenOutflowAmount: number
+  expectedClosingFrozen: number
+  ledgerClosingFrozen: number
+  actualFrozenBalance: number
+  frozenDifference: number
+  openingTotalBalance: number
+  totalInflowAmount: number
+  totalOutflowAmount: number
+  expectedClosingTotal: number
+  ledgerClosingTotal: number
+  actualTotalBalance: number
+  totalDifference: number
+  logCount: number
+  issueCount: number
+  status: 'OK' | 'MISMATCH'
+  issueSummary?: string
+  checkedAt: string
+}
+
+export interface IReconciliationSummary {
+  date?: string
+  total: number
+  ok: number
+  mismatch: number
+}
+
 export const financeApi = {
   getOverview: () => request.get<ICommonResponse<IAdminFinanceSummary>>('/admin/finance/overview'),
   getWithdrawals: (params: any) => request.get<ICommonResponse<{list:IAdminWithdrawal[];total:number}>>('/admin/withdrawals', { params }),
@@ -40,4 +81,7 @@ export const financeApi = {
   getCommissions: (params: any) => request.get<ICommonResponse<{list:IAdminCommission[];total:number}>>('/admin/commissions', { params }),
   getPayments: (params: any) => request.get<ICommonResponse<{list:IAdminPayment[];total:number}>>('/admin/payments', { params }),
   getFundLogs: (params: any) => request.get<ICommonResponse<{list:any[];total:number}>>('/admin/finance/fund-logs', { params }),
+  getReconciliationSummary: (params: any) => request.get<ICommonResponse<IReconciliationSummary>>('/admin/finance/reconciliation/summary', { params }),
+  getReconciliations: (params: any) => request.get<ICommonResponse<{list:IMerchantFundReconciliation[];total:number}>>('/admin/finance/reconciliation', { params }),
+  runReconciliation: (params: any) => request.post<ICommonResponse<IReconciliationSummary>>('/admin/finance/reconciliation/run', null, { params }),
 }

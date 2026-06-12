@@ -8,6 +8,7 @@ import com.mall.api.modules.agent.entity.Agent;
 import com.mall.api.modules.agent.mapper.AgentMapper;
 import com.mall.api.modules.merchant.entity.Merchant;
 import com.mall.api.modules.merchant.mapper.MerchantMapper;
+import com.mall.api.modules.merchant.service.MerchantFundService;
 import com.mall.api.modules.notification.NotificationService;
 import com.mall.api.modules.system.SystemSettingService;
 import com.mall.api.modules.withdrawal.entity.Withdrawal;
@@ -25,15 +26,17 @@ public class WithdrawalService {
 
     private final WithdrawalMapper withdrawalMapper;
     private final MerchantMapper merchantMapper;
+    private final MerchantFundService merchantFundService;
     private final AgentMapper agentMapper;
     private final SystemSettingService systemSettingService;
     private final NotificationService notificationService;
 
     public WithdrawalService(WithdrawalMapper withdrawalMapper, MerchantMapper merchantMapper,
-                             AgentMapper agentMapper, SystemSettingService systemSettingService,
+                             MerchantFundService merchantFundService, AgentMapper agentMapper, SystemSettingService systemSettingService,
                              NotificationService notificationService) {
         this.withdrawalMapper = withdrawalMapper;
         this.merchantMapper = merchantMapper;
+        this.merchantFundService = merchantFundService;
         this.agentMapper = agentMapper;
         this.systemSettingService = systemSettingService;
         this.notificationService = notificationService;
@@ -46,47 +49,10 @@ public class WithdrawalService {
             throw new BusinessException(400, "提现金额必须大于0");
         }
 
-        BigDecimal minAmount;
-        if ("MERCHANT".equals(role)) {
-            minAmount = systemSettingService.getMinMerchantWithdrawal();
-            LambdaQueryWrapper<Merchant> wrapper = Wrappers.<Merchant>lambdaQuery()
-                    .eq(Merchant::getUserId, userId);
-            Merchant merchant = merchantMapper.selectOne(wrapper);
-            if (merchant == null) {
-                throw new BusinessException(400, "商家信息不存在");
-            }
-            if (amount.compareTo(minAmount) < 0) {
-                throw new BusinessException(400, "提现金额不能低于" + minAmount);
-            }
-
-            int rows = merchantMapper.freezeForWithdrawal(userId, amount);
-            if (rows == 0) {
-                throw new BusinessException(400, "余额不足");
-            }
-        } else if ("AGENT".equals(role)) {
-            minAmount = systemSettingService.getMinAgentWithdrawal();
-            LambdaQueryWrapper<Agent> wrapper = Wrappers.<Agent>lambdaQuery()
-                    .eq(Agent::getUserId, userId);
-            Agent agent = agentMapper.selectOne(wrapper);
-            if (agent == null) {
-                throw new BusinessException(400, "代理信息不存在");
-            }
-            if (amount.compareTo(minAmount) < 0) {
-                throw new BusinessException(400, "提现金额不能低于" + minAmount);
-            }
-
-            int rows = agentMapper.freezeForWithdrawal(userId, amount);
-            if (rows == 0) {
-                throw new BusinessException(400, "余额不足");
-            }
-        } else {
-            throw new BusinessException(400, "不支持的角色类型");
-        }
-
         Withdrawal withdrawal = new Withdrawal();
         withdrawal.setUserId(userId);
         withdrawal.setRole(role);
-        withdrawal.setType(role.equals("MERCHANT") ? "MERCHANT_BALANCE" : "AGENT_BALANCE");
+        withdrawal.setType("MERCHANT".equals(role) ? "MERCHANT_BALANCE" : "AGENT_BALANCE");
         withdrawal.setUserType(role);
         withdrawal.setAmount(amount);
         withdrawal.setFee(BigDecimal.ZERO);
@@ -100,7 +66,42 @@ public class WithdrawalService {
         withdrawal.setStatus("PENDING");
         withdrawal.setCreatedAt(LocalDateTime.now());
         withdrawal.setUpdatedAt(LocalDateTime.now());
-        withdrawalMapper.insert(withdrawal);
+
+        if ("MERCHANT".equals(role)) {
+            BigDecimal minAmount = systemSettingService.getMinMerchantWithdrawal();
+            LambdaQueryWrapper<Merchant> wrapper = Wrappers.<Merchant>lambdaQuery()
+                    .eq(Merchant::getUserId, userId);
+            Merchant merchant = merchantMapper.selectOne(wrapper);
+            if (merchant == null) {
+                throw new BusinessException(400, "商家信息不存在");
+            }
+            if (amount.compareTo(minAmount) < 0) {
+                throw new BusinessException(400, "提现金额不能低于" + minAmount);
+            }
+
+            withdrawalMapper.insert(withdrawal);
+            merchantFundService.freezeWithOperator(merchant.getId(), amount, "withdraw_freeze",
+                    "Withdrawal requested", "MERCHANT", userId, "WITHDRAWAL", withdrawal.getId());
+        } else if ("AGENT".equals(role)) {
+            BigDecimal minAmount = systemSettingService.getMinAgentWithdrawal();
+            LambdaQueryWrapper<Agent> wrapper = Wrappers.<Agent>lambdaQuery()
+                    .eq(Agent::getUserId, userId);
+            Agent agent = agentMapper.selectOne(wrapper);
+            if (agent == null) {
+                throw new BusinessException(400, "代理信息不存在");
+            }
+            if (amount.compareTo(minAmount) < 0) {
+                throw new BusinessException(400, "提现金额不能低于" + minAmount);
+            }
+
+            withdrawalMapper.insert(withdrawal);
+            int rows = agentMapper.freezeForWithdrawal(userId, amount);
+            if (rows == 0) {
+                throw new BusinessException(400, "余额不足");
+            }
+        } else {
+            throw new BusinessException(400, "不支持的角色类型");
+        }
 
         return withdrawal;
     }
@@ -111,7 +112,8 @@ public class WithdrawalService {
         if (withdrawal == null) {
             throw new BusinessException(400, "提现记录不存在");
         }
-        if (!"PENDING".equals(withdrawal.getStatus())) {
+        int claimed = withdrawalMapper.approvePending(withdrawalId, reviewerUserId, LocalDateTime.now());
+        if (claimed == 0) {
             throw new BusinessException(400, "只能审批待处理状态的提现");
         }
 
@@ -119,39 +121,24 @@ public class WithdrawalService {
             LambdaQueryWrapper<Merchant> wrapper = Wrappers.<Merchant>lambdaQuery()
                     .eq(Merchant::getUserId, withdrawal.getUserId());
             Merchant merchant = merchantMapper.selectOne(wrapper);
-            if (merchant != null) {
-                BigDecimal frozenBalance = merchant.getFrozenBalance() != null
-                        ? merchant.getFrozenBalance() : BigDecimal.ZERO;
-                BigDecimal totalWithdrawn = merchant.getTotalWithdrawn() != null
-                        ? merchant.getTotalWithdrawn() : BigDecimal.ZERO;
-
-                merchant.setFrozenBalance(frozenBalance.subtract(withdrawal.getAmount()));
-                merchant.setTotalWithdrawn(totalWithdrawn.add(withdrawal.getAmount()));
-                merchant.setUpdatedAt(LocalDateTime.now());
-                merchantMapper.updateById(merchant);
+            if (merchant == null) {
+                throw new BusinessException(400, "商家信息不存在");
             }
+            merchantFundService.settleFrozen(merchant.getId(), withdrawal.getAmount(), "withdraw",
+                    "Withdrawal approved", reviewerUserId, "WITHDRAWAL", withdrawal.getId());
         } else if ("AGENT".equals(withdrawal.getRole())) {
-            LambdaQueryWrapper<Agent> wrapper = Wrappers.<Agent>lambdaQuery()
-                    .eq(Agent::getUserId, withdrawal.getUserId());
-            Agent agent = agentMapper.selectOne(wrapper);
-            if (agent != null) {
-                BigDecimal frozenBalance = agent.getFrozenBalance() != null
-                        ? agent.getFrozenBalance() : BigDecimal.ZERO;
-                BigDecimal totalWithdrawn = agent.getTotalWithdrawn() != null
-                        ? agent.getTotalWithdrawn() : BigDecimal.ZERO;
-
-                agent.setFrozenBalance(frozenBalance.subtract(withdrawal.getAmount()));
-                agent.setTotalWithdrawn(totalWithdrawn.add(withdrawal.getAmount()));
-                agent.setUpdatedAt(LocalDateTime.now());
-                agentMapper.updateById(agent);
+            int rows = agentMapper.settleFrozenWithdrawal(withdrawal.getUserId(), withdrawal.getAmount());
+            if (rows == 0) {
+                throw new BusinessException(400, "代理冻结余额不足");
             }
+        } else {
+            throw new BusinessException(400, "不支持的角色类型");
         }
 
         withdrawal.setStatus("APPROVED");
         withdrawal.setReviewedBy(reviewerUserId);
         withdrawal.setReviewedAt(LocalDateTime.now());
         withdrawal.setUpdatedAt(LocalDateTime.now());
-        withdrawalMapper.updateById(withdrawal);
 
         notificationService.createNotification(withdrawal.getUserId(), withdrawal.getRole(),
                 "Withdrawal approved",
@@ -167,7 +154,8 @@ public class WithdrawalService {
         if (withdrawal == null) {
             throw new BusinessException(400, "提现记录不存在");
         }
-        if (!"PENDING".equals(withdrawal.getStatus())) {
+        int claimed = withdrawalMapper.rejectPending(withdrawalId, rejectReason, reviewerUserId, LocalDateTime.now());
+        if (claimed == 0) {
             throw new BusinessException(400, "只能拒绝待处理状态的提现");
         }
 
@@ -175,32 +163,19 @@ public class WithdrawalService {
             LambdaQueryWrapper<Merchant> wrapper = Wrappers.<Merchant>lambdaQuery()
                     .eq(Merchant::getUserId, withdrawal.getUserId());
             Merchant merchant = merchantMapper.selectOne(wrapper);
-            if (merchant != null) {
-                BigDecimal frozenBalance = merchant.getFrozenBalance() != null
-                        ? merchant.getFrozenBalance() : BigDecimal.ZERO;
-                BigDecimal balance = merchant.getBalance() != null
-                        ? merchant.getBalance() : BigDecimal.ZERO;
-
-                merchant.setFrozenBalance(frozenBalance.subtract(withdrawal.getAmount()));
-                merchant.setBalance(balance.add(withdrawal.getAmount()));
-                merchant.setUpdatedAt(LocalDateTime.now());
-                merchantMapper.updateById(merchant);
+            if (merchant == null) {
+                throw new BusinessException(400, "商家信息不存在");
             }
+            merchantFundService.unfreeze(merchant.getId(), withdrawal.getAmount(), "withdraw_reject",
+                    "Withdrawal rejected" + (rejectReason != null ? ": " + rejectReason : ""),
+                    reviewerUserId, "WITHDRAWAL", withdrawal.getId());
         } else if ("AGENT".equals(withdrawal.getRole())) {
-            LambdaQueryWrapper<Agent> wrapper = Wrappers.<Agent>lambdaQuery()
-                    .eq(Agent::getUserId, withdrawal.getUserId());
-            Agent agent = agentMapper.selectOne(wrapper);
-            if (agent != null) {
-                BigDecimal frozenBalance = agent.getFrozenBalance() != null
-                        ? agent.getFrozenBalance() : BigDecimal.ZERO;
-                BigDecimal balance = agent.getBalance() != null
-                        ? agent.getBalance() : BigDecimal.ZERO;
-
-                agent.setFrozenBalance(frozenBalance.subtract(withdrawal.getAmount()));
-                agent.setBalance(balance.add(withdrawal.getAmount()));
-                agent.setUpdatedAt(LocalDateTime.now());
-                agentMapper.updateById(agent);
+            int rows = agentMapper.unfreezeWithdrawal(withdrawal.getUserId(), withdrawal.getAmount());
+            if (rows == 0) {
+                throw new BusinessException(400, "代理冻结余额不足");
             }
+        } else {
+            throw new BusinessException(400, "不支持的角色类型");
         }
 
         withdrawal.setStatus("REJECTED");
@@ -208,7 +183,6 @@ public class WithdrawalService {
         withdrawal.setReviewedBy(reviewerUserId);
         withdrawal.setReviewedAt(LocalDateTime.now());
         withdrawal.setUpdatedAt(LocalDateTime.now());
-        withdrawalMapper.updateById(withdrawal);
 
         notificationService.createNotification(withdrawal.getUserId(), withdrawal.getRole(),
                 "Withdrawal rejected",

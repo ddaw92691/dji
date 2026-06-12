@@ -23,7 +23,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default function OrdersPage() {
-  const { t } = useI18nStore()
+  const { t, localeId } = useI18nStore()
   const { token } = useAuthStore()
   const navigate = useNavigate()
 
@@ -47,11 +47,11 @@ export default function OrdersPage() {
         setTotal(res.data.data.total)
       }
     } catch {
-      setError('Failed to load orders')
+      setError(t('order.loadFailed', 'Failed to load orders'))
     } finally {
       setLoading(false)
     }
-  }, [activeTab, page])
+  }, [activeTab, page, localeId, t])
 
   useEffect(() => {
     if (!token) { navigate('/login'); return }

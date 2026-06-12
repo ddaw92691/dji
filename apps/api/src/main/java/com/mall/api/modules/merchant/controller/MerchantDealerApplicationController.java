@@ -12,9 +12,11 @@ import com.mall.api.modules.merchant.entity.MerchantApplication;
 import com.mall.api.modules.merchant.mapper.MerchantApplicationMapper;
 import com.mall.api.modules.merchant.mapper.MerchantMapper;
 import com.mall.api.modules.upload.UploadService;
+import com.mall.api.security.HumanVerificationService;
 import com.mall.api.security.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,20 +35,25 @@ public class MerchantDealerApplicationController {
     private final UploadService uploadService;
     private final MerchantApplicationMapper applicationMapper;
     private final MerchantMapper merchantMapper;
+    private final HumanVerificationService humanVerificationService;
 
     public MerchantDealerApplicationController(AuthService authService,
                                                UploadService uploadService,
                                                MerchantApplicationMapper applicationMapper,
-                                               MerchantMapper merchantMapper) {
+                                               MerchantMapper merchantMapper,
+                                               HumanVerificationService humanVerificationService) {
         this.authService = authService;
         this.uploadService = uploadService;
         this.applicationMapper = applicationMapper;
         this.merchantMapper = merchantMapper;
+        this.humanVerificationService = humanVerificationService;
     }
 
     @PostMapping("/dealer-applications")
     @Operation(summary = "Submit dealer application")
-    public ApiResponse<MerchantApplicationResponse> submit(@Valid @RequestBody MerchantApplicationRequest request) {
+    public ApiResponse<MerchantApplicationResponse> submit(@Valid @RequestBody MerchantApplicationRequest request,
+                                                           HttpServletRequest httpRequest) {
+        humanVerificationService.verify(httpRequest, request.getCaptchaToken());
         return ApiResponse.success(authService.submitMerchantApplication(request));
     }
 
@@ -79,7 +86,10 @@ public class MerchantDealerApplicationController {
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload dealer application file")
-    public ApiResponse<Map<String, Object>> upload(@RequestParam("file") MultipartFile file) {
+    public ApiResponse<Map<String, Object>> upload(@RequestParam("file") MultipartFile file,
+                                                   @RequestParam(value = "captchaToken", required = false) String captchaToken,
+                                                   HttpServletRequest request) {
+        humanVerificationService.verify(request, captchaToken);
         return ApiResponse.success(uploadService.uploadMerchantApplicationFile(file));
     }
 

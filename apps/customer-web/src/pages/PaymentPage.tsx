@@ -6,7 +6,7 @@ import { useAuthStore } from '../stores/authStore'
 
 export default function PaymentPage() {
   const { orderId } = useParams<{ orderId: string }>()
-  const { t } = useI18nStore()
+  const { t, localeId } = useI18nStore()
   const { token } = useAuthStore()
   const navigate = useNavigate()
 
@@ -18,7 +18,7 @@ export default function PaymentPage() {
   useEffect(() => {
     if (!token) { navigate('/login'); return }
     if (orderId) loadOrder(Number(orderId))
-  }, [token, orderId])
+  }, [token, orderId, localeId])
 
   const loadOrder = async (id: number) => {
     setLoading(true)

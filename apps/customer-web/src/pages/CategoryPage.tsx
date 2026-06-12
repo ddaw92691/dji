@@ -5,13 +5,13 @@ import { useI18nStore } from '../stores/i18nStore'
 
 export default function CategoryPage() {
   const navigate = useNavigate()
-  const { t } = useI18nStore()
+  const { t, localeId } = useI18nStore()
   const [categories, setCategories] = useState<CategoryItem[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     loadCategories()
-  }, [])
+  }, [localeId])
 
   const loadCategories = async () => {
     setLoading(true)

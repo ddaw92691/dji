@@ -80,6 +80,13 @@ public class MerchantFundService {
     @Transactional
     public MerchantFundLog freeze(Long merchantId, BigDecimal amount, String type, String reason,
                                   Long operatorId, String refType, Long refId) {
+        return freezeWithOperator(merchantId, amount, type, reason,
+                operatorId == null ? "SYSTEM" : "ADMIN", operatorId, refType, refId);
+    }
+
+    @Transactional
+    public MerchantFundLog freezeWithOperator(Long merchantId, BigDecimal amount, String type, String reason,
+                                              String operatorType, Long operatorId, String refType, Long refId) {
         Merchant merchant = requireMerchant(merchantId);
         validateAmount(amount);
         BigDecimal before = safe(merchant.getBalance());
@@ -89,7 +96,7 @@ public class MerchantFundService {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Merchant available balance is not enough");
         }
         return insertLog(merchantId, type, amount, before, before.subtract(amount),
-                frozenBefore, frozenBefore.add(amount), reason, operatorId, refType, refId);
+                frozenBefore, frozenBefore.add(amount), reason, operatorType, operatorId, refType, refId);
     }
 
     @Transactional
@@ -104,6 +111,21 @@ public class MerchantFundService {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Merchant frozen balance is not enough");
         }
         return insertLog(merchantId, type, amount, before, before.add(amount),
+                frozenBefore, frozenBefore.subtract(amount), reason, operatorId, refType, refId);
+    }
+
+    @Transactional
+    public MerchantFundLog settleFrozen(Long merchantId, BigDecimal amount, String type, String reason,
+                                        Long operatorId, String refType, Long refId) {
+        Merchant merchant = requireMerchant(merchantId);
+        validateAmount(amount);
+        BigDecimal before = safe(merchant.getBalance());
+        BigDecimal frozenBefore = safe(merchant.getFrozenBalance());
+        int rows = merchantMapper.settleFrozenWithdrawal(merchantId, amount);
+        if (rows == 0) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Merchant frozen balance is not enough");
+        }
+        return insertLog(merchantId, type, amount, before, before,
                 frozenBefore, frozenBefore.subtract(amount), reason, operatorId, refType, refId);
     }
 
@@ -136,6 +158,14 @@ public class MerchantFundService {
                                       BigDecimal before, BigDecimal after,
                                       BigDecimal frozenBefore, BigDecimal frozenAfter,
                                       String reason, Long operatorId, String refType, Long refId) {
+        return insertLog(merchantId, type, amount, before, after, frozenBefore, frozenAfter, reason,
+                operatorId == null ? "SYSTEM" : "ADMIN", operatorId, refType, refId);
+    }
+
+    private MerchantFundLog insertLog(Long merchantId, String type, BigDecimal amount,
+                                      BigDecimal before, BigDecimal after,
+                                      BigDecimal frozenBefore, BigDecimal frozenAfter,
+                                      String reason, String operatorType, Long operatorId, String refType, Long refId) {
         MerchantFundLog log = new MerchantFundLog();
         log.setMerchantId(merchantId);
         log.setType(type);
@@ -149,7 +179,7 @@ public class MerchantFundService {
         applyRelatedIds(log, refType, refId);
         log.setRemark(reason);
         log.setReason(reason);
-        log.setOperatorType(operatorId == null ? "SYSTEM" : "ADMIN");
+        log.setOperatorType(operatorType == null || operatorType.isBlank() ? "SYSTEM" : operatorType);
         log.setOperatorId(operatorId);
         log.setCreatedAt(LocalDateTime.now());
         fundLogMapper.insert(log);
