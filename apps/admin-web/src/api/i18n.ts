@@ -80,6 +80,5 @@ export const i18nApi = {
   deleteTranslation: (id: number) => request.delete<ICommonResponse<any>>(`/admin/i18n/translations/${id}`),
   importTranslations: (data: any) => request.post<ICommonResponse<any>>('/admin/i18n/translations/import', data),
   exportTranslations: (params: any) => request.get<ICommonResponse<any>>('/admin/i18n/translations/export', { params }),
-  autoTranslate: (data: any) => request.post<ICommonResponse<any>>('/admin/i18n/translations/auto-translate', data),
+  autoTranslate: (data: any) => request.post<ICommonResponse<any>>('/admin/i18n/translations/auto-translate', data, { timeout: 600000 }),
 }
-

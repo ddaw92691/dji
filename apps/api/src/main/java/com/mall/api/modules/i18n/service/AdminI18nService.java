@@ -24,6 +24,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class AdminI18nService {
+    private static final int DEEPSEEK_BATCH_SIZE = 30;
+    private static final int DEEPSEEK_BATCH_CHAR_LIMIT = 12_000;
 
     private final CountryMapper countryMapper;
     private final LanguageMapper languageMapper;
@@ -42,7 +45,7 @@ public class AdminI18nService {
     private final I18nNamespaceMapper namespaceMapper;
     private final I18nTranslationMapper translationMapper;
     private final I18nService i18nService;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = createRestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
@@ -80,6 +83,13 @@ public class AdminI18nService {
         this.namespaceMapper = namespaceMapper;
         this.translationMapper = translationMapper;
         this.i18nService = i18nService;
+    }
+
+    private static RestTemplate createRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(10_000);
+        factory.setReadTimeout(120_000);
+        return new RestTemplate(factory);
     }
 
     // ==================== Country ====================
@@ -755,6 +765,287 @@ public class AdminI18nService {
         return result;
     }
 
+    @Transactional
+    public Map<String, Object> autoTranslateBatch(Map<String, Object> body) {
+        String sourceLanguageCode = stringOf(firstNonBlank(body.get("sourceLanguageCode"), body.get("baseLanguage"), "en"));
+        String namespaceCode = normalizeBlank(stringOf(firstNonBlank(body.get("namespaceCode"), body.get("module"), "")));
+        String countryCode = normalizeBlank(stringOf(body.get("countryCode")));
+        boolean overwrite = Boolean.TRUE.equals(body.get("overwrite"));
+
+        List<String> targetLanguageCodes = toStringList(body.get("targetLanguageCodes"));
+        if (targetLanguageCodes.isEmpty()) targetLanguageCodes = toStringList(body.get("targetLanguages"));
+        if (targetLanguageCodes.isEmpty()) targetLanguageCodes = toStringList(body.get("targetLanguageCode"));
+        targetLanguageCodes = targetLanguageCodes.stream()
+                .map(String::trim)
+                .filter(v -> !v.isBlank())
+                .filter(v -> !v.equals(sourceLanguageCode))
+                .distinct()
+                .collect(Collectors.toList());
+        if (targetLanguageCodes.isEmpty()) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "Please select a target language");
+        }
+
+        Set<String> selectedKeys = toStringList(body.get("keys")).stream()
+                .map(String::trim)
+                .filter(v -> !v.isBlank())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        LambdaQueryWrapper<I18nTranslation> qw = new LambdaQueryWrapper<I18nTranslation>()
+                .eq(I18nTranslation::getDeleted, false)
+                .eq(I18nTranslation::getStatus, "ENABLE")
+                .eq(I18nTranslation::getLanguageCode, sourceLanguageCode);
+        if (namespaceCode != null) qw.eq(I18nTranslation::getNamespaceCode, namespaceCode);
+        if (countryCode != null) qw.eq(I18nTranslation::getCountryCode, countryCode);
+        else qw.and(w -> w.isNull(I18nTranslation::getCountryCode).or().eq(I18nTranslation::getCountryCode, ""));
+        qw.orderByAsc(I18nTranslation::getNamespaceCode, I18nTranslation::getTranslationKey);
+
+        List<I18nTranslation> sourceRows = translationMapper.selectList(qw).stream()
+                .filter(t -> selectedKeys.isEmpty()
+                        || selectedKeys.contains(t.getNamespaceCode() + "." + t.getTranslationKey())
+                        || selectedKeys.contains(t.getTranslationKey()))
+                .toList();
+
+        int created = 0, updated = 0, skipped = 0, failed = 0, copiedFallback = 0;
+        List<PendingTranslation> pendingTranslations = new ArrayList<>();
+        for (I18nTranslation source : sourceRows) {
+            if (source.getTextValue() == null || source.getTextValue().isBlank()) {
+                skipped++;
+                continue;
+            }
+            for (String targetLanguageCode : targetLanguageCodes) {
+                I18nTranslation exist = findExistingTranslation(
+                        source.getNamespaceCode(), source.getTranslationKey(), targetLanguageCode, source.getCountryCode());
+                if (exist != null && !overwrite && exist.getTextValue() != null && !exist.getTextValue().isBlank()) {
+                    skipped++;
+                    continue;
+                }
+                pendingTranslations.add(new PendingTranslation(source, targetLanguageCode, exist));
+            }
+        }
+
+        Map<String, List<PendingTranslation>> pendingByTarget = pendingTranslations.stream()
+                .collect(Collectors.groupingBy(PendingTranslation::targetLanguageCode, LinkedHashMap::new, Collectors.toList()));
+        for (Map.Entry<String, List<PendingTranslation>> entry : pendingByTarget.entrySet()) {
+            String targetLanguageCode = entry.getKey();
+            for (List<PendingTranslation> batch : splitPendingTranslations(entry.getValue())) {
+                Map<String, String> batchTranslations = Collections.emptyMap();
+                boolean translatedByBatch = false;
+                if (isDeepSeekConfigured()) {
+                    try {
+                        batchTranslations = translateByDeepSeekBatch(batch, sourceLanguageCode, targetLanguageCode);
+                        translatedByBatch = true;
+                    } catch (Exception e) {
+                        log.warn("DeepSeek batch translate failed for {} items -> {}: {}",
+                                batch.size(), targetLanguageCode, e.getMessage());
+                    }
+                }
+
+                for (PendingTranslation item : batch) {
+                    I18nTranslation source = item.source();
+                    try {
+                        TranslationAttempt attempt;
+                        if (translatedByBatch) {
+                            String translated = batchTranslations.get(translationFullKey(source));
+                            if (translated == null || translated.isBlank()) {
+                                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "DeepSeek batch result missing item");
+                            }
+                            translated = cleanModelTranslation(translated);
+                            validateTranslationSafety(source.getTextValue(), translated);
+                            attempt = new TranslationAttempt(translated, false);
+                        } else {
+                            attempt = translateText(source.getTextValue(), sourceLanguageCode, targetLanguageCode);
+                        }
+
+                        if (attempt.copiedFallback()) copiedFallback++;
+                        if (saveAutoTranslatedItem(item, attempt, sourceLanguageCode)) created++;
+                        else updated++;
+                    } catch (Exception e) {
+                        failed++;
+                        log.warn("autoTranslate failed for {}.{} -> {}: {}",
+                                source.getNamespaceCode(), source.getTranslationKey(), targetLanguageCode, e.getMessage());
+                    }
+                }
+            }
+        }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("sourceCount", sourceRows.size());
+        result.put("targetLanguageCount", targetLanguageCodes.size());
+        result.put("created", created);
+        result.put("updated", updated);
+        result.put("skipped", skipped);
+        result.put("failed", failed);
+        result.put("copiedFallback", copiedFallback);
+        result.put("provider", resolveTranslateProviderName());
+        i18nService.clearCache();
+        return result;
+    }
+
+    private boolean saveAutoTranslatedItem(PendingTranslation item, TranslationAttempt attempt, String sourceLanguageCode) {
+        I18nTranslation source = item.source();
+        String targetLanguageCode = item.targetLanguageCode();
+        String desc = "Auto translate " + sourceLanguageCode + " -> " + targetLanguageCode
+                + (attempt.copiedFallback() ? " (fallback copied source for manual review)" : "");
+
+        I18nTranslation exist = item.existing();
+        if (exist == null) {
+            I18nTranslation nt = new I18nTranslation();
+            nt.setNamespaceCode(source.getNamespaceCode());
+            nt.setTranslationKey(source.getTranslationKey());
+            nt.setLanguageCode(targetLanguageCode);
+            nt.setCountryCode(source.getCountryCode());
+            nt.setTextValue(attempt.text());
+            nt.setDescription(desc);
+            nt.setStatus("ENABLE");
+            nt.setDeleted(false);
+            nt.setCreatedAt(LocalDateTime.now());
+            nt.setUpdatedAt(LocalDateTime.now());
+            translationMapper.insert(nt);
+            return true;
+        }
+
+        exist.setTextValue(attempt.text());
+        exist.setDescription(desc);
+        exist.setStatus("ENABLE");
+        exist.setUpdatedAt(LocalDateTime.now());
+        translationMapper.updateById(exist);
+        return false;
+    }
+
+    private List<List<PendingTranslation>> splitPendingTranslations(List<PendingTranslation> items) {
+        List<List<PendingTranslation>> batches = new ArrayList<>();
+        List<PendingTranslation> current = new ArrayList<>();
+        int currentChars = 0;
+        for (PendingTranslation item : items) {
+            int itemChars = item.source().getTextValue() == null ? 0 : item.source().getTextValue().length();
+            if (!current.isEmpty()
+                    && (current.size() >= DEEPSEEK_BATCH_SIZE || currentChars + itemChars > DEEPSEEK_BATCH_CHAR_LIMIT)) {
+                batches.add(current);
+                current = new ArrayList<>();
+                currentChars = 0;
+            }
+            current.add(item);
+            currentChars += itemChars;
+        }
+        if (!current.isEmpty()) batches.add(current);
+        return batches;
+    }
+
+    private Map<String, String> translateByDeepSeekBatch(List<PendingTranslation> batch,
+                                                          String sourceLanguageCode,
+                                                          String targetLanguageCode) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(deepSeekApiKey.trim());
+
+            List<Map<String, String>> items = new ArrayList<>();
+            int totalChars = 0;
+            for (PendingTranslation item : batch) {
+                String text = item.source().getTextValue();
+                totalChars += text == null ? 0 : text.length();
+                items.add(Map.of(
+                        "key", translationFullKey(item.source()),
+                        "text", text == null ? "" : text
+                ));
+            }
+
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("model", deepSeekModel == null || deepSeekModel.isBlank() ? "deepseek-v4-pro" : deepSeekModel.trim());
+            payload.put("temperature", 0.1);
+            payload.put("top_p", 0.9);
+            payload.put("stream", false);
+            payload.put("max_tokens", Math.max(512, Math.min(16_384, totalChars * 4 + batch.size() * 96 + 512)));
+            payload.put("thinking", Map.of("type", "disabled"));
+
+            List<Map<String, String>> messages = new ArrayList<>();
+            messages.add(Map.of(
+                    "role", "system",
+                    "content", buildDeepSeekBatchTranslationSystemPrompt(sourceLanguageCode, targetLanguageCode)
+            ));
+            messages.add(Map.of(
+                    "role", "user",
+                    "content", objectMapper.writeValueAsString(Map.of("items", items))
+            ));
+            payload.put("messages", messages);
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(deepSeekChatCompletionsUrl(), entity, String.class);
+            String body = response.getBody();
+            if (body == null || body.isBlank()) {
+                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "DeepSeek batch response is empty");
+            }
+
+            JsonNode json = objectMapper.readTree(body);
+            if (json.has("error")) {
+                String message = json.path("error").path("message").asText("DeepSeek batch response returned an error");
+                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), message);
+            }
+
+            String content = cleanModelTranslation(json.path("choices").path(0).path("message").path("content").asText(""));
+            if (content.isBlank()) {
+                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "DeepSeek batch response has no content");
+            }
+            return readBatchTranslationMap(content);
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "DeepSeek batch translate failed: " + e.getMessage());
+        }
+    }
+
+    private Map<String, String> readBatchTranslationMap(String content) throws Exception {
+        JsonNode root = objectMapper.readTree(content);
+        JsonNode translationsNode = root.has("translations") ? root.path("translations") : root;
+        if (root.has("items")) translationsNode = root.path("items");
+
+        Map<String, String> result = new LinkedHashMap<>();
+        if (translationsNode.isObject()) {
+            Iterator<Map.Entry<String, JsonNode>> fields = translationsNode.fields();
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> field = fields.next();
+                result.put(field.getKey(), field.getValue().asText("").trim());
+            }
+        } else if (translationsNode.isArray()) {
+            for (JsonNode item : translationsNode) {
+                String key = item.path("key").asText("").trim();
+                String translated = firstNonBlankText(item.path("translation"), item.path("text"), item.path("value"));
+                if (!key.isBlank()) result.put(key, translated.trim());
+            }
+        }
+        if (result.isEmpty()) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "DeepSeek batch result is not a translation map");
+        }
+        return result;
+    }
+
+    private String firstNonBlankText(JsonNode... nodes) {
+        for (JsonNode node : nodes) {
+            String value = node.asText("").trim();
+            if (!value.isBlank()) return value;
+        }
+        return "";
+    }
+
+    private String buildDeepSeekBatchTranslationSystemPrompt(String sourceLanguageCode, String targetLanguageCode) {
+        String source = languageDisplayName(sourceLanguageCode);
+        String target = languageDisplayName(targetLanguageCode);
+        return "You are a professional localization engine for an ecommerce admin system.\n"
+                + "Translate each item from " + source + " to " + target + ".\n"
+                + "Return only valid JSON in this exact shape: {\"translations\":{\"namespace.key\":\"translated text\"}}.\n"
+                + "Keep every JSON key unchanged and translate every item.\n"
+                + "Preserve placeholders, variables, HTML tags, URLs, emails, order numbers, currency codes, numbers, and brand names.\n"
+                + "Do not add markdown, comments, explanations, or extra fields.";
+    }
+
+    private boolean isDeepSeekConfigured() {
+        return deepSeekApiKey != null && !deepSeekApiKey.isBlank();
+    }
+
+    private String translationFullKey(I18nTranslation translation) {
+        return translation.getNamespaceCode() + "." + translation.getTranslationKey();
+    }
+
     private TranslationAttempt translateText(String text, String sourceLanguageCode, String targetLanguageCode) {
         if (text == null || text.isBlank() || sourceLanguageCode.equals(targetLanguageCode)) {
             return new TranslationAttempt(text == null ? "" : text, false);
@@ -966,6 +1257,8 @@ public class AdminI18nService {
                 .filter(v -> !v.isBlank())
                 .collect(Collectors.toList());
     }
+
+    private record PendingTranslation(I18nTranslation source, String targetLanguageCode, I18nTranslation existing) {}
 
     private record TranslationAttempt(String text, boolean copiedFallback) {}
 

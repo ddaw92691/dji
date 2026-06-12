@@ -2,6 +2,13 @@ import axios from 'axios';
 import { ElMessage } from 'element-plus';
 import router from '@/router';
 import { STORAGE_KEYS, storage } from '@/utils/storage';
+function formatTimeoutMessage(error) {
+    const timeout = Number(error?.config?.timeout);
+    if (Number.isFinite(timeout) && timeout > 0) {
+        return `请求超时（${Math.round(timeout / 1000)} 秒），请缩小处理范围或稍后查看结果`;
+    }
+    return '请求超时，请稍后重试';
+}
 // 创建 axios 实例
 const service = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -43,7 +50,10 @@ service.interceptors.response.use((response) => {
     return response;
 }, (error) => {
     let errorMessage = '请求失败';
-    if (error.response) {
+    if (error.code === 'ECONNABORTED' || String(error.message || '').toLowerCase().includes('timeout')) {
+        errorMessage = formatTimeoutMessage(error);
+    }
+    else if (error.response) {
         const backendMsg = error.response.data?.message;
         switch (error.response.status) {
             case 401:
@@ -70,6 +80,7 @@ service.interceptors.response.use((response) => {
     else {
         errorMessage = error.message || '请求失败';
     }
+    error.friendlyMessage = errorMessage;
     ElMessage.error(errorMessage);
     return Promise.reject(error);
 });

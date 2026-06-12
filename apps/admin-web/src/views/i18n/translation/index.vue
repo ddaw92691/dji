@@ -1044,7 +1044,9 @@ async function handleAutoTranslate() {
       ElMessage.error(res.message || '一键翻译失败')
     }
   } catch (error: any) {
-    ElMessage.error(error?.response?.data?.message || error?.message || '一键翻译失败')
+    if (!error?.response && !error?.request) {
+      ElMessage.error(error?.friendlyMessage || error?.message || '一键翻译失败')
+    }
   } finally {
     autoTranslateLoading.value = false
   }
