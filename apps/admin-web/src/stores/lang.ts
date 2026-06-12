@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import zhCN from 'element-plus/es/locale/lang/zh-cn'
-import EN from 'element-plus/es/locale/lang/en'
 import { setI18nLang } from '@/i18n'
 import { STORAGE_KEYS, storage } from '@/utils/storage'
 import request from '@/utils/request'
@@ -15,27 +14,20 @@ export const useLangStore = defineStore('lang', () => {
 
   const langOptions: ILangOption[] = [
     { code: 'zhCN', shortCode: 'CN', label: '简体中文', elementLocale: 'zhCN' },
-    { code: 'enUS', shortCode: 'US', label: 'English', elementLocale: 'EN' },
-    { code: 'jaJP', shortCode: 'JP', label: '日本語', elementLocale: 'zhCN' },
-    { code: 'koKR', shortCode: 'KR', label: '한국어', elementLocale: 'zhCN' },
   ] as const
 
   const currentLangOption = computed(
     () => langOptions.find((option) => option.code === currentLang.value) || langOptions[0],
   )
 
-  const elementLangMap = { EN, zhCN } as const
+  const elementLangMap = { zhCN } as const
   const currentElementLang = computed(
     () => elementLangMap[currentLangOption.value?.elementLocale as keyof typeof elementLangMap] || zhCN,
   )
 
   const loadedMessages = ref<Record<string, string>>({})
 
-  const toApiLang = (code: string) => {
-    if (code === 'jaJP') return 'ja'
-    if (code === 'koKR') return 'ko'
-    return 'en'
-  }
+  const toApiLang = (_code: string) => 'zh-Hans'
 
   const loadMessages = async (countryCode?: string, langCode?: string) => {
     const cc = countryCode || currentCountryCode.value
@@ -52,7 +44,7 @@ export const useLangStore = defineStore('lang', () => {
         loadedMessages.value = res.data.messages
         // Merge into vue-i18n
         const { i18n } = await import('@/i18n')
-        i18n.global.mergeLocaleMessage(lc === 'jaJP' ? 'ja' : lc === 'koKR' ? 'ko' : 'en', res.data.messages)
+        i18n.global.mergeLocaleMessage('zhCN', res.data.messages)
       }
     } catch (e) {
       console.warn('Failed to load i18n messages:', e)

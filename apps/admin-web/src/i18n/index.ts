@@ -1,5 +1,4 @@
 import { createI18n } from 'vue-i18n'
-import enUS from '@/i18n/en-US.json'
 import zhCN from '@/i18n/zh-CN.json'
 import { APP_CONFIG } from '@/config/app.config'
 
@@ -7,7 +6,7 @@ import { APP_CONFIG } from '@/config/app.config'
 export const messages = {
   zhCN,
   zhTW: zhCN,
-  enUS,
+  enUS: zhCN,
   jaJP: zhCN,
   koKR: zhCN,
 }

@@ -28,4 +28,5 @@ export const i18nApi = {
     deleteTranslation: (id) => request.delete(`/admin/i18n/translations/${id}`),
     importTranslations: (data) => request.post('/admin/i18n/translations/import', data),
     exportTranslations: (params) => request.get('/admin/i18n/translations/export', { params }),
+    autoTranslate: (data) => request.post('/admin/i18n/translations/auto-translate', data),
 };

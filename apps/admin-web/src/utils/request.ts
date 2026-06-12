@@ -1,7 +1,6 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
-import { useLangStore } from '@/stores/lang'
 import { STORAGE_KEYS, storage } from '@/utils/storage'
 
 type ApiResponse<T = any> = {
@@ -24,20 +23,15 @@ const service: AxiosInstance = axios.create({
 service.interceptors.request.use(
   (config) => {
     const token = storage.get<string>(STORAGE_KEYS.TOKEN)
-    const langStore = useLangStore()
-
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
 
-    // 将当前应用语言统一传给后端
-    // Accept-Language 是标准 HTTP 头，后端通常可以直接识别。
-    // X-Locale 是额外补充的业务头，便于后端在需要时做更明确的自定义处理。
-    // 这里统一传递 langStore.currentLang，避免请求层与 i18n 层使用不同的语言参数。
-    config.headers['Accept-Language'] = langStore.currentLang
-    config.headers['X-Locale'] = langStore.currentLang
-    config.headers['X-Country-Code'] = storage.get<string>(STORAGE_KEYS.COUNTRY_CODE) || 'US'
-    config.headers['X-Language-Code'] = storage.get<string>(STORAGE_KEYS.LANGUAGE_CODE) || 'en'
+    // 总后台固定简体中文：请求头也固定传 zh-Hans，避免后端错误提示回退英文。
+    config.headers['Accept-Language'] = 'zh-CN'
+    config.headers['X-Locale'] = 'zh-CN'
+    config.headers['X-Country-Code'] = 'CN'
+    config.headers['X-Language-Code'] = 'zh-Hans'
 
     return config
   },

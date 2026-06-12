@@ -16,12 +16,19 @@ import com.mall.api.modules.language.entity.Language;
 import com.mall.api.modules.language.mapper.LanguageMapper;
 import com.mall.api.modules.user.entity.User;
 import com.mall.api.modules.user.mapper.UserMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class AdminI18nService {
 
@@ -31,6 +38,19 @@ public class AdminI18nService {
     private final I18nNamespaceMapper namespaceMapper;
     private final I18nTranslationMapper translationMapper;
     private final I18nService i18nService;
+    private final RestTemplate restTemplate = new RestTemplate();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    /**
+     * 可选：配置 LibreTranslate 兼容接口后，一键翻译会调用真实机器翻译。
+     * 未配置时仍会创建/补齐目标语言记录，并保留原文作为待校对内容，避免漏 key。
+     * 环境变量示例：TRANSLATE_API_URL=https://libretranslate.example.com/translate
+     */
+    @Value("${TRANSLATE_API_URL:}")
+    private String translateApiUrl;
+
+    @Value("${TRANSLATE_API_KEY:}")
+    private String translateApiKey;
 
     public AdminI18nService(CountryMapper countryMapper, LanguageMapper languageMapper,
                             CountryLanguageMapper countryLanguageMapper,
@@ -64,7 +84,6 @@ public class AdminI18nService {
     public Country createCountry(Country country) {
         Country exist = countryMapper.selectByCode(country.getCode());
         if (exist != null) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "国家代码已存在");
-        country.setId(System.currentTimeMillis());
         country.setCode(country.getCode().toUpperCase());
         country.setDeleted(false);
         country.setCreatedAt(LocalDateTime.now());
@@ -143,7 +162,6 @@ public class AdminI18nService {
     public Language createLanguage(Language language) {
         Language exist = languageMapper.selectByCode(language.getCode());
         if (exist != null) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "语言代码已存在");
-        language.setId(System.currentTimeMillis());
         language.setCode(language.getCode());
         language.setDeleted(false);
         language.setCreatedAt(LocalDateTime.now());
@@ -242,7 +260,6 @@ public class AdminI18nService {
         if (count > 0) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "该国家/地区已绑定此语言");
 
         CountryLanguage cl = new CountryLanguage();
-        cl.setId(System.currentTimeMillis());
         cl.setCountryId(countryId);
         cl.setLanguageId(languageId);
         cl.setIsDefault(isDefault != null && isDefault);
@@ -305,7 +322,6 @@ public class AdminI18nService {
     public I18nNamespace createNamespace(I18nNamespace ns) {
         Long count = namespaceMapper.selectCount(new LambdaQueryWrapper<I18nNamespace>().eq(I18nNamespace::getCode, ns.getCode()));
         if (count > 0) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "命名空间代码已存在");
-        ns.setId(System.currentTimeMillis());
         ns.setCode(ns.getCode().toLowerCase());
         ns.setDeleted(false);
         ns.setCreatedAt(LocalDateTime.now());
@@ -430,7 +446,6 @@ public class AdminI18nService {
         if (t.getCountryCode() != null && t.getCountryCode().isBlank()) t.setCountryCode(null);
         I18nTranslation duplicate = findExistingTranslation(t.getNamespaceCode(), t.getTranslationKey(), t.getLanguageCode(), t.getCountryCode());
         if (duplicate != null) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "同一模块、key、语言和地区的翻译已存在");
-        t.setId(System.currentTimeMillis());
         t.setDeleted(false);
         t.setCreatedAt(LocalDateTime.now());
         t.setUpdatedAt(LocalDateTime.now());
@@ -477,50 +492,59 @@ public class AdminI18nService {
     @Transactional
     public Map<String, Integer> importTranslations(String countryCode, String languageCode, String namespaceCode,
                                                     boolean overwrite, Map<String, String> messages) {
-        int created = 0, updated = 0, skipped = 0;
+        int created = 0, updated = 0, skipped = 0, failed = 0;
+        if (languageCode == null || languageCode.isBlank()) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "语言不能为空");
+        }
+        if (namespaceCode == null || namespaceCode.isBlank()) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "模块不能为空");
+        }
+        if (messages == null || messages.isEmpty()) {
+            Map<String, Integer> empty = new LinkedHashMap<>();
+            empty.put("created", 0); empty.put("updated", 0); empty.put("skipped", 0); empty.put("failed", 0);
+            return empty;
+        }
+        String normalizedCountry = normalizeBlank(countryCode);
         for (Map.Entry<String, String> entry : messages.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            LambdaQueryWrapper<I18nTranslation> qw = new LambdaQueryWrapper<I18nTranslation>()
-                    .eq(I18nTranslation::getNamespaceCode, namespaceCode)
-                    .eq(I18nTranslation::getTranslationKey, key)
-                    .eq(I18nTranslation::getLanguageCode, languageCode)
-                    .eq(I18nTranslation::getDeleted, false);
-            if (countryCode != null && !countryCode.isEmpty()) qw.eq(I18nTranslation::getCountryCode, countryCode);
-            else qw.isNull(I18nTranslation::getCountryCode);
+            try {
+                String key = entry.getKey();
+                String value = entry.getValue();
+                if (key == null || key.isBlank()) { failed++; continue; }
 
-            I18nTranslation exist = translationMapper.selectOne(qw);
-            if (exist != null) {
-                if (overwrite) {
-                    exist.setTextValue(value);
-                    exist.setUpdatedAt(LocalDateTime.now());
-                    translationMapper.updateById(exist);
-                    updated++;
+                I18nTranslation exist = findExistingTranslation(namespaceCode, key, languageCode, normalizedCountry);
+                if (exist != null) {
+                    if (overwrite) {
+                        exist.setTextValue(value == null ? "" : value);
+                        exist.setUpdatedAt(LocalDateTime.now());
+                        translationMapper.updateById(exist);
+                        updated++;
+                    } else {
+                        skipped++;
+                    }
                 } else {
-                    skipped++;
+                    I18nTranslation nt = new I18nTranslation();
+                    nt.setNamespaceCode(namespaceCode);
+                    nt.setTranslationKey(key);
+                    nt.setLanguageCode(languageCode);
+                    nt.setCountryCode(normalizedCountry);
+                    nt.setTextValue(value == null ? "" : value);
+                    nt.setDescription("");
+                    nt.setStatus("ENABLE");
+                    nt.setDeleted(false);
+                    nt.setCreatedAt(LocalDateTime.now());
+                    nt.setUpdatedAt(LocalDateTime.now());
+                    translationMapper.insert(nt);
+                    created++;
                 }
-            } else {
-                I18nTranslation nt = new I18nTranslation();
-                nt.setId(System.currentTimeMillis());
-                nt.setNamespaceCode(namespaceCode);
-                nt.setTranslationKey(key);
-                nt.setLanguageCode(languageCode);
-                nt.setCountryCode(countryCode != null && !countryCode.isEmpty() ? countryCode : null);
-                nt.setTextValue(value);
-                nt.setDescription("");
-                nt.setStatus("ENABLE");
-                nt.setDeleted(false);
-                nt.setCreatedAt(LocalDateTime.now());
-                nt.setUpdatedAt(LocalDateTime.now());
-                translationMapper.insert(nt);
-                created++;
+            } catch (Exception e) {
+                failed++;
             }
         }
         Map<String, Integer> result = new LinkedHashMap<>();
         result.put("created", created);
         result.put("updated", updated);
         result.put("skipped", skipped);
-        result.put("failed", 0);
+        result.put("failed", failed);
         i18nService.clearCache();
         return result;
     }
@@ -564,7 +588,6 @@ public class AdminI18nService {
                     }
                     I18nTranslation exist = findExistingTranslation(item.getNamespaceCode(), item.getTranslationKey(), item.getLanguageCode(), item.getCountryCode());
                     if (exist == null) {
-                        item.setId(System.currentTimeMillis() + created + updated + failed);
                         item.setStatus(item.getStatus() == null || item.getStatus().isBlank() ? "ENABLE" : item.getStatus());
                         item.setDeleted(false);
                         item.setCreatedAt(LocalDateTime.now());
@@ -605,6 +628,189 @@ public class AdminI18nService {
         i18nService.clearCache();
         return result;
     }
+
+
+    /**
+     * 一键翻译/补全：以基准语言为来源，批量创建或更新目标语言翻译。
+     * - 配置 TRANSLATE_API_URL 时会调用 LibreTranslate 兼容接口生成机器翻译。
+     * - 未配置翻译接口时保留源文案作为待校对内容，仍然补齐 key，避免前台回退缺失。
+     */
+    @Transactional
+    public Map<String, Object> autoTranslate(Map<String, Object> body) {
+        String sourceLanguageCode = stringOf(firstNonBlank(body.get("sourceLanguageCode"), body.get("baseLanguage"), "en"));
+        String namespaceCode = normalizeBlank(stringOf(firstNonBlank(body.get("namespaceCode"), body.get("module"), "")));
+        String countryCode = normalizeBlank(stringOf(body.get("countryCode")));
+        boolean overwrite = Boolean.TRUE.equals(body.get("overwrite"));
+
+        List<String> targetLanguageCodes = toStringList(body.get("targetLanguageCodes"));
+        if (targetLanguageCodes.isEmpty()) targetLanguageCodes = toStringList(body.get("targetLanguages"));
+        if (targetLanguageCodes.isEmpty()) targetLanguageCodes = toStringList(body.get("targetLanguageCode"));
+        targetLanguageCodes = targetLanguageCodes.stream()
+                .map(String::trim)
+                .filter(v -> !v.isBlank())
+                .filter(v -> !v.equals(sourceLanguageCode))
+                .distinct()
+                .collect(Collectors.toList());
+        if (targetLanguageCodes.isEmpty()) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "请选择目标语言");
+        }
+
+        Set<String> selectedKeys = toStringList(body.get("keys")).stream()
+                .map(String::trim)
+                .filter(v -> !v.isBlank())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        LambdaQueryWrapper<I18nTranslation> qw = new LambdaQueryWrapper<I18nTranslation>()
+                .eq(I18nTranslation::getDeleted, false)
+                .eq(I18nTranslation::getStatus, "ENABLE")
+                .eq(I18nTranslation::getLanguageCode, sourceLanguageCode);
+        if (namespaceCode != null) qw.eq(I18nTranslation::getNamespaceCode, namespaceCode);
+        if (countryCode != null) qw.eq(I18nTranslation::getCountryCode, countryCode);
+        else qw.and(w -> w.isNull(I18nTranslation::getCountryCode).or().eq(I18nTranslation::getCountryCode, ""));
+        qw.orderByAsc(I18nTranslation::getNamespaceCode, I18nTranslation::getTranslationKey);
+
+        List<I18nTranslation> sourceRows = translationMapper.selectList(qw).stream()
+                .filter(t -> selectedKeys.isEmpty()
+                        || selectedKeys.contains(t.getNamespaceCode() + "." + t.getTranslationKey())
+                        || selectedKeys.contains(t.getTranslationKey()))
+                .toList();
+
+        int created = 0, updated = 0, skipped = 0, failed = 0, copiedFallback = 0;
+        for (I18nTranslation source : sourceRows) {
+            if (source.getTextValue() == null || source.getTextValue().isBlank()) {
+                skipped++;
+                continue;
+            }
+            for (String targetLanguageCode : targetLanguageCodes) {
+                try {
+                    I18nTranslation exist = findExistingTranslation(
+                            source.getNamespaceCode(), source.getTranslationKey(), targetLanguageCode, source.getCountryCode());
+                    if (exist != null && !overwrite && exist.getTextValue() != null && !exist.getTextValue().isBlank()) {
+                        skipped++;
+                        continue;
+                    }
+
+                    TranslationAttempt attempt = translateText(source.getTextValue(), sourceLanguageCode, targetLanguageCode);
+                    if (attempt.copiedFallback()) copiedFallback++;
+                    String desc = "一键翻译 " + sourceLanguageCode + " → " + targetLanguageCode
+                            + (attempt.copiedFallback() ? "（未配置或调用翻译接口失败，已保留原文待校对）" : "");
+
+                    if (exist == null) {
+                        I18nTranslation nt = new I18nTranslation();
+                        nt.setNamespaceCode(source.getNamespaceCode());
+                        nt.setTranslationKey(source.getTranslationKey());
+                        nt.setLanguageCode(targetLanguageCode);
+                        nt.setCountryCode(source.getCountryCode());
+                        nt.setTextValue(attempt.text());
+                        nt.setDescription(desc);
+                        nt.setStatus("ENABLE");
+                        nt.setDeleted(false);
+                        nt.setCreatedAt(LocalDateTime.now());
+                        nt.setUpdatedAt(LocalDateTime.now());
+                        translationMapper.insert(nt);
+                        created++;
+                    } else {
+                        exist.setTextValue(attempt.text());
+                        exist.setDescription(desc);
+                        exist.setStatus("ENABLE");
+                        exist.setUpdatedAt(LocalDateTime.now());
+                        translationMapper.updateById(exist);
+                        updated++;
+                    }
+                } catch (Exception e) {
+                    failed++;
+                    log.warn("autoTranslate failed for {}.{} -> {}: {}",
+                            source.getNamespaceCode(), source.getTranslationKey(), targetLanguageCode, e.getMessage());
+                }
+            }
+        }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("sourceCount", sourceRows.size());
+        result.put("targetLanguageCount", targetLanguageCodes.size());
+        result.put("created", created);
+        result.put("updated", updated);
+        result.put("skipped", skipped);
+        result.put("failed", failed);
+        result.put("copiedFallback", copiedFallback);
+        result.put("provider", translateApiUrl == null || translateApiUrl.isBlank() ? "copy-fallback" : "libretranslate-compatible");
+        i18nService.clearCache();
+        return result;
+    }
+
+    private TranslationAttempt translateText(String text, String sourceLanguageCode, String targetLanguageCode) {
+        if (text == null || text.isBlank() || sourceLanguageCode.equals(targetLanguageCode)) {
+            return new TranslationAttempt(text == null ? "" : text, false);
+        }
+
+        if (translateApiUrl != null && !translateApiUrl.isBlank()) {
+            try {
+                Map<String, Object> payload = new LinkedHashMap<>();
+                payload.put("q", text);
+                payload.put("source", toTranslateApiLanguage(sourceLanguageCode));
+                payload.put("target", toTranslateApiLanguage(targetLanguageCode));
+                payload.put("format", "text");
+                if (translateApiKey != null && !translateApiKey.isBlank()) payload.put("api_key", translateApiKey);
+
+                String response = restTemplate.postForObject(translateApiUrl, payload, String.class);
+                if (response != null && !response.isBlank()) {
+                    JsonNode json = objectMapper.readTree(response);
+                    String translated = json.path("translatedText").asText("");
+                    if (!translated.isBlank()) return new TranslationAttempt(translated, false);
+                }
+            } catch (Exception e) {
+                log.warn("translate api unavailable: {}", e.getMessage());
+            }
+        }
+
+        String local = localUiDictionary(text, targetLanguageCode);
+        return new TranslationAttempt(local, true);
+    }
+
+    private String toTranslateApiLanguage(String languageCode) {
+        if (languageCode == null) return "en";
+        String v = languageCode.trim();
+        if (v.equalsIgnoreCase("zh-Hans") || v.equalsIgnoreCase("zh-CN") || v.equalsIgnoreCase("zhCN")) return "zh";
+        if (v.equalsIgnoreCase("en-US") || v.equalsIgnoreCase("enUS")) return "en";
+        if (v.equalsIgnoreCase("ja-JP") || v.equalsIgnoreCase("jaJP")) return "ja";
+        if (v.equalsIgnoreCase("ko-KR") || v.equalsIgnoreCase("koKR")) return "ko";
+        int dash = v.indexOf('-');
+        return (dash > 0 ? v.substring(0, dash) : v).toLowerCase(Locale.ROOT);
+    }
+
+    private String localUiDictionary(String text, String targetLanguageCode) {
+        String target = toTranslateApiLanguage(targetLanguageCode);
+        if (!"zh".equals(target)) return text;
+        Map<String, String> enToZh = Map.ofEntries(
+                Map.entry("Confirm", "确认"), Map.entry("Cancel", "取消"), Map.entry("Save", "保存"),
+                Map.entry("Delete", "删除"), Map.entry("Edit", "编辑"), Map.entry("Search", "搜索"),
+                Map.entry("Reset", "重置"), Map.entry("Enabled", "已启用"), Map.entry("Disabled", "已禁用"),
+                Map.entry("Login", "登录"), Map.entry("Logout", "退出登录"), Map.entry("Register", "注册"),
+                Map.entry("Account", "账号"), Map.entry("Password", "密码"), Map.entry("Status", "状态"),
+                Map.entry("Operation", "操作"), Map.entry("Create", "新增"), Map.entry("Update", "更新"),
+                Map.entry("Submit", "提交"), Map.entry("Back", "返回"), Map.entry("Next", "下一步"),
+                Map.entry("Previous", "上一步"), Map.entry("Loading", "加载中"), Map.entry("Success", "成功"),
+                Map.entry("Failed", "失败"), Map.entry("User not found", "用户不存在"),
+                Map.entry("Invalid password", "密码错误"), Map.entry("Permission denied", "没有权限"),
+                Map.entry("Internal server error", "服务器内部错误")
+        );
+        return enToZh.getOrDefault(text, text);
+    }
+
+    private List<String> toStringList(Object value) {
+        if (value == null) return Collections.emptyList();
+        if (value instanceof Collection<?> collection) {
+            return collection.stream().map(String::valueOf).collect(Collectors.toList());
+        }
+        String raw = String.valueOf(value).trim();
+        if (raw.isBlank()) return Collections.emptyList();
+        return Arrays.stream(raw.split(","))
+                .map(String::trim)
+                .filter(v -> !v.isBlank())
+                .collect(Collectors.toList());
+    }
+
+    private record TranslationAttempt(String text, boolean copiedFallback) {}
 
     private I18nTranslation mapToTranslation(Map<?, ?> raw) {
         I18nTranslation t = new I18nTranslation();

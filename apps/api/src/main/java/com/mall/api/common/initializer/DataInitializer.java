@@ -100,6 +100,7 @@ public class DataInitializer implements CommandLineRunner {
         try { initCountryLanguages(); } catch (Exception e) { log.warn("initCountryLanguages failed: {}", e.getMessage()); }
         try { initNamespaces(); } catch (Exception e) { log.warn("initNamespaces failed: {}", e.getMessage()); }
         try { initTranslations(); } catch (Exception e) { log.warn("initTranslations failed: {}", e.getMessage()); }
+        try { initErrorZhTranslations(); } catch (Exception e) { log.warn("initErrorZhTranslations failed: {}", e.getMessage()); }
         try { initUsers(); } catch (Exception e) { log.warn("initUsers failed: {}", e.getMessage()); }
         try { initMerchantAndAgentProfiles(); } catch (Exception e) { log.warn("initMerchantAndAgentProfiles failed: {}", e.getMessage()); }
         try { initSystemSettings(); } catch (Exception e) { log.warn("initSystemSettings failed: {}", e.getMessage()); }
@@ -10528,7 +10529,9 @@ public class DataInitializer implements CommandLineRunner {
         }
         if (translationMapper.selectCount(qw) > 0) return;
         I18nTranslation t = new I18nTranslation();
-        t.setId(id);
+        // 不再手动指定固定自增 id：种子列表增删会让位置型 id 偏移，二次启动撞 PK(如 id=1358)，
+        // 导致 initTranslations 中途抛唯一约束异常并 abort，使其后全部译文漏种。
+        // 改用 MyBatis-Plus 雪花 id（BaseEntity @TableId ASSIGN_ID），去重仍按 (ns,key,lang)。
         t.setNamespaceCode(ns);
         t.setTranslationKey(key);
         t.setLanguageCode(lang);
@@ -10540,6 +10543,64 @@ public class DataInitializer implements CommandLineRunner {
         t.setCreatedAt(LocalDateTime.now());
         t.setUpdatedAt(LocalDateTime.now());
         translationMapper.insert(t);
+    }
+
+    /**
+     * 补齐 error 命名空间的简体中文（zh-Hans）译文。
+     * 原种子的 error.* 只有 en/ja/ko，导致总后台（强制简中、请求头 zh-Hans）的报错提示回退英文。
+     * GlobalExceptionHandler 对含「.」的 message 走 i18nService.translate，这里补齐后即返回中文。
+     * 幂等：addTranslation 按 (ns,key,lang) 去重；id 由雪花生成（形参忽略）。
+     */
+    private void initErrorZhTranslations() {
+        String ns = "error";
+        String lang = "zh-Hans";
+        addTranslation(0L, ns, "address.notFound", lang, null, "地址不存在");
+        addTranslation(0L, ns, "agent.notFound", lang, null, "代理不存在");
+        addTranslation(0L, ns, "auth.accountDisabled", lang, null, "账号已被禁用");
+        addTranslation(0L, ns, "auth.emailExists", lang, null, "邮箱已存在");
+        addTranslation(0L, ns, "auth.invalidCountry", lang, null, "无效的国家");
+        addTranslation(0L, ns, "auth.invalidPassword", lang, null, "密码错误");
+        addTranslation(0L, ns, "auth.tokenExpired", lang, null, "登录已过期，请重新登录");
+        addTranslation(0L, ns, "auth.unauthorized", lang, null, "未授权或登录已失效");
+        addTranslation(0L, ns, "auth.userNotFound", lang, null, "用户不存在");
+        addTranslation(0L, ns, "cart.empty", lang, null, "购物车为空");
+        addTranslation(0L, ns, "cart.itemNotFound", lang, null, "购物车商品不存在");
+        addTranslation(0L, ns, "catalog.alreadyExists", lang, null, "平台商品已存在");
+        addTranslation(0L, ns, "catalog.insufficientStock", lang, null, "平台库存不足");
+        addTranslation(0L, ns, "catalog.invalidStatus", lang, null, "平台商品状态无效");
+        addTranslation(0L, ns, "catalog.notFound", lang, null, "平台商品不存在");
+        addTranslation(0L, ns, "commission.notFound", lang, null, "佣金记录不存在");
+        addTranslation(0L, ns, "finance.amountTooLow", lang, null, "金额低于最小限额");
+        addTranslation(0L, ns, "finance.balanceNotEnough", lang, null, "余额不足");
+        addTranslation(0L, ns, "inspection.notFound", lang, null, "暗访记录不存在");
+        addTranslation(0L, ns, "menu.notFound", lang, null, "菜单不存在");
+        addTranslation(0L, ns, "merchant.notFound", lang, null, "商家不存在");
+        addTranslation(0L, ns, "order.invalidStatus", lang, null, "订单状态无效");
+        addTranslation(0L, ns, "order.multiMerchantNotSupported", lang, null, "不能同时购买多个商家的商品");
+        addTranslation(0L, ns, "order.notFound", lang, null, "订单不存在");
+        addTranslation(0L, ns, "order.stockNotEnough", lang, null, "库存不足");
+        addTranslation(0L, ns, "permission.denied", lang, null, "没有权限访问");
+        addTranslation(0L, ns, "quickReply.notFound", lang, null, "快捷回复不存在");
+        addTranslation(0L, ns, "rateLimit.tooManyRequests", lang, null, "请求过于频繁，请稍后再试");
+        addTranslation(0L, ns, "role.notFound", lang, null, "角色不存在");
+        addTranslation(0L, ns, "support.alreadyClosed", lang, null, "会话已关闭");
+        addTranslation(0L, ns, "support.notFound", lang, null, "客服会话不存在");
+        addTranslation(0L, ns, "support.notOpen", lang, null, "会话未开启");
+        addTranslation(0L, ns, "system.internalError", lang, null, "服务器内部错误，请稍后重试");
+        addTranslation(0L, ns, "tax.alreadyPaid", lang, null, "税费通知已支付");
+        addTranslation(0L, ns, "tax.alreadySubmitted", lang, null, "税费凭证已提交");
+        addTranslation(0L, ns, "tax.invalidStatus", lang, null, "税费通知状态无效");
+        addTranslation(0L, ns, "tax.notFound", lang, null, "税费通知不存在");
+        addTranslation(0L, ns, "user.cannotDisableSelf", lang, null, "不能禁用自己");
+        addTranslation(0L, ns, "user.cannotModifySuperAdmin", lang, null, "不能修改超级管理员");
+        addTranslation(0L, ns, "user.emailExists", lang, null, "邮箱已存在");
+        addTranslation(0L, ns, "user.lastSuperAdmin", lang, null, "不能移除最后一个超级管理员");
+        addTranslation(0L, ns, "user.notFound", lang, null, "用户不存在");
+        addTranslation(0L, ns, "user.phoneExists", lang, null, "手机号已存在");
+        addTranslation(0L, ns, "websocket.connectionFailed", lang, null, "WebSocket 连接失败");
+        addTranslation(0L, ns, "websocket.notConnected", lang, null, "WebSocket 未连接");
+        addTranslation(0L, ns, "withdrawal.invalidStatus", lang, null, "提现状态无效");
+        addTranslation(0L, ns, "withdrawal.notFound", lang, null, "提现记录不存在");
     }
 
     private void initUsers() {

@@ -275,4 +275,11 @@ public class AdminI18nController {
     public ApiResponse<Map<String, Integer>> batchSaveTranslations(@RequestBody Map<String, Object> body) {
         return ApiResponse.success(service.batchSaveTranslations(body));
     }
+
+    @PostMapping("/translations/auto-translate")
+    @Operation(summary = "一键翻译/补齐目标语言")
+    @PreAuthorize("@perm.has('i18n:translation:edit')")
+    public ApiResponse<Map<String, Object>> autoTranslate(@RequestBody Map<String, Object> body) {
+        return ApiResponse.success(service.autoTranslate(body));
+    }
 }

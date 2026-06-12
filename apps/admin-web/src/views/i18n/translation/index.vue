@@ -63,6 +63,9 @@
         <el-button @click="handleOpenMissing">缺失翻译检测</el-button>
       </el-form-item>
       <el-form-item>
+        <el-button type="primary" plain :loading="autoTranslateLoading" v-permission="'i18n:translation:edit'" @click="handleOpenAutoTranslate">一键翻译/补全</el-button>
+      </el-form-item>
+      <el-form-item>
         <el-button type="success" plain v-permission="'i18n:translation:add'" @click="handleOpenImport">批量导入</el-button>
       </el-form-item>
       <el-form-item>
@@ -335,6 +338,55 @@
         <el-button @click="missingDialogVisible = false">关闭</el-button>
       </template>
     </el-dialog>
+
+    <!-- 一键翻译 / 补全目标语言 -->
+    <el-dialog v-model="autoTranslateDialogVisible" title="一键翻译 / 补全目标语言" width="640px">
+      <el-alert
+        title="未配置 TRANSLATE_API_URL 时，系统会先补齐目标语言记录并保留原文，方便人工校对；配置 LibreTranslate 兼容接口后会自动机器翻译。"
+        type="info"
+        :closable="false"
+        show-icon
+        style="margin-bottom: 14px"
+      />
+      <el-form :model="autoTranslateForm" label-width="110px">
+        <el-form-item label="基准语言" required>
+          <el-select v-model="autoTranslateForm.sourceLanguageCode" filterable style="width: 100%">
+            <el-option v-for="l in languageOptions" :key="l.code" :label="`${l.name} (${l.code})`" :value="l.code" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="目标语言" required>
+          <el-select v-model="autoTranslateForm.targetLanguageCodes" multiple collapse-tags collapse-tags-tooltip filterable placeholder="请选择一个或多个目标语言" style="width: 100%">
+            <el-option
+              v-for="l in languageOptions.filter((item) => item.code !== autoTranslateForm.sourceLanguageCode)"
+              :key="l.code"
+              :label="`${l.name} (${l.code})`"
+              :value="l.code"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="国家">
+          <el-select v-model="autoTranslateForm.countryCode" placeholder="留空表示通用" clearable filterable style="width: 100%">
+            <el-option v-for="c in countryOptions" :key="c.code" :label="`${c.name} (${c.code})`" :value="c.code" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="模块">
+          <el-select v-model="autoTranslateForm.namespaceCode" placeholder="全部模块" clearable filterable style="width: 100%">
+            <el-option v-for="n in namespaceOptions" :key="n.code" :label="n.code" :value="n.code" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="覆盖已有">
+          <el-switch v-model="autoTranslateForm.overwrite" />
+          <span class="hint">关闭时只补齐缺失或空内容；开启后会覆盖目标语言现有内容</span>
+        </el-form-item>
+        <el-form-item label="处理范围">
+          <span class="hint">{{ selectedCount ? `仅处理已选择的 ${selectedCount} 个 Key` : '未选择时处理当前国家/模块筛选范围内的全部 Key' }}</span>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="autoTranslateDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="autoTranslateLoading" @click="handleAutoTranslate">开始处理</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -430,6 +482,16 @@ const importRules: FormRules = {
   namespaceCode: [{ required: true, message: '请选择模块', trigger: 'change' }],
   jsonText: [{ required: true, message: '请输入 JSON 内容', trigger: 'blur' }],
 }
+
+const autoTranslateDialogVisible = ref(false)
+const autoTranslateLoading = ref(false)
+const autoTranslateForm = reactive({
+  sourceLanguageCode: 'en',
+  targetLanguageCodes: [] as string[],
+  countryCode: '',
+  namespaceCode: '',
+  overwrite: false,
+})
 
 const exportDialogVisible = ref(false)
 const exportJsonText = ref('')
@@ -928,6 +990,61 @@ async function handleCopyExport() {
     ElMessage.success('已复制到剪贴板')
   } catch {
     ElMessage.error('复制失败')
+  }
+}
+
+/* ============ 一键翻译 / 补全 ============ */
+function getSelectedFullKeys() {
+  const set = new Set<string>()
+  if (viewMode.value === 'matrix') {
+    selectedGroups.value.forEach((g) => set.add(`${g.namespaceCode}.${g.translationKey}`))
+  } else {
+    selectedTranslations.value.forEach((row) => set.add(`${row.namespaceCode}.${row.translationKey}`))
+  }
+  return Array.from(set)
+}
+
+function handleOpenAutoTranslate() {
+  const defaultSource = languageOptions.value.find((l) => l.code === 'en')?.code || languageOptions.value[0]?.code || ''
+  autoTranslateForm.sourceLanguageCode = defaultSource
+  autoTranslateForm.countryCode = searchForm.countryCode || ''
+  autoTranslateForm.namespaceCode = searchForm.namespaceCode || ''
+  autoTranslateForm.overwrite = false
+  autoTranslateForm.targetLanguageCodes = searchForm.languageCode && searchForm.languageCode !== defaultSource
+    ? [searchForm.languageCode]
+    : []
+  autoTranslateDialogVisible.value = true
+}
+
+async function handleAutoTranslate() {
+  if (!autoTranslateForm.sourceLanguageCode) { ElMessage.warning('请选择基准语言'); return }
+  if (!autoTranslateForm.targetLanguageCodes.length) { ElMessage.warning('请选择目标语言'); return }
+  const same = autoTranslateForm.targetLanguageCodes.includes(autoTranslateForm.sourceLanguageCode)
+  if (same) { ElMessage.warning('目标语言不能包含基准语言'); return }
+
+  autoTranslateLoading.value = true
+  try {
+    const { data: res } = await i18nApi.autoTranslate({
+      sourceLanguageCode: autoTranslateForm.sourceLanguageCode,
+      targetLanguageCodes: autoTranslateForm.targetLanguageCodes,
+      countryCode: autoTranslateForm.countryCode || undefined,
+      namespaceCode: autoTranslateForm.namespaceCode || undefined,
+      overwrite: autoTranslateForm.overwrite,
+      keys: getSelectedFullKeys(),
+    })
+    if (res.code === 200) {
+      const r = res.data || {}
+      const fallbackText = r.copiedFallback ? `，待校对 ${r.copiedFallback}` : ''
+      ElMessage.success(`处理完成：来源 ${r.sourceCount ?? 0}，新增 ${r.created ?? 0}，更新 ${r.updated ?? 0}，跳过 ${r.skipped ?? 0}${fallbackText}`)
+      autoTranslateDialogVisible.value = false
+      fetchData()
+    } else {
+      ElMessage.error(res.message || '一键翻译失败')
+    }
+  } catch {
+    ElMessage.error('一键翻译失败')
+  } finally {
+    autoTranslateLoading.value = false
   }
 }
 

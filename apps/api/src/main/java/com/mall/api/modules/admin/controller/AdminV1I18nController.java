@@ -120,6 +120,13 @@ public class AdminV1I18nController {
         return ApiResponse.success(service.batchSaveTranslations(body));
     }
 
+    @PostMapping("/translations/auto-translate")
+    @Operation(summary = "一键翻译/补齐目标语言")
+    @PreAuthorize("@perm.has('i18n:translation:edit')")
+    public ApiResponse<Map<String, Object>> autoTranslate(@RequestBody Map<String, Object> body) {
+        return ApiResponse.success(service.autoTranslate(body));
+    }
+
     @PostMapping("/translations/import")
     @Operation(summary = "导入翻译")
     @PreAuthorize("@perm.has('i18n:translation:add')")
