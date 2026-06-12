@@ -4,6 +4,14 @@ server:
 spring:
   application:
     name: mall-api
+  sql:
+    init:
+      mode: always
+      schema-locations:
+        - classpath:sql/schema.sql
+        - classpath:db/V2__catalog_tax_websocket_indexes.sql
+        - classpath:db/V3__merchant_application_review_fields.sql
+      continue-on-error: true
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:mall_system}

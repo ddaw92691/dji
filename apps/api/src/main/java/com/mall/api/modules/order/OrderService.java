@@ -557,30 +557,38 @@ public class OrderService {
             BigDecimal discountAmount = BigDecimal.ZERO;
 
             for (Map<String, Object> itemMap : items) {
-                Long productId = itemMap.get("productId") == null ? null : ((Number) itemMap.get("productId")).longValue();
-                if (productId == null && itemMap.get("platformProductId") != null) {
-                    Long platformProductId = ((Number) itemMap.get("platformProductId")).longValue();
-                    Product listing = productMapper.selectOne(Wrappers.<Product>lambdaQuery()
-                            .eq(Product::getMerchantId, merchantId)
-                            .eq(Product::getPlatformProductId, platformProductId)
-                            .eq(Product::getDeleted, false)
-                            .last("LIMIT 1"));
-                    if (listing != null) {
-                        productId = listing.getId();
+                Long productId = readLong(itemMap.get("productId"));
+                Long platformProductId = readLong(itemMap.get("platformProductId"));
+
+                Product product = null;
+                if (platformProductId != null) {
+                    product = findMerchantListingByPlatformProduct(merchantId, platformProductId);
+                } else if (productId != null) {
+                    product = productMapper.selectById(productId);
+                    // 前端历史版本曾把平台商品/上架记录 id 放在 productId 中。
+                    // 如果不是该商家的商品，再按平台商品 id 尝试解析，避免误报“商品不属于指定商家”。
+                    if (product == null || Boolean.TRUE.equals(product.getDeleted())
+                            || product.getMerchantId() == null || !product.getMerchantId().equals(merchantId)) {
+                        Product listing = findMerchantListingByPlatformProduct(merchantId, productId);
+                        if (listing != null) {
+                            product = listing;
+                        }
                     }
                 }
-                if (productId == null) {
-                    throw new BusinessException(400, "商品不能为空");
-                }
-                int quantity = ((Number) itemMap.get("quantity")).intValue();
 
-                Product product = productMapper.selectById(productId);
                 if (product == null || Boolean.TRUE.equals(product.getDeleted())) {
-                    throw new BusinessException(400, "商品不存在: " + productId);
+                    throw new BusinessException(400, "商品不存在或未被该商家上架");
                 }
-                if (!product.getMerchantId().equals(merchantId)) {
+                if (product.getMerchantId() == null || !product.getMerchantId().equals(merchantId)) {
                     throw new BusinessException(400, "商品不属于指定商家");
                 }
+
+                Object quantityValue = itemMap.get("quantity");
+                if (!(quantityValue instanceof Number) || ((Number) quantityValue).intValue() <= 0) {
+                    throw new BusinessException(400, "商品数量必须大于0");
+                }
+                int quantity = ((Number) quantityValue).intValue();
+                productId = product.getId();
 
                 BigDecimal price;
                 if (product.getPlatformProductId() != null) {
@@ -615,7 +623,7 @@ public class OrderService {
             order.setDiscountAmount(discountAmount);
             order.setShippingAmount(shippingAmount);
             order.setPayAmount(totalAmount.subtract(discountAmount).add(shippingAmount));
-            order.setCurrency("JPY");
+            order.setCurrency(resolveMerchantCurrency(merchant));
             order.setStatus("PAID");
             order.setPayStatus("PAID");
             order.setRemark(remark);
@@ -1014,6 +1022,45 @@ public class OrderService {
                 productMapper.restoreStock(product.getId(), oi.getQuantity());
             }
         }
+    }
+
+
+    private Long readLong(Object value) {
+        if (value == null || String.valueOf(value).isBlank()) {
+            return null;
+        }
+        if (value instanceof Number n) {
+            return n.longValue();
+        }
+        try {
+            return Long.valueOf(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private Product findMerchantListingByPlatformProduct(Long merchantId, Long platformProductId) {
+        if (merchantId == null || platformProductId == null) {
+            return null;
+        }
+        return productMapper.selectOne(Wrappers.<Product>lambdaQuery()
+                .eq(Product::getMerchantId, merchantId)
+                .eq(Product::getPlatformProductId, platformProductId)
+                .eq(Product::getDeleted, false)
+                .last("LIMIT 1"));
+    }
+
+    private String resolveMerchantCurrency(Merchant merchant) {
+        if (merchant != null && merchant.getUserId() != null) {
+            User merchantUser = userMapper.selectById(merchant.getUserId());
+            if (merchantUser != null && merchantUser.getCountryCode() != null) {
+                Country country = countryMapper.selectByCode(merchantUser.getCountryCode());
+                if (country != null && country.getCurrencyCode() != null && !country.getCurrencyCode().isBlank()) {
+                    return country.getCurrencyCode();
+                }
+            }
+        }
+        return "USD";
     }
 
     private String resolveCurrency(Long userId) {

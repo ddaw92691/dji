@@ -361,7 +361,7 @@ async function handleSubmit() {
       customerId: orderForm.customerId,
       merchantId: orderForm.merchantId,
       items: orderForm.items.map((it) => ({
-        productId: it.platformProductId,
+        platformProductId: it.platformProductId,
         quantity: it.quantity,
       })),
       addressSnapshot: orderForm.addressSnapshot,
@@ -380,8 +380,8 @@ async function handleSubmit() {
     } else {
       ElMessage.error(res.message || '创建订单失败')
     }
-  } catch {
-    ElMessage.error('创建订单失败')
+  } catch (error: any) {
+    ElMessage.error(error?.response?.data?.message || error?.message || '创建订单失败')
   } finally {
     submitLoading.value = false
   }
@@ -411,8 +411,8 @@ async function createVirtualCustomer() {
     } else {
       ElMessage.error(res.message || '创建失败')
     }
-  } catch {
-    ElMessage.error('创建虚拟客户失败')
+  } catch (error: any) {
+    ElMessage.error(error?.response?.data?.message || error?.message || '创建虚拟客户失败')
   } finally {
     virtualLoading.value = false
   }

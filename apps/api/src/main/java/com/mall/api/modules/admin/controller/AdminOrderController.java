@@ -137,17 +137,37 @@ public class AdminOrderController {
     @Operation(summary = "管理员为商家创建订单")
     @PreAuthorize("@perm.has('admin:order:create')")
     public ApiResponse<OrderResponse> createForMerchant(@RequestBody Map<String, Object> body) {
+        if (body == null) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "请求参数不能为空");
+        }
         Long adminId = SecurityUtils.getCurrentUserId();
-        Long customerId = ((Number) body.get("customerId")).longValue();
-        Long merchantId = ((Number) body.get("merchantId")).longValue();
-        boolean markAsPaid = Boolean.TRUE.equals(body.getOrDefault("markAsPaid", true));
-        String remark = (String) body.get("remark");
-        Long addressId = body.get("addressId") != null ? ((Number) body.get("addressId")).longValue() : null;
+        Long customerId = toLong(body.get("customerId"), "客户不能为空");
+        Long merchantId = toLong(body.get("merchantId"), "商家不能为空");
+        boolean markAsPaid = body.get("markAsPaid") == null || Boolean.TRUE.equals(body.get("markAsPaid"));
+        String remark = body.get("remark") == null ? null : String.valueOf(body.get("remark"));
+        Long addressId = body.get("addressId") != null ? toLong(body.get("addressId"), "地址参数不正确") : null;
 
         @SuppressWarnings("unchecked")
-        List<Map<String, Object>> items = (List<Map<String, Object>>) body.get("items");
+        List<Map<String, Object>> items = body.get("items") instanceof List<?> ? (List<Map<String, Object>>) body.get("items") : null;
+        if (items == null || items.isEmpty()) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "订单商品不能为空");
+        }
 
         return ApiResponse.success(orderService.adminCreateOrder(adminId, customerId, merchantId,
                 items, addressId, markAsPaid, remark));
+    }
+
+    private Long toLong(Object value, String errorMessage) {
+        if (value == null || String.valueOf(value).isBlank()) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), errorMessage);
+        }
+        if (value instanceof Number n) {
+            return n.longValue();
+        }
+        try {
+            return Long.valueOf(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), errorMessage);
+        }
     }
 }
