@@ -342,7 +342,7 @@
     <!-- 一键翻译 / 补全目标语言 -->
     <el-dialog v-model="autoTranslateDialogVisible" title="一键翻译 / 补全目标语言" width="640px">
       <el-alert
-        title="未配置 TRANSLATE_API_URL 时，系统会先补齐目标语言记录并保留原文，方便人工校对；配置 LibreTranslate 兼容接口后会自动机器翻译。"
+        title="一键翻译优先调用 DeepSeek V4 Pro。请在后端环境变量配置 DEEPSEEK_API_KEY；未配置时仅补齐目标语言记录并保留原文待人工校对。"
         type="info"
         :closable="false"
         show-icon
@@ -1035,14 +1035,16 @@ async function handleAutoTranslate() {
     if (res.code === 200) {
       const r = res.data || {}
       const fallbackText = r.copiedFallback ? `，待校对 ${r.copiedFallback}` : ''
-      ElMessage.success(`处理完成：来源 ${r.sourceCount ?? 0}，新增 ${r.created ?? 0}，更新 ${r.updated ?? 0}，跳过 ${r.skipped ?? 0}${fallbackText}`)
+      const failedText = r.failed ? `，失败 ${r.failed}` : ''
+      const providerText = r.provider ? `，服务 ${r.provider}` : ''
+      ElMessage.success(`处理完成：来源 ${r.sourceCount ?? 0}，新增 ${r.created ?? 0}，更新 ${r.updated ?? 0}，跳过 ${r.skipped ?? 0}${failedText}${fallbackText}${providerText}`)
       autoTranslateDialogVisible.value = false
       fetchData()
     } else {
       ElMessage.error(res.message || '一键翻译失败')
     }
-  } catch {
-    ElMessage.error('一键翻译失败')
+  } catch (error: any) {
+    ElMessage.error(error?.response?.data?.message || error?.message || '一键翻译失败')
   } finally {
     autoTranslateLoading.value = false
   }

@@ -20,6 +20,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,10 +46,23 @@ public class AdminI18nService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
-     * 可选：配置 LibreTranslate 兼容接口后，一键翻译会调用真实机器翻译。
-     * 未配置时仍会创建/补齐目标语言记录，并保留原文作为待校对内容，避免漏 key。
-     * 环境变量示例：TRANSLATE_API_URL=https://libretranslate.example.com/translate
+     * 一键翻译优先使用 DeepSeek V4 Pro。
+     * Railway / 服务器环境变量示例：
+     * DEEPSEEK_API_KEY=sk-xxxx
+     * DEEPSEEK_BASE_URL=https://api.deepseek.com
+     * DEEPSEEK_MODEL=deepseek-v4-pro
+     *
+     * TRANSLATE_API_URL / TRANSLATE_API_KEY 继续保留为 LibreTranslate 兼容备用方案。
      */
+    @Value("${DEEPSEEK_API_KEY:}")
+    private String deepSeekApiKey;
+
+    @Value("${DEEPSEEK_BASE_URL:https://api.deepseek.com}")
+    private String deepSeekBaseUrl;
+
+    @Value("${DEEPSEEK_MODEL:deepseek-v4-pro}")
+    private String deepSeekModel;
+
     @Value("${TRANSLATE_API_URL:}")
     private String translateApiUrl;
 
@@ -82,13 +99,13 @@ public class AdminI18nService {
 
     @Transactional
     public Country createCountry(Country country) {
-        normalizeCountryForSave(country, true);
         Country exist = countryMapper.selectByCode(country.getCode());
         if (exist != null) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "国家代码已存在");
+        country.setCode(country.getCode().toUpperCase());
         country.setDeleted(false);
         country.setCreatedAt(LocalDateTime.now());
         country.setUpdatedAt(LocalDateTime.now());
-        if (country.getStatus() == null || country.getStatus().isBlank()) country.setStatus("ENABLE");
+        if (country.getStatus() == null) country.setStatus("ENABLE");
         countryMapper.insert(country);
         i18nService.clearCache();
         return country;
@@ -98,16 +115,14 @@ public class AdminI18nService {
     public Country updateCountry(Long id, Country country) {
         Country exist = countryMapper.selectById(id);
         if (exist == null) throw new BusinessException(ResultCode.NOT_FOUND);
-        normalizeCountryForSave(country, false);
         if (country.getCode() != null && !country.getCode().isEmpty()) {
-            Country codeExist = countryMapper.selectByCode(country.getCode());
+            Country codeExist = countryMapper.selectByCode(country.getCode().toUpperCase());
             if (codeExist != null && !codeExist.getId().equals(id)) {
                 throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "国家代码已存在");
             }
-            exist.setCode(country.getCode());
+            exist.setCode(country.getCode().toUpperCase());
         }
         if (country.getName() != null) exist.setName(country.getName());
-        if (country.getRegion() != null) exist.setRegion(country.getRegion());
         if (country.getFlagIcon() != null) exist.setFlagIcon(country.getFlagIcon());
         if (country.getPhoneCode() != null) exist.setPhoneCode(country.getPhoneCode());
         if (country.getCurrencyCode() != null) exist.setCurrencyCode(country.getCurrencyCode());
@@ -162,13 +177,13 @@ public class AdminI18nService {
 
     @Transactional
     public Language createLanguage(Language language) {
-        language.setCode(normalizeLanguageCode(language.getCode()));
         Language exist = languageMapper.selectByCode(language.getCode());
         if (exist != null) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "语言代码已存在");
+        language.setCode(language.getCode());
         language.setDeleted(false);
         language.setCreatedAt(LocalDateTime.now());
         language.setUpdatedAt(LocalDateTime.now());
-        if (language.getStatus() == null || language.getStatus().isBlank()) language.setStatus("ENABLE");
+        if (language.getStatus() == null) language.setStatus("ENABLE");
         languageMapper.insert(language);
         i18nService.clearCache();
         return language;
@@ -179,11 +194,10 @@ public class AdminI18nService {
         Language exist = languageMapper.selectById(id);
         if (exist == null) throw new BusinessException(ResultCode.NOT_FOUND);
         if (language.getCode() != null && !language.getCode().isEmpty()) {
-            language.setCode(normalizeLanguageCode(language.getCode()));
-            Language codeExist = languageMapper.selectByCode(language.getCode());
+            Language codeExist = languageMapper.selectByCode(language.getCode().toLowerCase());
             if (codeExist != null && !codeExist.getId().equals(id))
                 throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "语言代码已存在");
-            exist.setCode(language.getCode());
+            exist.setCode(language.getCode().toLowerCase());
         }
         if (language.getName() != null) exist.setName(language.getName());
         if (language.getNativeName() != null) exist.setNativeName(language.getNativeName());
@@ -215,48 +229,6 @@ public class AdminI18nService {
         exist.setUpdatedAt(LocalDateTime.now());
         languageMapper.updateById(exist);
         i18nService.clearCache();
-    }
-
-    private void normalizeCountryForSave(Country country, boolean creating) {
-        if (country == null) return;
-        if (country.getCode() != null && !country.getCode().isBlank()) {
-            country.setCode(country.getCode().trim().toUpperCase(Locale.ROOT));
-        } else if (creating) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "请输入国家代码");
-        }
-        if (country.getCurrencyCode() != null && !country.getCurrencyCode().isBlank()) {
-            country.setCurrencyCode(country.getCurrencyCode().trim().toUpperCase(Locale.ROOT));
-        } else if (creating) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "请输入货币代码");
-        }
-        if (country.getDefaultLanguageCode() != null && !country.getDefaultLanguageCode().isBlank()) {
-            country.setDefaultLanguageCode(normalizeLanguageCode(country.getDefaultLanguageCode()));
-        }
-        if (country.getExchangeRate() != null && country.getExchangeRate().compareTo(java.math.BigDecimal.ZERO) <= 0) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "汇率必须大于 0，按 USD 1 : 目标货币填写");
-        }
-        if (country.getTimezone() != null && country.getTimezone().isBlank()) {
-            country.setTimezone(null);
-        }
-    }
-
-    private String normalizeLanguageCode(String code) {
-        if (code == null || code.isBlank()) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "请输入语言代码");
-        }
-        String[] parts = code.trim().replace('_', '-').split("-");
-        for (int i = 0; i < parts.length; i++) {
-            if (parts[i].isBlank()) continue;
-            if (i == 0) {
-                parts[i] = parts[i].toLowerCase(Locale.ROOT);
-            } else if (parts[i].length() == 2) {
-                parts[i] = parts[i].toUpperCase(Locale.ROOT);
-            } else if (parts[i].length() == 4) {
-                parts[i] = parts[i].substring(0, 1).toUpperCase(Locale.ROOT)
-                        + parts[i].substring(1).toLowerCase(Locale.ROOT);
-            }
-        }
-        return String.join("-", parts);
     }
 
     // ==================== Country-Language ====================
@@ -778,7 +750,7 @@ public class AdminI18nService {
         result.put("skipped", skipped);
         result.put("failed", failed);
         result.put("copiedFallback", copiedFallback);
-        result.put("provider", translateApiUrl == null || translateApiUrl.isBlank() ? "copy-fallback" : "libretranslate-compatible");
+        result.put("provider", resolveTranslateProviderName());
         i18nService.clearCache();
         return result;
     }
@@ -788,21 +760,14 @@ public class AdminI18nService {
             return new TranslationAttempt(text == null ? "" : text, false);
         }
 
+        if (deepSeekApiKey != null && !deepSeekApiKey.isBlank()) {
+            return new TranslationAttempt(translateByDeepSeek(text, sourceLanguageCode, targetLanguageCode), false);
+        }
+
         if (translateApiUrl != null && !translateApiUrl.isBlank()) {
             try {
-                Map<String, Object> payload = new LinkedHashMap<>();
-                payload.put("q", text);
-                payload.put("source", toTranslateApiLanguage(sourceLanguageCode));
-                payload.put("target", toTranslateApiLanguage(targetLanguageCode));
-                payload.put("format", "text");
-                if (translateApiKey != null && !translateApiKey.isBlank()) payload.put("api_key", translateApiKey);
-
-                String response = restTemplate.postForObject(translateApiUrl, payload, String.class);
-                if (response != null && !response.isBlank()) {
-                    JsonNode json = objectMapper.readTree(response);
-                    String translated = json.path("translatedText").asText("");
-                    if (!translated.isBlank()) return new TranslationAttempt(translated, false);
-                }
+                String translated = translateByLibreTranslate(text, sourceLanguageCode, targetLanguageCode);
+                if (!translated.isBlank()) return new TranslationAttempt(translated, false);
             } catch (Exception e) {
                 log.warn("translate api unavailable: {}", e.getMessage());
             }
@@ -810,6 +775,153 @@ public class AdminI18nService {
 
         String local = localUiDictionary(text, targetLanguageCode);
         return new TranslationAttempt(local, true);
+    }
+
+    private String translateByDeepSeek(String text, String sourceLanguageCode, String targetLanguageCode) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(deepSeekApiKey.trim());
+
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("model", deepSeekModel == null || deepSeekModel.isBlank() ? "deepseek-v4-pro" : deepSeekModel.trim());
+            payload.put("temperature", 0.1);
+            payload.put("top_p", 0.9);
+            payload.put("stream", false);
+            payload.put("max_tokens", Math.max(256, Math.min(4096, text.length() * 4 + 256)));
+            payload.put("thinking", Map.of("type", "disabled"));
+
+            List<Map<String, String>> messages = new ArrayList<>();
+            messages.add(Map.of(
+                    "role", "system",
+                    "content", buildDeepSeekTranslationSystemPrompt(sourceLanguageCode, targetLanguageCode)
+            ));
+            messages.add(Map.of(
+                    "role", "user",
+                    "content", text
+            ));
+            payload.put("messages", messages);
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(deepSeekChatCompletionsUrl(), entity, String.class);
+            String body = response.getBody();
+            if (body == null || body.isBlank()) {
+                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "DeepSeek 翻译接口返回为空");
+            }
+
+            JsonNode json = objectMapper.readTree(body);
+            if (json.has("error")) {
+                String message = json.path("error").path("message").asText("DeepSeek 翻译接口返回错误");
+                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), message);
+            }
+
+            String translated = json.path("choices").path(0).path("message").path("content").asText("").trim();
+            translated = cleanModelTranslation(translated);
+            if (translated.isBlank()) {
+                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "DeepSeek 未返回有效翻译结果");
+            }
+            validateTranslationSafety(text, translated);
+            return translated;
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "DeepSeek 翻译失败：" + e.getMessage());
+        }
+    }
+
+    private String translateByLibreTranslate(String text, String sourceLanguageCode, String targetLanguageCode) throws Exception {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("q", text);
+        payload.put("source", toTranslateApiLanguage(sourceLanguageCode));
+        payload.put("target", toTranslateApiLanguage(targetLanguageCode));
+        payload.put("format", "text");
+        if (translateApiKey != null && !translateApiKey.isBlank()) payload.put("api_key", translateApiKey);
+
+        String response = restTemplate.postForObject(translateApiUrl, payload, String.class);
+        if (response == null || response.isBlank()) return "";
+        JsonNode json = objectMapper.readTree(response);
+        return json.path("translatedText").asText("").trim();
+    }
+
+    private String buildDeepSeekTranslationSystemPrompt(String sourceLanguageCode, String targetLanguageCode) {
+        String source = languageDisplayName(sourceLanguageCode);
+        String target = languageDisplayName(targetLanguageCode);
+        return "你是专业电商平台本地化翻译引擎。请将用户输入从 " + source + " 准确翻译为 " + target + "。\n"
+                + "严格规则：\n"
+                + "1. 只输出译文，不要解释、不要标题、不要 Markdown。\n"
+                + "2. 保留所有占位符、变量、HTML 标签、URL、邮箱、订单号、货币代码、数字和品牌名。\n"
+                + "3. 保留 {name}、{{count}}、${value}、%s、%d 等格式，不要翻译或删除。\n"
+                + "4. 后台/商城 UI 文案要自然、简洁、符合目标语言用户习惯。\n"
+                + "5. 简体中文使用大陆简体；繁体中文使用港澳台常用繁体表达；西班牙语使用拉美电商常用表达。\n"
+                + "6. 如果输入是单个按钮、菜单、表格字段或错误提示，也只返回对应短译文。";
+    }
+
+    private String deepSeekChatCompletionsUrl() {
+        String base = deepSeekBaseUrl == null || deepSeekBaseUrl.isBlank()
+                ? "https://api.deepseek.com"
+                : deepSeekBaseUrl.trim();
+        while (base.endsWith("/")) base = base.substring(0, base.length() - 1);
+        if (base.endsWith("/chat/completions")) return base;
+        return base + "/chat/completions";
+    }
+
+    private String cleanModelTranslation(String value) {
+        if (value == null) return "";
+        String v = value.trim();
+        if (v.startsWith("```") && v.endsWith("```")) {
+            v = v.replaceFirst("^```[a-zA-Z]*\\n?", "").replaceFirst("\\n?```$", "").trim();
+        }
+        if (v.length() >= 2) {
+            char first = v.charAt(0);
+            char last = v.charAt(v.length() - 1);
+            if ((first == '"' && last == '"') || (first == '\'' && last == '\'') || (first == '“' && last == '”')) {
+                v = v.substring(1, v.length() - 1).trim();
+            }
+        }
+        return v;
+    }
+
+    private void validateTranslationSafety(String source, String translated) {
+        Set<String> placeholders = extractProtectedTokens(source);
+        for (String token : placeholders) {
+            if (!translated.contains(token)) {
+                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "翻译结果缺少占位符：" + token);
+            }
+        }
+    }
+
+    private Set<String> extractProtectedTokens(String text) {
+        if (text == null || text.isBlank()) return Collections.emptySet();
+        LinkedHashSet<String> tokens = new LinkedHashSet<>();
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
+                "\\{\\{[^{}]+}}|\\$\\{[^}]+}|\\{[A-Za-z0-9_.-]+}|%[sdif]|https?://\\S+|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
+        );
+        java.util.regex.Matcher matcher = pattern.matcher(text);
+        while (matcher.find()) tokens.add(matcher.group());
+        return tokens;
+    }
+
+    private String languageDisplayName(String code) {
+        if (code == null || code.isBlank()) return "未知语言";
+        try {
+            Language lang = languageMapper.selectByCode(code);
+            if (lang != null) {
+                String nativeName = lang.getNativeName();
+                String name = lang.getName();
+                if (nativeName != null && !nativeName.isBlank()) return nativeName + "（" + code + "）";
+                if (name != null && !name.isBlank()) return name + "（" + code + "）";
+            }
+        } catch (Exception ignored) {
+        }
+        return code;
+    }
+
+    private String resolveTranslateProviderName() {
+        if (deepSeekApiKey != null && !deepSeekApiKey.isBlank()) {
+            return deepSeekModel == null || deepSeekModel.isBlank() ? "deepseek-v4-pro" : deepSeekModel.trim();
+        }
+        if (translateApiUrl != null && !translateApiUrl.isBlank()) return "libretranslate-compatible";
+        return "copy-fallback";
     }
 
     private String toTranslateApiLanguage(String languageCode) {
