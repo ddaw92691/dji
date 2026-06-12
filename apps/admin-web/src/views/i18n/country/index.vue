@@ -29,7 +29,9 @@
         <template #default="{ row }">{{ regionLabel(row.region) }}</template>
       </el-table-column>
       <el-table-column prop="phoneCode" label="区号" width="90" />
-      <el-table-column prop="defaultLanguageCode" label="默认语言" width="120" show-overflow-tooltip />
+      <el-table-column prop="defaultLanguageCode" label="默认语言" width="130" show-overflow-tooltip>
+        <template #default="{ row }">{{ languageLabel(row.defaultLanguageCode) }}</template>
+      </el-table-column>
       <el-table-column prop="currencyCode" label="货币" width="80" />
       <el-table-column prop="currencySymbol" label="符号" width="70" />
       <el-table-column prop="timezone" label="时区" width="140" show-overflow-tooltip />
@@ -85,11 +87,29 @@
         <el-form-item label="电话区号" prop="phoneCode">
           <el-input v-model="form.phoneCode" placeholder="+1" />
         </el-form-item>
-        <el-form-item label="默认语言代码" prop="defaultLanguageCode">
-          <el-input v-model="form.defaultLanguageCode" placeholder="如 en、zh-Hans" />
+        <el-form-item label="默认语言" prop="defaultLanguageCode">
+          <el-select v-model="form.defaultLanguageCode" filterable clearable placeholder="请选择默认语言" style="width: 100%">
+            <el-option
+              v-for="language in languageOptions"
+              :key="language.code"
+              :label="`${language.name || language.nativeName}（${language.code}）`"
+              :value="language.code"
+            />
+          </el-select>
+          <div class="form-tip">默认语言来自「语言管理」，国家语言页面已隐藏，不再单独维护重复关系。</div>
         </el-form-item>
         <el-form-item label="货币代码" prop="currencyCode">
-          <el-input v-model="form.currencyCode" placeholder="USD" />
+          <el-select
+            v-model="form.currencyCode"
+            filterable
+            allow-create
+            default-first-option
+            placeholder="请选择或输入货币代码"
+            style="width: 100%"
+            @change="handleCurrencyChange"
+          >
+            <el-option v-for="currency in CURRENCY_OPTIONS" :key="currency.code" :label="`${currency.code} - ${currency.name}`" :value="currency.code" />
+          </el-select>
         </el-form-item>
         <el-form-item label="货币符号" prop="currencySymbol">
           <el-input v-model="form.currencySymbol" placeholder="$" />
@@ -98,18 +118,19 @@
           <el-select
             v-model="form.timezone"
             filterable
-            allow-create
-            default-first-option
             placeholder="请选择时区"
             style="width: 100%"
           >
             <el-option v-for="timezone in TIMEZONE_OPTIONS" :key="timezone" :label="timezone" :value="timezone" />
           </el-select>
         </el-form-item>
-        <el-form-item label="汇率" prop="exchangeRate">
+        <el-form-item label="汇率（USD → 目标货币）" prop="exchangeRate">
           <el-input-number v-model="form.exchangeRate" :precision="6" :min="0.000001" style="width: 100%" />
           <div class="form-tip">
-            按美元兑目标货币填写，例如人民币填写：美元 1 : 人民币 7。
+            统一按「USD 1 : 目标货币」填写。例如 CNY 填 7，EUR 填 0.92，后台资金和报表都以此换算。
+          </div>
+          <div class="exchange-preview">
+            当前：USD 1 = {{ form.exchangeRate || 1 }} {{ form.currencyCode || '目标货币' }}
           </div>
         </el-form-item>
         <el-form-item label="状态" prop="status">
@@ -133,7 +154,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { i18nApi, type I18nCountry, type PageData } from '@/api/i18n'
+import { i18nApi, type I18nCountry, type I18nLanguage, type PageData } from '@/api/i18n'
 import { REGION_OPTIONS, regionLabel } from '@/constants/i18nRegions'
 
 defineOptions({ name: 'I18nCountryView' })
@@ -143,6 +164,7 @@ const submitLoading = ref(false)
 const tableData = ref<I18nCountry[]>([])
 const total = ref(0)
 const selectedRows = ref<I18nCountry[]>([])
+const languageOptions = ref<I18nLanguage[]>([])
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const editingId = ref<number | null>(null)
@@ -165,6 +187,20 @@ const TIMEZONE_OPTIONS = [
   'Asia/Singapore',
   'Asia/Dubai',
   'Australia/Sydney',
+]
+
+const CURRENCY_OPTIONS = [
+  { code: 'USD', name: '美元', symbol: '$' },
+  { code: 'CNY', name: '人民币', symbol: '¥' },
+  { code: 'EUR', name: '欧元', symbol: '€' },
+  { code: 'JPY', name: '日元', symbol: '¥' },
+  { code: 'GBP', name: '英镑', symbol: '£' },
+  { code: 'HKD', name: '港币', symbol: 'HK$' },
+  { code: 'SGD', name: '新加坡元', symbol: 'S$' },
+  { code: 'AUD', name: '澳元', symbol: 'A$' },
+  { code: 'CAD', name: '加元', symbol: 'C$' },
+  { code: 'BRL', name: '巴西雷亚尔', symbol: 'R$' },
+  { code: 'MXN', name: '墨西哥比索', symbol: '$' },
 ]
 
 const searchForm = reactive({
@@ -194,12 +230,39 @@ const rules: FormRules = {
   code: [{ required: true, message: '请输入国家代码', trigger: 'blur' }],
   phoneCode: [{ required: true, message: '请输入电话区号', trigger: 'blur' }],
   currencyCode: [{ required: true, message: '请输入货币代码', trigger: 'blur' }],
-  timezone: [{ required: true, message: '请输入时区', trigger: 'blur' }],
+  timezone: [{ required: true, message: '请选择时区', trigger: 'change' }],
+  exchangeRate: [{ required: true, message: '请输入汇率', trigger: 'blur' }],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }],
 }
 
 function handleSelectionChange(rows: I18nCountry[]) {
   selectedRows.value = rows
+}
+
+function languageLabel(code?: string) {
+  if (!code) return '-'
+  const language = languageOptions.value.find((item) => item.code === code)
+  return language ? `${language.name || language.nativeName}（${code}）` : code
+}
+
+function handleCurrencyChange(code: string) {
+  const normalized = String(code || '').trim().toUpperCase()
+  form.currencyCode = normalized
+  const currency = CURRENCY_OPTIONS.find((item) => item.code === normalized)
+  if (currency) {
+    form.currencySymbol = currency.symbol
+  }
+}
+
+async function loadLanguages() {
+  try {
+    const { data: res } = await i18nApi.getLanguages({ status: 'ENABLE', page: 1, pageSize: 500 })
+    if (res.code === 200) {
+      languageOptions.value = (res.data as PageData<I18nLanguage>).list || []
+    }
+  } catch {
+    languageOptions.value = []
+  }
 }
 
 async function fetchData() {
@@ -218,8 +281,8 @@ async function fetchData() {
     } else {
       ElMessage.error(res.message || '获取数据失败')
     }
-  } catch {
-    ElMessage.error('获取数据失败')
+  } catch (error) {
+    ElMessage.error((error as any)?.response?.data?.message || (error as any)?.message || '获取数据失败')
   } finally {
     loading.value = false
   }
@@ -281,6 +344,8 @@ async function handleSubmit() {
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid) return
 
+  form.code = String(form.code || '').trim().toUpperCase()
+  form.currencyCode = String(form.currencyCode || '').trim().toUpperCase()
   submitLoading.value = true
   try {
     if (isEdit.value && editingId.value) {
@@ -302,8 +367,8 @@ async function handleSubmit() {
         ElMessage.error(res.message || '新增失败')
       }
     }
-  } catch {
-    ElMessage.error('操作失败')
+  } catch (error) {
+    ElMessage.error((error as any)?.response?.data?.message || (error as any)?.message || '操作失败')
   } finally {
     submitLoading.value = false
   }
@@ -319,8 +384,8 @@ async function handleToggleStatus(row: I18nCountry) {
     } else {
       ElMessage.error(res.message || '状态更新失败')
     }
-  } catch {
-    ElMessage.error('状态更新失败')
+  } catch (error) {
+    ElMessage.error((error as any)?.response?.data?.message || (error as any)?.message || '状态更新失败')
   }
 }
 
@@ -333,8 +398,8 @@ async function handleDelete(row: I18nCountry) {
     } else {
       ElMessage.error(res.message || '删除失败')
     }
-  } catch {
-    ElMessage.error('删除失败')
+  } catch (error) {
+    ElMessage.error((error as any)?.response?.data?.message || (error as any)?.message || '删除失败')
   }
 }
 
@@ -342,7 +407,8 @@ function resetForm() {
   formRef.value?.resetFields()
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await loadLanguages()
   fetchData()
 })
 </script>
@@ -353,6 +419,12 @@ onMounted(() => {
 .form-tip {
   margin-top: 6px;
   color: #909399;
+  font-size: 12px;
+  line-height: 18px;
+}
+.exchange-preview {
+  margin-top: 6px;
+  color: #606266;
   font-size: 12px;
   line-height: 18px;
 }

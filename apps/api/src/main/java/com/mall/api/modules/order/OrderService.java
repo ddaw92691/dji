@@ -1071,7 +1071,7 @@ public class OrderService {
                 return c.getCurrencyCode();
             }
         }
-        return "JPY";
+        return "USD";
     }
 
     // N+1 修复：一次 IN 查全部明细

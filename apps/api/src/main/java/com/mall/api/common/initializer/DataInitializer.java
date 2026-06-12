@@ -11121,9 +11121,9 @@ public class DataInitializer implements CommandLineRunner {
         insertMenu(1500L, null, "ADMIN", "DIRECTORY", null, "翻译与语言", "HOutline:GlobeAltIcon", null, 6, true);
         insertMenu(1501L, 1500L, "ADMIN", "MENU", "/i18n/country", "国家管理", null, "i18n:country:view", 1, true);
         insertMenu(1502L, 1500L, "ADMIN", "MENU", "/i18n/language", "语言管理", null, "i18n:language:view", 2, true);
-        insertMenu(1503L, 1500L, "ADMIN", "MENU", "/i18n/country-language", "国家语言", null, "i18n:countryLanguage:view", 3, false);
-        insertMenu(1504L, 1500L, "ADMIN", "MENU", "/i18n/namespace", "命名空间", null, "i18n:namespace:view", 4, true);
-        insertMenu(1505L, 1500L, "ADMIN", "MENU", "/i18n/translation", "翻译管理", null, "i18n:translation:view", 5, true);
+        insertMenu(1503L, 1500L, "ADMIN", "MENU", "/i18n/country-language", "国家语言（已隐藏）", null, "i18n:countryLanguage:view", 3, false);
+        insertMenu(1504L, 1500L, "ADMIN", "MENU", "/i18n/namespace", "命名空间（已隐藏）", null, "i18n:namespace:view", 4, false);
+        insertMenu(1505L, 1500L, "ADMIN", "MENU", "/i18n/translation", "翻译管理", null, "i18n:translation:view", 3, true);
 
         insertMenu(1600L, null, "ADMIN", "DIRECTORY", null, "系统管理", "HOutline:Cog6ToothIcon", null, 7, true);
         insertMenu(1601L, 1600L, "ADMIN", "MENU", "/system/role", "角色管理", null, "sys:role:view", 1, true);

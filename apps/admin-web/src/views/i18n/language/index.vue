@@ -68,7 +68,8 @@
           <el-input v-model="form.nativeName" placeholder="请输入本地名称，如 简体中文" />
         </el-form-item>
         <el-form-item label="语言代码" prop="code">
-          <el-input v-model="form.code" placeholder="如 en、zh-Hans、zh-Hant" />
+          <el-input v-model="form.code" placeholder="如 en、zh-Hans、zh-Hant、es" />
+          <div class="form-tip">语言代码会按 BCP47 风格保存，例如 zh-Hans 不会被强制改成 zh-hans，避免前台语言包匹配失败。</div>
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-select v-model="form.status" placeholder="请选择状态" style="width: 100%">
@@ -184,6 +185,7 @@ async function handleSubmit() {
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid) return
 
+  form.code = normalizeLanguageCode(form.code)
   submitLoading.value = true
   try {
     if (isEdit.value && editingId.value) {
@@ -205,8 +207,8 @@ async function handleSubmit() {
         ElMessage.error(res.message || '新增失败')
       }
     }
-  } catch {
-    ElMessage.error('操作失败')
+  } catch (error) {
+    ElMessage.error((error as any)?.response?.data?.message || (error as any)?.message || '操作失败')
   } finally {
     submitLoading.value = false
   }
@@ -241,6 +243,20 @@ async function handleDelete(row: I18nLanguage) {
   }
 }
 
+function normalizeLanguageCode(code: string) {
+  return String(code || '')
+    .trim()
+    .replace(/_/g, '-')
+    .split('-')
+    .map((part, index) => {
+      if (index === 0) return part.toLowerCase()
+      if (part.length === 2) return part.toUpperCase()
+      if (part.length === 4) return `${part.slice(0, 1).toUpperCase()}${part.slice(1).toLowerCase()}`
+      return part
+    })
+    .join('-')
+}
+
 function resetForm() {
   formRef.value?.resetFields()
 }
@@ -253,4 +269,5 @@ onMounted(() => {
 <style scoped>
 .i18n-page { padding: 20px; }
 .search-bar { margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+.form-tip { margin-top: 6px; color: #909399; font-size: 12px; line-height: 18px; }
 </style>

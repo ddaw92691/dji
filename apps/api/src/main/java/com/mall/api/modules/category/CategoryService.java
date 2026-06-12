@@ -27,9 +27,12 @@ public class CategoryService {
         this.categoryTranslationMapper = categoryTranslationMapper;
     }
 
-    public Page<Category> getCategories(String status, int page, int pageSize) {
+    public Page<Category> getCategories(String keyword, String status, int page, int pageSize) {
         LambdaQueryWrapper<Category> wrapper = Wrappers.<Category>lambdaQuery()
                 .eq(Category::getDeleted, false);
+        if (keyword != null && !keyword.isBlank()) {
+            wrapper.like(Category::getName, keyword.trim());
+        }
         if (status != null && !status.isBlank()) {
             wrapper.in(Category::getStatus, statusCandidates(status));
         }
@@ -58,17 +61,9 @@ public class CategoryService {
             item.put("icon", cat.getIcon());
             item.put("image", cat.getImage());
             item.put("sort", cat.getSort());
-            LambdaQueryWrapper<CategoryTranslation> tw = Wrappers.<CategoryTranslation>lambdaQuery()
-                    .eq(CategoryTranslation::getCategoryId, cat.getId());
-            if (countryCode != null && !countryCode.isBlank()) {
-                tw.eq(CategoryTranslation::getCountryCode, countryCode);
-            }
-            if (languageCode != null && !languageCode.isBlank()) {
-                tw.eq(CategoryTranslation::getLanguageCode, languageCode);
-            }
-            List<CategoryTranslation> translations = categoryTranslationMapper.selectList(tw);
-            if (translations.size() > 0) {
-                item.put("name", translations.get(0).getName());
+            CategoryTranslation translation = findBestTranslation(cat.getId(), countryCode, languageCode);
+            if (translation != null && translation.getName() != null && !translation.getName().isBlank()) {
+                item.put("name", translation.getName());
             }
             result.add(item);
         }
@@ -135,16 +130,68 @@ public class CategoryService {
         categoryTranslationMapper.delete(wrapper);
         if (translations != null) {
             for (Map<String, String> t : translations) {
+                String languageCode = normalizeLanguageCode(t.get("languageCode"));
+                String name = t.get("name");
+                if (languageCode == null || languageCode.isBlank() || name == null || name.isBlank()) {
+                    continue;
+                }
                 CategoryTranslation ct = new CategoryTranslation();
                 ct.setCategoryId(categoryId);
-                ct.setLanguageCode(t.get("languageCode"));
-                ct.setCountryCode(t.get("countryCode"));
-                ct.setName(t.get("name"));
+                ct.setLanguageCode(languageCode);
+                String countryCode = t.get("countryCode");
+                ct.setCountryCode(countryCode == null || countryCode.isBlank() ? null : countryCode.trim().toUpperCase());
+                ct.setName(name.trim());
                 ct.setCreatedAt(LocalDateTime.now());
                 ct.setUpdatedAt(LocalDateTime.now());
                 categoryTranslationMapper.insert(ct);
             }
         }
+    }
+
+    private CategoryTranslation findBestTranslation(Long categoryId, String countryCode, String languageCode) {
+        if (categoryId == null || languageCode == null || languageCode.isBlank()) {
+            return null;
+        }
+        String lang = normalizeLanguageCode(languageCode);
+        String country = countryCode == null ? null : countryCode.trim().toUpperCase();
+        if (country != null && !country.isBlank()) {
+            CategoryTranslation exact = categoryTranslationMapper.selectOne(
+                    Wrappers.<CategoryTranslation>lambdaQuery()
+                            .eq(CategoryTranslation::getCategoryId, categoryId)
+                            .eq(CategoryTranslation::getLanguageCode, lang)
+                            .eq(CategoryTranslation::getCountryCode, country)
+                            .last("LIMIT 1"));
+            if (exact != null) return exact;
+        }
+        CategoryTranslation byLanguage = categoryTranslationMapper.selectOne(
+                Wrappers.<CategoryTranslation>lambdaQuery()
+                        .eq(CategoryTranslation::getCategoryId, categoryId)
+                        .eq(CategoryTranslation::getLanguageCode, lang)
+                        .and(w -> w.isNull(CategoryTranslation::getCountryCode).or().eq(CategoryTranslation::getCountryCode, ""))
+                        .last("LIMIT 1"));
+        if (byLanguage != null) return byLanguage;
+
+        return categoryTranslationMapper.selectOne(
+                Wrappers.<CategoryTranslation>lambdaQuery()
+                        .eq(CategoryTranslation::getCategoryId, categoryId)
+                        .eq(CategoryTranslation::getLanguageCode, lang)
+                        .last("LIMIT 1"));
+    }
+
+    private String normalizeLanguageCode(String code) {
+        if (code == null) return null;
+        String[] parts = code.trim().replace('_', '-').split("-");
+        for (int i = 0; i < parts.length; i++) {
+            if (parts[i].isBlank()) continue;
+            if (i == 0) {
+                parts[i] = parts[i].toLowerCase();
+            } else if (parts[i].length() == 2) {
+                parts[i] = parts[i].toUpperCase();
+            } else if (parts[i].length() == 4) {
+                parts[i] = parts[i].substring(0, 1).toUpperCase() + parts[i].substring(1).toLowerCase();
+            }
+        }
+        return String.join("-", parts);
     }
 
     private String normalizeStatus(String status) {

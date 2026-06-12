@@ -88,8 +88,9 @@
       @close="resetForm"
     >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="130px">
-        <el-form-item label="名称" prop="name">
-          <el-input v-model="form.name" placeholder="分类名称" />
+        <el-form-item label="中文名称" prop="name">
+          <el-input v-model="form.name" placeholder="可直接使用中文命名，如 手机配件" />
+          <div class="form-tip">这是后台基础名称；商家后台和前台会优先按当前语言显示下方翻译名称，缺失时回退到该名称。</div>
         </el-form-item>
         <el-form-item label="上级" prop="parentId">
           <el-select
@@ -136,8 +137,14 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="transDialogVisible" title="分类翻译" width="550px" @close="resetTransForm">
-      <el-form ref="transFormRef" :model="transForm" label-width="150px">
+    <el-dialog v-model="transDialogVisible" title="分类多语言名称" width="620px" @close="resetTransForm">
+      <el-alert
+        title="这里会显示语言管理中已启用的所有语言。未填写的语言会在商家后台/前台回退显示分类中文名称。"
+        type="info"
+        :closable="false"
+        style="margin-bottom: 14px"
+      />
+      <el-form ref="transFormRef" :model="transForm" label-width="170px">
         <el-form-item
           v-for="language in languageOptions"
           :key="language.code"
@@ -199,8 +206,8 @@ const form = reactive({
 const transForm = reactive<Record<string, string>>({})
 
 const rules: FormRules = {
-  name: [{ required: true, message: 'Please enter name', trigger: 'blur' }],
-  status: [{ required: true, message: 'Please select status', trigger: 'change' }],
+  name: [{ required: true, message: '请输入分类名称', trigger: 'blur' }],
+  status: [{ required: true, message: '请选择状态', trigger: 'change' }],
 }
 
 function getCategoryName(id: number): string {
@@ -309,8 +316,8 @@ async function handleSubmit() {
         ElMessage.error(res.message || '创建失败')
       }
     }
-  } catch {
-    ElMessage.error('操作失败')
+  } catch (error) {
+    ElMessage.error((error as any)?.response?.data?.message || (error as any)?.message || '操作失败')
   } finally {
     submitLoading.value = false
   }
@@ -369,8 +376,8 @@ async function handleSaveTranslations() {
     } else {
       ElMessage.error(res.message || '保存失败')
     }
-  } catch {
-    ElMessage.error('保存失败')
+  } catch (error) {
+    ElMessage.error((error as any)?.response?.data?.message || (error as any)?.message || '保存失败')
   } finally {
     transLoading.value = false
   }
@@ -425,5 +432,11 @@ onMounted(async () => {
 }
 .input-with-upload {
   flex: 1;
+}
+.form-tip {
+  margin-top: 6px;
+  color: #909399;
+  font-size: 12px;
+  line-height: 18px;
 }
 </style>

@@ -56,20 +56,7 @@ public class PublicController {
             item.put("timezone", country.getTimezone());
             item.put("region", country.getRegion());
 
-            List<CountryLanguage> cls = countryLanguageMapper.selectByCountryId(country.getId());
-            List<Map<String, Object>> languages = new ArrayList<>();
-            for (CountryLanguage cl : cls) {
-                Language lang = languageMapper.selectById(cl.getLanguageId());
-                if (lang != null && "ENABLE".equals(lang.getStatus())) {
-                    Map<String, Object> langItem = new LinkedHashMap<>();
-                    langItem.put("code", lang.getCode());
-                    langItem.put("name", lang.getName());
-                    langItem.put("nativeName", lang.getNativeName());
-                    langItem.put("isDefault", cl.getIsDefault());
-                    languages.add(langItem);
-                }
-            }
-            item.put("languages", languages);
+            item.put("languages", resolveCountryLanguages(country));
             result.add(item);
         }
         return ApiResponse.success(result);
@@ -83,20 +70,38 @@ public class PublicController {
             return ApiResponse.success(Collections.emptyList());
         }
 
+        return ApiResponse.success(resolveCountryLanguages(country));
+    }
+
+    private List<Map<String, Object>> resolveCountryLanguages(Country country) {
         List<CountryLanguage> cls = countryLanguageMapper.selectByCountryId(country.getId());
         List<Map<String, Object>> result = new ArrayList<>();
+        Set<String> addedCodes = new HashSet<>();
         for (CountryLanguage cl : cls) {
             Language lang = languageMapper.selectById(cl.getLanguageId());
             if (lang != null && "ENABLE".equals(lang.getStatus())) {
-                Map<String, Object> item = new LinkedHashMap<>();
-                item.put("code", lang.getCode());
-                item.put("name", lang.getName());
-                item.put("nativeName", lang.getNativeName());
-                item.put("isDefault", cl.getIsDefault());
-                result.add(item);
+                result.add(languageItem(lang, Boolean.TRUE.equals(cl.getIsDefault())));
+                addedCodes.add(lang.getCode());
             }
         }
-        return ApiResponse.success(result);
+
+        String defaultLanguageCode = country.getDefaultLanguageCode();
+        if (defaultLanguageCode != null && !defaultLanguageCode.isBlank() && !addedCodes.contains(defaultLanguageCode)) {
+            Language lang = languageMapper.selectByCode(defaultLanguageCode);
+            if (lang != null && "ENABLE".equals(lang.getStatus())) {
+                result.add(0, languageItem(lang, true));
+            }
+        }
+        return result;
+    }
+
+    private Map<String, Object> languageItem(Language lang, boolean isDefault) {
+        Map<String, Object> item = new LinkedHashMap<>();
+        item.put("code", lang.getCode());
+        item.put("name", lang.getName());
+        item.put("nativeName", lang.getNativeName());
+        item.put("isDefault", isDefault);
+        return item;
     }
 
     @GetMapping("/i18n")

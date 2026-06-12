@@ -82,13 +82,13 @@ public class AdminI18nService {
 
     @Transactional
     public Country createCountry(Country country) {
+        normalizeCountryForSave(country, true);
         Country exist = countryMapper.selectByCode(country.getCode());
         if (exist != null) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "国家代码已存在");
-        country.setCode(country.getCode().toUpperCase());
         country.setDeleted(false);
         country.setCreatedAt(LocalDateTime.now());
         country.setUpdatedAt(LocalDateTime.now());
-        if (country.getStatus() == null) country.setStatus("ENABLE");
+        if (country.getStatus() == null || country.getStatus().isBlank()) country.setStatus("ENABLE");
         countryMapper.insert(country);
         i18nService.clearCache();
         return country;
@@ -98,14 +98,16 @@ public class AdminI18nService {
     public Country updateCountry(Long id, Country country) {
         Country exist = countryMapper.selectById(id);
         if (exist == null) throw new BusinessException(ResultCode.NOT_FOUND);
+        normalizeCountryForSave(country, false);
         if (country.getCode() != null && !country.getCode().isEmpty()) {
-            Country codeExist = countryMapper.selectByCode(country.getCode().toUpperCase());
+            Country codeExist = countryMapper.selectByCode(country.getCode());
             if (codeExist != null && !codeExist.getId().equals(id)) {
                 throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "国家代码已存在");
             }
-            exist.setCode(country.getCode().toUpperCase());
+            exist.setCode(country.getCode());
         }
         if (country.getName() != null) exist.setName(country.getName());
+        if (country.getRegion() != null) exist.setRegion(country.getRegion());
         if (country.getFlagIcon() != null) exist.setFlagIcon(country.getFlagIcon());
         if (country.getPhoneCode() != null) exist.setPhoneCode(country.getPhoneCode());
         if (country.getCurrencyCode() != null) exist.setCurrencyCode(country.getCurrencyCode());
@@ -160,13 +162,13 @@ public class AdminI18nService {
 
     @Transactional
     public Language createLanguage(Language language) {
+        language.setCode(normalizeLanguageCode(language.getCode()));
         Language exist = languageMapper.selectByCode(language.getCode());
         if (exist != null) throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "语言代码已存在");
-        language.setCode(language.getCode());
         language.setDeleted(false);
         language.setCreatedAt(LocalDateTime.now());
         language.setUpdatedAt(LocalDateTime.now());
-        if (language.getStatus() == null) language.setStatus("ENABLE");
+        if (language.getStatus() == null || language.getStatus().isBlank()) language.setStatus("ENABLE");
         languageMapper.insert(language);
         i18nService.clearCache();
         return language;
@@ -177,10 +179,11 @@ public class AdminI18nService {
         Language exist = languageMapper.selectById(id);
         if (exist == null) throw new BusinessException(ResultCode.NOT_FOUND);
         if (language.getCode() != null && !language.getCode().isEmpty()) {
-            Language codeExist = languageMapper.selectByCode(language.getCode().toLowerCase());
+            language.setCode(normalizeLanguageCode(language.getCode()));
+            Language codeExist = languageMapper.selectByCode(language.getCode());
             if (codeExist != null && !codeExist.getId().equals(id))
                 throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "语言代码已存在");
-            exist.setCode(language.getCode().toLowerCase());
+            exist.setCode(language.getCode());
         }
         if (language.getName() != null) exist.setName(language.getName());
         if (language.getNativeName() != null) exist.setNativeName(language.getNativeName());
@@ -212,6 +215,48 @@ public class AdminI18nService {
         exist.setUpdatedAt(LocalDateTime.now());
         languageMapper.updateById(exist);
         i18nService.clearCache();
+    }
+
+    private void normalizeCountryForSave(Country country, boolean creating) {
+        if (country == null) return;
+        if (country.getCode() != null && !country.getCode().isBlank()) {
+            country.setCode(country.getCode().trim().toUpperCase(Locale.ROOT));
+        } else if (creating) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "请输入国家代码");
+        }
+        if (country.getCurrencyCode() != null && !country.getCurrencyCode().isBlank()) {
+            country.setCurrencyCode(country.getCurrencyCode().trim().toUpperCase(Locale.ROOT));
+        } else if (creating) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "请输入货币代码");
+        }
+        if (country.getDefaultLanguageCode() != null && !country.getDefaultLanguageCode().isBlank()) {
+            country.setDefaultLanguageCode(normalizeLanguageCode(country.getDefaultLanguageCode()));
+        }
+        if (country.getExchangeRate() != null && country.getExchangeRate().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "汇率必须大于 0，按 USD 1 : 目标货币填写");
+        }
+        if (country.getTimezone() != null && country.getTimezone().isBlank()) {
+            country.setTimezone(null);
+        }
+    }
+
+    private String normalizeLanguageCode(String code) {
+        if (code == null || code.isBlank()) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "请输入语言代码");
+        }
+        String[] parts = code.trim().replace('_', '-').split("-");
+        for (int i = 0; i < parts.length; i++) {
+            if (parts[i].isBlank()) continue;
+            if (i == 0) {
+                parts[i] = parts[i].toLowerCase(Locale.ROOT);
+            } else if (parts[i].length() == 2) {
+                parts[i] = parts[i].toUpperCase(Locale.ROOT);
+            } else if (parts[i].length() == 4) {
+                parts[i] = parts[i].substring(0, 1).toUpperCase(Locale.ROOT)
+                        + parts[i].substring(1).toLowerCase(Locale.ROOT);
+            }
+        }
+        return String.join("-", parts);
     }
 
     // ==================== Country-Language ====================

@@ -28,10 +28,11 @@ public class AdminCategoryController {
     @Operation(summary = "分类列表")
     @PreAuthorize("@perm.has('product:view')")
     public ApiResponse<Map<String, Object>> getCategories(
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize) {
-        Page<Category> pg = categoryService.getCategories(status, page, pageSize);
+        Page<Category> pg = categoryService.getCategories(keyword, status, page, pageSize);
         return ApiResponse.success(Map.of("list", pg.getRecords(), "total", pg.getTotal(), "page", page, "pageSize", pageSize));
     }
 
