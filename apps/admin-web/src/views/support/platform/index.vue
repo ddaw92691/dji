@@ -150,7 +150,10 @@ async function fetchData() {
       tableData.value = res.data.list || []
       total.value = res.data.total || 0
       if (!chatSession.value && tableData.value.length) {
-        await openReply(tableData.value[0])
+        const firstSession = tableData.value[0]
+        if (firstSession) {
+          await openReply(firstSession)
+        }
       }
     }
   } catch {
