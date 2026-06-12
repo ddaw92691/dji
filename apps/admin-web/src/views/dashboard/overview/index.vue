@@ -74,20 +74,20 @@
     <el-row :gutter="16" class="stats-row">
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">总销售额</div>
-          <div class="stat-value green">${{ formatAmount(summary.totalSales) }}</div>
+          <div class="stat-label">总销售额（{{ summary.baseCurrency || 'USD' }}）</div>
+          <div class="stat-value green">{{ formatMoney(summary.totalSales, summary.baseCurrency) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">今日销售</div>
-          <div class="stat-value">${{ formatAmount(summary.todaySales) }}</div>
+          <div class="stat-label">今日销售（{{ summary.baseCurrency || 'USD' }}）</div>
+          <div class="stat-value">{{ formatMoney(summary.todaySales, summary.baseCurrency) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">总佣金</div>
-          <div class="stat-value">${{ formatAmount(summary.totalCommission) }}</div>
+          <div class="stat-value">{{ formatMoney(summary.totalCommission, summary.baseCurrency) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
@@ -107,10 +107,12 @@
             <el-table-column label="客户" min-width="100" show-overflow-tooltip>
               <template #default="{ row }">{{ row.userName || '-' }}</template>
             </el-table-column>
-            <el-table-column prop="payAmount" label="金额" width="90" align="right" />
+            <el-table-column label="金额" width="120" align="right">
+              <template #default="{ row }">{{ formatMoney(row.payAmount, row.currency) }}</template>
+            </el-table-column>
             <el-table-column label="状态" width="100" align="center">
               <template #default="{ row }">
-                <el-tag size="small">{{ row.status }}</el-tag>
+                <el-tag size="small">{{ translateOrderStatus(row.status) }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column prop="createdAt" label="创建时间" width="160" />
@@ -125,7 +127,9 @@
             <el-table-column label="客户" min-width="100" show-overflow-tooltip>
               <template #default="{ row }">{{ row.userName || '-' }}</template>
             </el-table-column>
-            <el-table-column prop="refundAmount" label="金额" width="90" align="right" />
+            <el-table-column label="金额" width="120" align="right">
+              <template #default="{ row }">{{ formatMoney(row.refundAmount, row.currency) }}</template>
+            </el-table-column>
             <el-table-column label="状态" width="100" align="center">
               <template #default="{ row }">
                 <el-tag
@@ -138,7 +142,7 @@
                         : 'danger'
                   "
                 >
-                  {{ row.refundStatus }}
+                  {{ translateRefundStatus(row.refundStatus) }}
                 </el-tag>
               </template>
             </el-table-column>
@@ -151,7 +155,7 @@
     <el-row :gutter="16" class="charts-row">
       <el-col :span="12">
         <el-card shadow="hover" class="section-card">
-          <template #header><span class="section-title">近 7 日销售额</span></template>
+          <template #header><span class="section-title">近 7 日销售额（{{ chartData.baseCurrency || summary.baseCurrency || 'USD' }}）</span></template>
           <div ref="salesChartRef" class="chart-box" />
         </el-card>
       </el-col>
@@ -194,6 +198,7 @@ const orderStatusChartRef = ref<HTMLElement | null>(null)
 const userRoleChartRef = ref<HTMLElement | null>(null)
 
 const summary = reactive<IAdminDashboard>({
+  baseCurrency: 'USD',
   totalUsers: 0,
   totalCustomers: 0,
   totalMerchants: 0,
@@ -215,6 +220,7 @@ const summary = reactive<IAdminDashboard>({
 })
 
 const chartData = reactive<IAdminDashboardCharts>({
+  baseCurrency: 'USD',
   salesTrend: [],
   orderTrend: [],
   orderStatusDistribution: [],
@@ -227,7 +233,12 @@ let orderStatusChart: echarts.ECharts | null = null
 let userRoleChart: echarts.ECharts | null = null
 
 function formatAmount(val: number) {
-  return (val ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return Number(val ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function formatMoney(val: number | string | undefined, currency = 'USD') {
+  const code = currency || 'USD'
+  return `${code} ${formatAmount(Number(val || 0))}`
 }
 
 function initSalesChart() {
@@ -317,10 +328,26 @@ function formatChartDate(date?: string) {
 function translateOrderStatus(status?: string) {
   const map: Record<string, string> = {
     'Pending Payment': '待支付',
+    PENDING_PAYMENT: '待支付',
     Paid: '已支付',
+    PAID: '已支付',
     Shipped: '已发货',
+    SHIPPED: '已发货',
     Completed: '已完成',
+    COMPLETED: '已完成',
     Cancelled: '已取消',
+    CANCELLED: '已取消',
+  }
+  return status ? map[status] || status : '-'
+}
+
+
+function translateRefundStatus(status?: string) {
+  const map: Record<string, string> = {
+    REQUESTED: '待处理',
+    APPROVED: '已通过',
+    REJECTED: '已拒绝',
+    REFUNDED: '已退款',
   }
   return status ? map[status] || status : '-'
 }

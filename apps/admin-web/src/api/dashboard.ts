@@ -2,6 +2,7 @@ import request from '@/utils/request'
 import type { ICommonResponse } from '@/types/common'
 
 export interface IAdminDashboard {
+  baseCurrency?: string
   totalUsers: number
   totalCustomers: number
   totalMerchants: number
@@ -31,6 +32,7 @@ export interface IChartPoint {
 }
 
 export interface IAdminDashboardCharts {
+  baseCurrency?: string
   salesTrend: IChartPoint[]
   orderTrend: IChartPoint[]
   orderStatusDistribution: IChartPoint[]

@@ -1,10 +1,13 @@
 package com.mall.api.modules.dashboard.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.mall.api.common.response.ApiResponse;
 import com.mall.api.modules.agent.entity.Agent;
 import com.mall.api.modules.agent.mapper.AgentMapper;
+import com.mall.api.modules.commission.entity.Commission;
+import com.mall.api.modules.commission.mapper.CommissionMapper;
+import com.mall.api.modules.country.entity.Country;
+import com.mall.api.modules.country.mapper.CountryMapper;
 import com.mall.api.modules.merchant.entity.Merchant;
 import com.mall.api.modules.merchant.mapper.MerchantMapper;
 import com.mall.api.modules.order.entity.MallOrder;
@@ -25,8 +28,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -35,6 +38,8 @@ import java.util.*;
 @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
 public class DashboardController {
 
+    private static final BigDecimal ZERO = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+
     private final UserMapper userMapper;
     private final MerchantMapper merchantMapper;
     private final AgentMapper agentMapper;
@@ -42,11 +47,14 @@ public class DashboardController {
     private final MallOrderMapper orderMapper;
     private final PaymentMapper paymentMapper;
     private final WithdrawalMapper withdrawalMapper;
+    private final CommissionMapper commissionMapper;
+    private final CountryMapper countryMapper;
 
     public DashboardController(UserMapper userMapper, MerchantMapper merchantMapper,
                                AgentMapper agentMapper, ProductMapper productMapper,
                                MallOrderMapper orderMapper, PaymentMapper paymentMapper,
-                               WithdrawalMapper withdrawalMapper) {
+                               WithdrawalMapper withdrawalMapper, CommissionMapper commissionMapper,
+                               CountryMapper countryMapper) {
         this.userMapper = userMapper;
         this.merchantMapper = merchantMapper;
         this.agentMapper = agentMapper;
@@ -54,6 +62,8 @@ public class DashboardController {
         this.orderMapper = orderMapper;
         this.paymentMapper = paymentMapper;
         this.withdrawalMapper = withdrawalMapper;
+        this.commissionMapper = commissionMapper;
+        this.countryMapper = countryMapper;
     }
 
     @GetMapping
@@ -62,23 +72,36 @@ public class DashboardController {
     public ApiResponse<Map<String, Object>> overview() {
         Map<String, Object> data = new HashMap<>();
 
-        Long totalUsers = userMapper.selectCount(null);
+        Long totalUsers = userMapper.selectCount(
+                Wrappers.<User>lambdaQuery().eq(User::getDeleted, false));
+        Long totalCustomers = userMapper.selectCount(
+                Wrappers.<User>lambdaQuery().eq(User::getRole, "CUSTOMER").eq(User::getDeleted, false));
         Long totalMerchants = merchantMapper.selectCount(
-                Wrappers.<Merchant>lambdaQuery().eq(Merchant::getStatus, "ENABLE"));
+                Wrappers.<Merchant>lambdaQuery().eq(Merchant::getStatus, "ENABLE").eq(Merchant::getDeleted, false));
         Long totalAgents = agentMapper.selectCount(
-                Wrappers.<Agent>lambdaQuery().eq(Agent::getStatus, "ENABLE"));
+                Wrappers.<Agent>lambdaQuery().eq(Agent::getStatus, "ENABLE").eq(Agent::getDeleted, false));
         Long totalProducts = productMapper.selectCount(
                 Wrappers.<Product>lambdaQuery().eq(Product::getDeleted, false));
+        Long pendingProducts = productMapper.selectCount(
+                Wrappers.<Product>lambdaQuery()
+                        .eq(Product::getDeleted, false)
+                        .eq(Product::getAuditStatus, "PENDING"));
         Long totalOrders = orderMapper.selectCount(
                 Wrappers.<MallOrder>lambdaQuery().eq(MallOrder::getDeleted, false));
+        Long paidOrders = orderMapper.selectCount(
+                Wrappers.<MallOrder>lambdaQuery()
+                        .eq(MallOrder::getDeleted, false)
+                        .eq(MallOrder::getPayStatus, "PAID"));
+        Long completedOrders = orderMapper.selectCount(
+                Wrappers.<MallOrder>lambdaQuery()
+                        .eq(MallOrder::getDeleted, false)
+                        .eq(MallOrder::getStatus, "COMPLETED"));
 
-        BigDecimal totalSales = BigDecimal.ZERO;
-        for (Payment p : paymentMapper.selectList(
-                Wrappers.<Payment>lambdaQuery().eq(Payment::getStatus, "SUCCESS"))) {
-            if (p.getAmount() != null) {
-                totalSales = totalSales.add(p.getAmount());
-            }
-        }
+        Map<String, BigDecimal> exchangeRateCache = new HashMap<>();
+        BigDecimal totalSales = sumPaymentsAsUsd(
+                paymentMapper.selectList(Wrappers.<Payment>lambdaQuery().eq(Payment::getStatus, "SUCCESS")),
+                exchangeRateCache
+        );
 
         LocalDate today = LocalDate.now();
         Long todayOrders = orderMapper.selectCount(
@@ -87,35 +110,46 @@ public class DashboardController {
                         .ge(MallOrder::getCreatedAt, today.atStartOfDay())
                         .le(MallOrder::getCreatedAt, today.atTime(23, 59, 59)));
 
-        BigDecimal todaySales = BigDecimal.ZERO;
-        for (Payment p : paymentMapper.selectList(
-                Wrappers.<Payment>lambdaQuery()
-                        .eq(Payment::getStatus, "SUCCESS")
-                        .ge(Payment::getPaidAt, today.atStartOfDay())
-                        .le(Payment::getPaidAt, today.atTime(23, 59, 59)))) {
-            if (p.getAmount() != null) {
-                todaySales = todaySales.add(p.getAmount());
-            }
-        }
+        BigDecimal todaySales = sumPaymentsAsUsd(
+                paymentMapper.selectList(
+                        Wrappers.<Payment>lambdaQuery()
+                                .eq(Payment::getStatus, "SUCCESS")
+                                .ge(Payment::getPaidAt, today.atStartOfDay())
+                                .le(Payment::getPaidAt, today.atTime(23, 59, 59))),
+                exchangeRateCache
+        );
+
+        BigDecimal totalCommission = sumCommissions(
+                commissionMapper.selectList(Wrappers.<Commission>lambdaQuery())
+        );
 
         Long pendingWithdrawals = withdrawalMapper.selectCount(
                 Wrappers.<Withdrawal>lambdaQuery().eq(Withdrawal::getStatus, "PENDING"));
 
-        Long pendingRefunds = orderMapper.selectCount(
+        Long refundRequests = orderMapper.selectCount(
                 Wrappers.<MallOrder>lambdaQuery()
                         .eq(MallOrder::getDeleted, false)
                         .eq(MallOrder::getRefundStatus, "REQUESTED"));
 
+        data.put("baseCurrency", "USD");
         data.put("totalUsers", totalUsers);
+        data.put("totalCustomers", totalCustomers);
         data.put("totalMerchants", totalMerchants);
         data.put("totalAgents", totalAgents);
         data.put("totalProducts", totalProducts);
+        data.put("pendingProducts", pendingProducts);
         data.put("totalOrders", totalOrders);
+        data.put("paidOrders", paidOrders);
+        data.put("completedOrders", completedOrders);
+        data.put("refundRequests", refundRequests);
+        data.put("pendingRefunds", refundRequests);
         data.put("totalSales", totalSales);
         data.put("todayOrders", todayOrders);
         data.put("todaySales", todaySales);
+        data.put("totalCommission", totalCommission);
         data.put("pendingWithdrawals", pendingWithdrawals);
-        data.put("pendingRefunds", pendingRefunds);
+        data.put("recentOrders", recentOrders());
+        data.put("recentRefunds", recentRefunds());
 
         return ApiResponse.success(data);
     }
@@ -129,22 +163,20 @@ public class DashboardController {
         LocalDate today = LocalDate.now();
         List<Map<String, Object>> salesTrend = new ArrayList<>();
         List<Map<String, Object>> orderTrend = new ArrayList<>();
+        Map<String, BigDecimal> exchangeRateCache = new HashMap<>();
 
         for (int i = 6; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
             String dateStr = date.toString();
 
-            List<Payment> dayPayments = paymentMapper.selectList(
-                    Wrappers.<Payment>lambdaQuery()
-                            .eq(Payment::getStatus, "SUCCESS")
-                            .ge(Payment::getPaidAt, date.atStartOfDay())
-                            .le(Payment::getPaidAt, date.atTime(23, 59, 59)));
-            BigDecimal daySales = BigDecimal.ZERO;
-            for (Payment p : dayPayments) {
-                if (p.getAmount() != null) {
-                    daySales = daySales.add(p.getAmount());
-                }
-            }
+            BigDecimal daySales = sumPaymentsAsUsd(
+                    paymentMapper.selectList(
+                            Wrappers.<Payment>lambdaQuery()
+                                    .eq(Payment::getStatus, "SUCCESS")
+                                    .ge(Payment::getPaidAt, date.atStartOfDay())
+                                    .le(Payment::getPaidAt, date.atTime(23, 59, 59))),
+                    exchangeRateCache
+            );
             Map<String, Object> sp = new HashMap<>();
             sp.put("date", dateStr);
             sp.put("amount", daySales);
@@ -196,11 +228,136 @@ public class DashboardController {
         userRoleDistribution.add(Map.of("name", "Agent", "value", agentCount));
         userRoleDistribution.add(Map.of("name", "Admin", "value", adminCount + superAdminCount));
 
+        data.put("baseCurrency", "USD");
         data.put("salesTrend", salesTrend);
         data.put("orderTrend", orderTrend);
         data.put("orderStatusDistribution", orderStatusDistribution);
         data.put("userRoleDistribution", userRoleDistribution);
 
         return ApiResponse.success(data);
+    }
+
+    private BigDecimal sumPaymentsAsUsd(List<Payment> payments, Map<String, BigDecimal> exchangeRateCache) {
+        BigDecimal total = BigDecimal.ZERO;
+        for (Payment payment : payments) {
+            if (payment.getAmount() == null) {
+                continue;
+            }
+            total = total.add(convertToUsd(payment.getAmount(), payment.getCurrency(), exchangeRateCache));
+        }
+        return money(total);
+    }
+
+    private BigDecimal sumCommissions(List<Commission> commissions) {
+        BigDecimal total = BigDecimal.ZERO;
+        for (Commission commission : commissions) {
+            if (commission.getAmount() != null) {
+                total = total.add(commission.getAmount());
+            }
+        }
+        return money(total);
+    }
+
+    private BigDecimal convertToUsd(BigDecimal amount, String currencyCode, Map<String, BigDecimal> exchangeRateCache) {
+        if (amount == null) {
+            return ZERO;
+        }
+        if (currencyCode == null || currencyCode.isBlank() || "USD".equalsIgnoreCase(currencyCode)) {
+            return money(amount);
+        }
+        String normalizedCurrency = currencyCode.trim().toUpperCase(Locale.ROOT);
+        BigDecimal exchangeRate = exchangeRateCache.computeIfAbsent(normalizedCurrency, this::loadExchangeRateByCurrency);
+        if (exchangeRate == null || exchangeRate.compareTo(BigDecimal.ZERO) <= 0) {
+            return money(amount);
+        }
+        return money(amount.divide(exchangeRate, 2, RoundingMode.HALF_UP));
+    }
+
+    private BigDecimal loadExchangeRateByCurrency(String currencyCode) {
+        Country country = countryMapper.selectOne(
+                Wrappers.<Country>lambdaQuery()
+                        .eq(Country::getCurrencyCode, currencyCode)
+                        .eq(Country::getStatus, "ENABLE")
+                        .eq(Country::getDeleted, false)
+                        .last("LIMIT 1")
+        );
+        if (country == null || country.getExchangeRate() == null) {
+            return BigDecimal.ONE;
+        }
+        return country.getExchangeRate();
+    }
+
+    private List<Map<String, Object>> recentOrders() {
+        List<MallOrder> orders = orderMapper.selectList(
+                Wrappers.<MallOrder>lambdaQuery()
+                        .eq(MallOrder::getDeleted, false)
+                        .orderByDesc(MallOrder::getCreatedAt)
+                        .last("LIMIT 8")
+        );
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (MallOrder order : orders) {
+            rows.add(orderRow(order, false));
+        }
+        return rows;
+    }
+
+    private List<Map<String, Object>> recentRefunds() {
+        List<MallOrder> orders = orderMapper.selectList(
+                Wrappers.<MallOrder>lambdaQuery()
+                        .eq(MallOrder::getDeleted, false)
+                        .isNotNull(MallOrder::getRefundStatus)
+                        .ne(MallOrder::getRefundStatus, "NONE")
+                        .orderByDesc(MallOrder::getCreatedAt)
+                        .last("LIMIT 8")
+        );
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (MallOrder order : orders) {
+            rows.add(orderRow(order, true));
+        }
+        return rows;
+    }
+
+    private Map<String, Object> orderRow(MallOrder order, boolean refundRow) {
+        Map<String, Object> row = new HashMap<>();
+        row.put("id", order.getId());
+        row.put("orderNo", order.getOrderNo());
+        row.put("userName", resolveUserDisplayName(order.getUserId()));
+        row.put("payAmount", money(order.getPayAmount()));
+        row.put("currency", order.getCurrency() == null ? "USD" : order.getCurrency());
+        row.put("status", order.getStatus());
+        row.put("payStatus", order.getPayStatus());
+        row.put("createdAt", order.getCreatedAt());
+        if (refundRow) {
+            row.put("refundAmount", money(order.getRefundAmount() != null ? order.getRefundAmount() : order.getPayAmount()));
+            row.put("refundStatus", order.getRefundStatus());
+        }
+        return row;
+    }
+
+    private String resolveUserDisplayName(Long userId) {
+        if (userId == null) {
+            return "-";
+        }
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            return "-";
+        }
+        if (user.getNickname() != null && !user.getNickname().isBlank()) {
+            return user.getNickname();
+        }
+        if (user.getUsername() != null && !user.getUsername().isBlank()) {
+            return user.getUsername();
+        }
+        if (user.getEmail() != null && !user.getEmail().isBlank()) {
+            return user.getEmail();
+        }
+        return String.valueOf(user.getId());
+    }
+
+    private BigDecimal money(BigDecimal amount) {
+        if (amount == null) {
+            return ZERO;
+        }
+        return amount.setScale(2, RoundingMode.HALF_UP);
     }
 }
