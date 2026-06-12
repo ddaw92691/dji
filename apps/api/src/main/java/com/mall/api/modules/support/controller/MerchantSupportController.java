@@ -114,6 +114,9 @@ public class MerchantSupportController {
     public ApiResponse<SupportSession> createPlatformSession(@RequestBody CreateSessionRequest request) {
         Long userId = SecurityUtils.getCurrentUserId();
         Merchant merchant = getMerchantByUserId(userId);
+        if (merchant == null) {
+            return ApiResponse.error(400, "商家信息不存在，无法联系平台支持");
+        }
 
         SupportSession session = supportService.createSession(
                 "MERCHANT_TO_PLATFORM",

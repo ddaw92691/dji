@@ -4,9 +4,10 @@ import type { ICommonResponse } from '@/types/common'
 export interface IAdminSupportSession {
   id: number; sessionNo: string; sessionType: string; title: string
   status: string; priority: string; merchantId: number; merchantName: string
+  merchantAccount?: string; merchantNickname?: string
   customerUserId: number; customerName: string
   lastMessage: string; lastMessageAt: string
-  customerUnread: number; merchantUnread: number
+  customerUnread: number; merchantUnread: number; adminUnread?: number; unreadAdminCount?: number; unreadCount?: number
   relatedProductId: number; relatedOrderId: number
   firstResponseAt: string; firstResponseSeconds: number
   inspectionId: number; operatorId: number; operatorName: string
@@ -49,6 +50,7 @@ export const platformSupportApi = {
   getMessages: (id: number) => request.get<ICommonResponse<ISupportMessage[]>>('/admin/support/sessions/' + id + '/messages'),
   sendMessage: (id: number, data: any) => request.post<ICommonResponse<ISupportMessage>>('/admin/support/platform-sessions/' + id + '/messages', data),
   closeSession: (id: number, reason?: string) => request.put<ICommonResponse<any>>('/admin/support/platform-sessions/' + id + '/close', { closeReason: reason || '' }),
+  markRead: (id: number) => request.put<ICommonResponse<any>>('/admin/support/sessions/' + id + '/read'),
 }
 
 export const inspectionApi = {

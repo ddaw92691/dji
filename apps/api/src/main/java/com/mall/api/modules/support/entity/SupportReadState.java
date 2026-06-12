@@ -37,6 +37,8 @@ public class SupportReadState implements Serializable {
     @Schema(description = "未读数")
     private Integer unreadCount;
 
+    // support_read_state 库表无 created_at 列；标记为非持久化字段，避免标记已读时报列不存在
+    @TableField(exist = false)
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 

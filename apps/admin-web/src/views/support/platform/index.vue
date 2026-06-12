@@ -37,9 +37,9 @@
         >
           <span class="session-row">
             <strong>{{ session.merchantName || '未知商家' }}</strong>
-            <el-badge v-if="session.merchantUnread" :value="session.merchantUnread" type="danger" />
+            <el-badge v-if="getSessionUnread(session)" :value="getSessionUnread(session)" type="danger" />
           </span>
-          <span class="session-title">{{ session.title || session.sessionNo }}</span>
+          <span class="session-title">{{ session.merchantAccount ? `账号：${session.merchantAccount}` : (session.title || session.sessionNo) }}</span>
           <span class="session-last">{{ session.lastMessage || '暂无消息' }}</span>
           <span class="session-meta">
             <el-tag :type="session.status === 'OPEN' ? 'success' : 'info'" size="small">
@@ -64,7 +64,7 @@
           <div class="chat-header">
             <div>
               <strong>{{ chatSession.merchantName || '未知商家' }}</strong>
-              <span class="chat-subtitle">{{ chatSession.title || chatSession.sessionNo }}</span>
+              <span class="chat-subtitle">{{ chatSession.merchantAccount ? `账号：${chatSession.merchantAccount}` : '' }} {{ chatSession.title || chatSession.sessionNo }}</span>
             </div>
             <div class="chat-actions">
               <el-tag :type="chatSession.status === 'OPEN' ? 'success' : 'info'" size="small">
@@ -91,7 +91,14 @@
                     'other-bubble': msg.senderSide !== 'ADMIN' && msg.senderSide !== 'PLATFORM',
                   }"
                 >
-                  {{ msg.content }}
+                  <el-image
+                    v-if="msg.messageType === 'IMAGE'"
+                    :src="msg.content"
+                    style="max-width: 220px; border-radius: 8px; cursor: pointer"
+                    :preview-src-list="[msg.content]"
+                    fit="cover"
+                  />
+                  <template v-else>{{ msg.content }}</template>
                 </div>
                 <span class="msg-time">{{ formatTime(msg.createdAt) }}</span>
               </template>
@@ -114,6 +121,8 @@
 import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { platformSupportApi, type IAdminSupportSession, type ISupportMessage } from '@/api/support'
+import { connectWebSocket, addRealtimeListener, removeRealtimeListener } from '@/utils/realtime'
+import { storage, STORAGE_KEYS } from '@/utils/storage'
 
 defineOptions({ name: 'AdminPlatformSupportView' })
 
@@ -156,8 +165,8 @@ async function fetchData() {
         }
       }
     }
-  } catch {
-    ElMessage.error('获取会话失败')
+  } catch (error) {
+    ElMessage.error(getErrorMessage(error, '获取会话失败'))
   } finally {
     loading.value = false
   }
@@ -182,6 +191,7 @@ async function loadMessages() {
     const { data: res } = await platformSupportApi.getMessages(chatSession.value.id)
     if (res.code === 200) {
       chatMessages.value = res.data || []
+      await platformSupportApi.markRead(chatSession.value.id).catch(() => {})
       await nextTick()
       scrollToBottom()
     }
@@ -203,8 +213,8 @@ async function sendMessage() {
     } else {
       ElMessage.error(res.message || '发送失败')
     }
-  } catch {
-    ElMessage.error('发送失败')
+  } catch (error) {
+    ElMessage.error(getErrorMessage(error, '发送失败'))
   } finally {
     sending.value = false
   }
@@ -222,14 +232,41 @@ async function handleClose(row: IAdminSupportSession) {
     } else {
       ElMessage.error(res.message || '关闭失败')
     }
-  } catch {
-    ElMessage.error('关闭失败')
+  } catch (error) {
+    ElMessage.error(getErrorMessage(error, '关闭失败'))
+  }
+}
+
+function getSessionUnread(session: IAdminSupportSession) {
+  return session.unreadCount || session.adminUnread || session.unreadAdminCount || 0
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  const err = error as any
+  return err?.response?.data?.message || err?.message || fallback
+}
+
+function handleRealtimeEvent(event: any) {
+  if (event?.type !== 'SUPPORT_MESSAGE_CREATED') return
+  const sessionId = Number(event?.payload?.sessionId || 0)
+  if (!sessionId) return
+  if (chatSession.value?.id === sessionId) {
+    loadMessages()
+  }
+  fetchData()
+}
+
+function setupRealtime() {
+  addRealtimeListener(handleRealtimeEvent)
+  const token = storage.get<string>(STORAGE_KEYS.TOKEN)
+  if (token) {
+    connectWebSocket(token)
   }
 }
 
 function restartPolling() {
   if (chatTimer) clearInterval(chatTimer)
-  chatTimer = setInterval(loadMessages, 5000)
+  chatTimer = setInterval(loadMessages, 3000)
 }
 
 function scrollToBottom() {
@@ -245,10 +282,12 @@ function formatTime(t: string) {
 
 onMounted(() => {
   fetchData()
+  setupRealtime()
 })
 
 onUnmounted(() => {
   if (chatTimer) clearInterval(chatTimer)
+  removeRealtimeListener(handleRealtimeEvent)
 })
 </script>
 

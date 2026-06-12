@@ -254,14 +254,20 @@ public class SupportService {
     }
 
     public Map<String, Object> getAdminPlatformSessions(String status, String keyword, Long merchantId, int page, int pageSize) {
+        List<Long> keywordMerchantIds = findMerchantIdsByKeyword(keyword);
+        boolean hasKeyword = keyword != null && !keyword.isBlank();
         LambdaQueryWrapper<SupportSession> wrapper = Wrappers.<SupportSession>lambdaQuery()
                 .eq(SupportSession::getSessionType, "MERCHANT_TO_PLATFORM")
                 .eq(status != null && !status.isBlank(), SupportSession::getStatus, status)
                 .eq(merchantId != null, SupportSession::getMerchantId, merchantId)
-                .and(keyword != null && !keyword.isBlank(), w -> w
-                        .like(SupportSession::getSessionNo, keyword)
-                        .or().like(SupportSession::getTitle, keyword)
-                        .or().like(SupportSession::getLastMessage, keyword))
+                .and(hasKeyword, w -> {
+                    w.like(SupportSession::getSessionNo, keyword)
+                            .or().like(SupportSession::getTitle, keyword)
+                            .or().like(SupportSession::getLastMessage, keyword);
+                    if (!keywordMerchantIds.isEmpty()) {
+                        w.or().in(SupportSession::getMerchantId, keywordMerchantIds);
+                    }
+                })
                 .orderByDesc(SupportSession::getUpdatedAt);
 
         Page<SupportSession> pg = sessionMapper.selectPage(new Page<>(page, pageSize), wrapper);
@@ -342,6 +348,9 @@ public class SupportService {
         if (!"OPEN".equals(session.getStatus()) && !"PENDING".equals(session.getStatus())) {
             throw new BusinessException(400, "会话已关闭，无法发送消息");
         }
+        if (content == null || content.isBlank()) {
+            throw new BusinessException(400, "消息内容不能为空");
+        }
 
         SupportMessage message = new SupportMessage();
         message.setSessionId(sessionId);
@@ -391,9 +400,10 @@ public class SupportService {
             }
         } else if ("MERCHANT_TO_PLATFORM".equals(session.getSessionType())) {
             if ("MERCHANT".equals(senderSide)) {
-                realtimeService.sendToRole("ADMIN",
-                        RealtimeService.RealtimeEvent.of("SUPPORT_MESSAGE_CREATED", "support_message",
-                                message.getId(), "新平台支持消息", content, eventPayload));
+                RealtimeService.RealtimeEvent event = RealtimeService.RealtimeEvent.of("SUPPORT_MESSAGE_CREATED", "support_message",
+                        message.getId(), "新平台支持消息", content, eventPayload);
+                realtimeService.sendToRole("ADMIN", event);
+                realtimeService.sendToRole("SUPER_ADMIN", event);
             } else if ("ADMIN".equals(senderSide) && session.getMerchantUserId() != null) {
                 realtimeService.sendToUser(session.getMerchantUserId(),
                         RealtimeService.RealtimeEvent.of("SUPPORT_MESSAGE_CREATED", "support_message",
@@ -429,6 +439,8 @@ public class SupportService {
         if (session == null) {
             throw new BusinessException(404, "会话不存在");
         }
+        User user = userMapper.selectById(userId);
+        validateAccess(session, user != null ? user.getRole() : "", userId);
 
         List<SupportMessage> messages = messageMapper.selectList(Wrappers.<SupportMessage>lambdaQuery()
                 .eq(SupportMessage::getSessionId, sessionId)
@@ -458,7 +470,6 @@ public class SupportService {
 
         LambdaUpdateWrapper<SupportSession> updateWrapper = Wrappers.<SupportSession>lambdaUpdate()
                 .eq(SupportSession::getId, sessionId);
-        User user = userMapper.selectById(userId);
         if (user != null) {
             if ("CUSTOMER".equals(user.getRole())) {
                 updateWrapper.set(SupportSession::getUnreadCustomerCount, 0);
@@ -708,6 +719,43 @@ public class SupportService {
         }
     }
 
+    private List<Long> findMerchantIdsByKeyword(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return List.of();
+        }
+        String kw = keyword.trim();
+        LinkedHashSet<Long> ids = new LinkedHashSet<>();
+
+        List<Merchant> merchantsByName = merchantMapper.selectList(Wrappers.<Merchant>lambdaQuery()
+                .eq(Merchant::getDeleted, false)
+                .like(Merchant::getShopName, kw)
+                .last("LIMIT 50"));
+        for (Merchant merchant : merchantsByName) {
+            ids.add(merchant.getId());
+        }
+
+        List<User> users = userMapper.selectList(Wrappers.<User>lambdaQuery()
+                .eq(User::getDeleted, false)
+                .and(w -> w.like(User::getUsername, kw)
+                        .or().like(User::getNickname, kw)
+                        .or().like(User::getEmail, kw)
+                        .or().like(User::getPhone, kw))
+                .last("LIMIT 50"));
+        if (!users.isEmpty()) {
+            List<Long> userIds = users.stream().map(User::getId).filter(Objects::nonNull).toList();
+            if (!userIds.isEmpty()) {
+                List<Merchant> merchantsByUser = merchantMapper.selectList(Wrappers.<Merchant>lambdaQuery()
+                        .eq(Merchant::getDeleted, false)
+                        .in(Merchant::getUserId, userIds));
+                for (Merchant merchant : merchantsByUser) {
+                    ids.add(merchant.getId());
+                }
+            }
+        }
+
+        return new ArrayList<>(ids);
+    }
+
     private Map<String, Object> buildSessionVO(SupportSession session, String userRole, Long userId) {
         Map<String, Object> vo = new LinkedHashMap<>();
         vo.put("id", session.getId());
@@ -729,17 +777,18 @@ public class SupportService {
         vo.put("unreadAdminCount", session.getUnreadAdminCount());
         vo.put("customerUnread", session.getUnreadCustomerCount());
         vo.put("merchantUnread", session.getUnreadMerchantCount());
+        vo.put("adminUnread", session.getUnreadAdminCount());
         vo.put("firstResponseAt", session.getFirstResponseAt());
         vo.put("closedAt", session.getClosedAt());
         vo.put("closeReason", session.getCloseReason());
         vo.put("createdAt", session.getCreatedAt());
         vo.put("updatedAt", session.getUpdatedAt());
 
-        if ("CUSTOMER".equals(userRole) && userId != null) {
+        if ("CUSTOMER".equals(userRole)) {
             vo.put("unreadCount", session.getUnreadCustomerCount());
-        } else if (("MERCHANT".equals(userRole) || "AGENT".equals(userRole)) && userId != null) {
+        } else if ("MERCHANT".equals(userRole) || "AGENT".equals(userRole)) {
             vo.put("unreadCount", session.getUnreadMerchantCount());
-        } else if (("SUPER_ADMIN".equals(userRole) || "ADMIN".equals(userRole)) && userId != null) {
+        } else if ("SUPER_ADMIN".equals(userRole) || "ADMIN".equals(userRole)) {
             vo.put("unreadCount", session.getUnreadAdminCount());
         }
 
@@ -769,6 +818,15 @@ public class SupportService {
                 merchantInfo.put("id", merchant.getId());
                 merchantInfo.put("shopName", merchant.getShopName());
                 merchantInfo.put("shopLogo", merchant.getShopLogo());
+                if (merchant.getUserId() != null) {
+                    User merchantUser = userMapper.selectById(merchant.getUserId());
+                    if (merchantUser != null) {
+                        merchantInfo.put("username", merchantUser.getUsername());
+                        merchantInfo.put("nickname", merchantUser.getNickname());
+                        vo.put("merchantAccount", merchantUser.getUsername());
+                        vo.put("merchantNickname", merchantUser.getNickname());
+                    }
+                }
                 vo.put("merchant", merchantInfo);
                 vo.put("merchantName", merchant.getShopName());
             }

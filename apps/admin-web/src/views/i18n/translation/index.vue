@@ -49,6 +49,29 @@
       </el-form-item>
       <el-form-item>
         <el-button
+          type="primary"
+          plain
+          :loading="autoTranslateLoading"
+          v-permission="'i18n:translation:edit'"
+          @click="handleOpenAutoTranslate('filter')"
+        >
+          一键翻译当前筛选
+        </el-button>
+      </el-form-item>
+      <el-form-item>
+        <el-button
+          type="primary"
+          plain
+          :disabled="selectedCount === 0"
+          :loading="autoTranslateLoading"
+          v-permission="'i18n:translation:edit'"
+          @click="handleOpenAutoTranslate('selected')"
+        >
+          一键翻译所选{{ selectedCount ? `（${selectedCount}）` : '' }}
+        </el-button>
+      </el-form-item>
+      <el-form-item>
+        <el-button
           type="danger"
           plain
           :disabled="selectedCount === 0"
@@ -56,14 +79,11 @@
           v-permission="'i18n:translation:delete'"
           @click="handleBatchDelete"
         >
-          删除所选{{ selectedCount ? `（${selectedCount}）` : '' }}
+          一键删除所选{{ selectedCount ? `（${selectedCount}）` : '' }}
         </el-button>
       </el-form-item>
       <el-form-item>
         <el-button @click="handleOpenMissing">缺失翻译检测</el-button>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" plain :loading="autoTranslateLoading" v-permission="'i18n:translation:edit'" @click="handleOpenAutoTranslate">一键翻译/补全</el-button>
       </el-form-item>
       <el-form-item>
         <el-button type="success" plain v-permission="'i18n:translation:add'" @click="handleOpenImport">批量导入</el-button>
@@ -101,7 +121,21 @@
           <el-tag v-if="row.countryCode" size="small" type="info" effect="plain">{{ row.countryCode }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column v-for="l in languageOptions" :key="l.code" :label="`${l.nativeName || l.name} · ${l.code}`" min-width="200">
+      <el-table-column v-for="l in languageOptions" :key="l.code" min-width="220">
+        <template #header>
+          <div class="language-header">
+            <span>{{ l.nativeName || l.name }} · {{ l.code }}</span>
+            <el-button
+              link
+              type="primary"
+              size="small"
+              v-permission="'i18n:translation:edit'"
+              @click.stop="handleOpenAutoTranslate('column', { targetLanguageCode: l.code })"
+            >
+              翻译本列
+            </el-button>
+          </div>
+        </template>
         <template #default="{ row }">
           <el-input
             v-model="matrixEdit[cellKey(row, l.code)]"
@@ -115,8 +149,9 @@
           />
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="80" fixed="right" align="center">
+      <el-table-column label="操作" width="130" fixed="right" align="center">
         <template #default="{ row }">
+          <el-button link type="primary" v-permission="'i18n:translation:edit'" @click="handleOpenAutoTranslate('row', { group: row })">翻译</el-button>
           <el-popconfirm title="删除该 Key 的全部语言翻译？" confirm-button-text="确认" cancel-button-text="取消" @confirm="handleMatrixDelete(row)">
             <template #reference>
               <el-button link type="danger" v-permission="'i18n:translation:delete'">删除</el-button>
@@ -154,8 +189,9 @@
         </template>
       </el-table-column>
       <el-table-column prop="updatedAt" label="更新时间" width="160" />
-      <el-table-column label="操作" width="200" fixed="right">
+      <el-table-column label="操作" width="260" fixed="right">
         <template #default="{ row }">
+          <el-button link type="primary" v-permission="'i18n:translation:edit'" @click="handleOpenAutoTranslate('row', { translation: row })">翻译</el-button>
           <el-button link type="primary" v-permission="'i18n:translation:edit'" @click="handleEdit(row)">编辑</el-button>
           <el-button link :type="row.status === 'ENABLE' ? 'warning' : 'success'" v-permission="'i18n:translation:edit'" @click="handleToggleStatus(row)">
             {{ row.status === 'ENABLE' ? '禁用' : '启用' }}
@@ -340,9 +376,9 @@
     </el-dialog>
 
     <!-- 一键翻译 / 补全目标语言 -->
-    <el-dialog v-model="autoTranslateDialogVisible" title="一键翻译 / 补全目标语言" width="640px">
+    <el-dialog v-model="autoTranslateDialogVisible" title="一键翻译 / 补全目标语言" width="720px">
       <el-alert
-        title="一键翻译优先调用 DeepSeek V4 Pro。请在后端环境变量配置 DEEPSEEK_API_KEY；未配置时仅补齐目标语言记录并保留原文待人工校对。"
+        :title="autoTranslateScopeTip"
         type="info"
         :closable="false"
         show-icon
@@ -355,14 +391,18 @@
           </el-select>
         </el-form-item>
         <el-form-item label="目标语言" required>
-          <el-select v-model="autoTranslateForm.targetLanguageCodes" multiple collapse-tags collapse-tags-tooltip filterable placeholder="请选择一个或多个目标语言" style="width: 100%">
-            <el-option
-              v-for="l in languageOptions.filter((item) => item.code !== autoTranslateForm.sourceLanguageCode)"
-              :key="l.code"
-              :label="`${l.name} (${l.code})`"
-              :value="l.code"
-            />
-          </el-select>
+          <div class="translate-target-row">
+            <el-select v-model="autoTranslateForm.targetLanguageCodes" multiple collapse-tags collapse-tags-tooltip filterable placeholder="请选择一个或多个目标语言" style="width: 100%">
+              <el-option
+                v-for="l in languageOptions.filter((item) => item.code !== autoTranslateForm.sourceLanguageCode)"
+                :key="l.code"
+                :label="`${l.name} (${l.code})`"
+                :value="l.code"
+              />
+            </el-select>
+            <el-button @click="selectAllTargetLanguages">全选</el-button>
+            <el-button @click="autoTranslateForm.targetLanguageCodes = []">清空</el-button>
+          </div>
         </el-form-item>
         <el-form-item label="国家">
           <el-select v-model="autoTranslateForm.countryCode" placeholder="留空表示通用" clearable filterable style="width: 100%">
@@ -379,7 +419,21 @@
           <span class="hint">关闭时只补齐缺失或空内容；开启后会覆盖目标语言现有内容</span>
         </el-form-item>
         <el-form-item label="处理范围">
-          <span class="hint">{{ selectedCount ? `仅处理已选择的 ${selectedCount} 个 Key` : '未选择时处理当前国家/模块筛选范围内的全部 Key' }}</span>
+          <div class="scope-box">
+            <el-tag type="primary" effect="plain">{{ autoTranslateScopeLabel }}</el-tag>
+            <span class="hint">{{ autoTranslateScopeDetail }}</span>
+          </div>
+        </el-form-item>
+        <el-form-item v-if="autoTranslateResult" label="处理结果">
+          <div class="result-box">
+            <el-tag>来源 {{ autoTranslateResult.sourceCount ?? 0 }}</el-tag>
+            <el-tag type="success">新增 {{ autoTranslateResult.created ?? 0 }}</el-tag>
+            <el-tag type="warning">更新 {{ autoTranslateResult.updated ?? 0 }}</el-tag>
+            <el-tag type="info">跳过 {{ autoTranslateResult.skipped ?? 0 }}</el-tag>
+            <el-tag v-if="autoTranslateResult.failed" type="danger">失败 {{ autoTranslateResult.failed }}</el-tag>
+            <el-tag v-if="autoTranslateResult.copiedFallback" type="warning">待校对 {{ autoTranslateResult.copiedFallback }}</el-tag>
+            <el-tag v-if="autoTranslateResult.provider" effect="plain">{{ autoTranslateResult.provider }}</el-tag>
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -485,6 +539,9 @@ const importRules: FormRules = {
 
 const autoTranslateDialogVisible = ref(false)
 const autoTranslateLoading = ref(false)
+type AutoTranslateScope = 'filter' | 'selected' | 'row' | 'column'
+type AutoTranslateSelectedItem = { namespaceCode: string; translationKey: string; countryCode?: string | null }
+
 const autoTranslateForm = reactive({
   sourceLanguageCode: 'en',
   targetLanguageCodes: [] as string[],
@@ -492,6 +549,9 @@ const autoTranslateForm = reactive({
   namespaceCode: '',
   overwrite: false,
 })
+const autoTranslateScope = ref<AutoTranslateScope>('filter')
+const autoTranslateSelectedItems = ref<AutoTranslateSelectedItem[]>([])
+const autoTranslateResult = ref<Record<string, any> | null>(null)
 
 const exportDialogVisible = ref(false)
 const exportJsonText = ref('')
@@ -994,25 +1054,99 @@ async function handleCopyExport() {
 }
 
 /* ============ 一键翻译 / 补全 ============ */
-function getSelectedFullKeys() {
-  const set = new Set<string>()
-  if (viewMode.value === 'matrix') {
-    selectedGroups.value.forEach((g) => set.add(`${g.namespaceCode}.${g.translationKey}`))
-  } else {
-    selectedTranslations.value.forEach((row) => set.add(`${row.namespaceCode}.${row.translationKey}`))
-  }
-  return Array.from(set)
+function groupToSelectedItem(g: I18nTranslationGroup): AutoTranslateSelectedItem {
+  return { namespaceCode: g.namespaceCode, translationKey: g.translationKey, countryCode: g.countryCode || null }
 }
 
-function handleOpenAutoTranslate() {
+function translationToSelectedItem(row: I18nTranslation): AutoTranslateSelectedItem {
+  return { namespaceCode: row.namespaceCode, translationKey: row.translationKey, countryCode: row.countryCode || null }
+}
+
+function selectedItemKey(item: AutoTranslateSelectedItem) {
+  return `${item.namespaceCode}.${item.translationKey}@@${item.countryCode || ''}`
+}
+
+function uniqueSelectedItems(items: AutoTranslateSelectedItem[]) {
+  const map = new Map<string, AutoTranslateSelectedItem>()
+  items.forEach((item) => {
+    if (item.namespaceCode && item.translationKey) map.set(selectedItemKey(item), item)
+  })
+  return Array.from(map.values())
+}
+
+function getSelectedTranslateItems() {
+  return uniqueSelectedItems(
+    viewMode.value === 'matrix'
+      ? selectedGroups.value.map(groupToSelectedItem)
+      : selectedTranslations.value.map(translationToSelectedItem),
+  )
+}
+
+const autoTranslateScopeLabel = computed(() => {
+  if (autoTranslateScope.value === 'selected') return '所选内容'
+  if (autoTranslateScope.value === 'row') return '单个 Key'
+  if (autoTranslateScope.value === 'column') return '当前语言列'
+  return '当前筛选范围'
+})
+
+const autoTranslateScopeDetail = computed(() => {
+  if (autoTranslateScope.value === 'selected') return `仅处理已勾选的 ${autoTranslateSelectedItems.value.length} 个 Key`
+  if (autoTranslateScope.value === 'row') return autoTranslateSelectedItems.value[0] ? `仅处理 ${autoTranslateSelectedItems.value[0].namespaceCode}.${autoTranslateSelectedItems.value[0].translationKey}` : '仅处理当前行'
+  if (autoTranslateScope.value === 'column') return `仅翻译当前页面 ${autoTranslateSelectedItems.value.length} 个 Key 到 ${autoTranslateForm.targetLanguageCodes.join('、') || '指定目标语言'}`
+  return '处理当前搜索条件下的全部 Key。建议先选择模块，避免一次处理过多内容。'
+})
+
+const autoTranslateScopeTip = computed(() => {
+  const base = '一键翻译优先调用 DeepSeek V4 Pro。请在后端环境变量配置 DEEPSEEK_API_KEY；未配置时仅补齐目标语言记录并保留原文待人工校对。'
+  return `${base} 当前范围：${autoTranslateScopeLabel.value}。`
+})
+
+function selectAllTargetLanguages() {
+  autoTranslateForm.targetLanguageCodes = languageOptions.value
+    .map((l) => l.code)
+    .filter((code) => code !== autoTranslateForm.sourceLanguageCode)
+}
+
+function handleOpenAutoTranslate(
+  scope: AutoTranslateScope = 'filter',
+  options: { targetLanguageCode?: string; group?: I18nTranslationGroup; translation?: I18nTranslation } = {},
+) {
   const defaultSource = languageOptions.value.find((l) => l.code === 'en')?.code || languageOptions.value[0]?.code || ''
+  autoTranslateScope.value = scope
+  autoTranslateResult.value = null
+  autoTranslateSelectedItems.value = []
   autoTranslateForm.sourceLanguageCode = defaultSource
   autoTranslateForm.countryCode = searchForm.countryCode || ''
   autoTranslateForm.namespaceCode = searchForm.namespaceCode || ''
   autoTranslateForm.overwrite = false
-  autoTranslateForm.targetLanguageCodes = searchForm.languageCode && searchForm.languageCode !== defaultSource
-    ? [searchForm.languageCode]
-    : []
+
+  if (scope === 'selected') {
+    const items = getSelectedTranslateItems()
+    if (!items.length) { ElMessage.warning('请先选择要翻译的内容'); return }
+    autoTranslateSelectedItems.value = items
+    const countryCodes = Array.from(new Set(items.map((item) => item.countryCode || '')))
+    if (countryCodes.length === 1) autoTranslateForm.countryCode = countryCodes[0]
+    const namespaceCodes = Array.from(new Set(items.map((item) => item.namespaceCode)))
+    if (namespaceCodes.length === 1) autoTranslateForm.namespaceCode = namespaceCodes[0]
+  }
+
+  if (scope === 'row') {
+    const item = options.group ? groupToSelectedItem(options.group) : options.translation ? translationToSelectedItem(options.translation) : null
+    if (!item) return
+    autoTranslateSelectedItems.value = [item]
+    autoTranslateForm.countryCode = item.countryCode || ''
+    autoTranslateForm.namespaceCode = item.namespaceCode
+  }
+
+  if (scope === 'column' && options.targetLanguageCode) {
+    autoTranslateSelectedItems.value = uniqueSelectedItems(groupData.value.map(groupToSelectedItem))
+    autoTranslateForm.targetLanguageCodes = [options.targetLanguageCode]
+  } else if (searchForm.languageCode && searchForm.languageCode !== defaultSource) {
+    autoTranslateForm.targetLanguageCodes = [searchForm.languageCode]
+  } else {
+    autoTranslateForm.targetLanguageCodes = []
+  }
+
   autoTranslateDialogVisible.value = true
 }
 
@@ -1021,24 +1155,33 @@ async function handleAutoTranslate() {
   if (!autoTranslateForm.targetLanguageCodes.length) { ElMessage.warning('请选择目标语言'); return }
   const same = autoTranslateForm.targetLanguageCodes.includes(autoTranslateForm.sourceLanguageCode)
   if (same) { ElMessage.warning('目标语言不能包含基准语言'); return }
+  if ((autoTranslateScope.value === 'selected' || autoTranslateScope.value === 'row') && !autoTranslateSelectedItems.value.length) {
+    ElMessage.warning('请先选择要翻译的 Key')
+    return
+  }
 
   autoTranslateLoading.value = true
   try {
+    const selectedItems = ['selected', 'row', 'column'].includes(autoTranslateScope.value)
+      ? autoTranslateSelectedItems.value
+      : []
     const { data: res } = await i18nApi.autoTranslate({
       sourceLanguageCode: autoTranslateForm.sourceLanguageCode,
       targetLanguageCodes: autoTranslateForm.targetLanguageCodes,
       countryCode: autoTranslateForm.countryCode || undefined,
       namespaceCode: autoTranslateForm.namespaceCode || undefined,
+      keyword: autoTranslateScope.value === 'filter' || autoTranslateScope.value === 'column' ? searchForm.keyword || undefined : undefined,
       overwrite: autoTranslateForm.overwrite,
-      keys: getSelectedFullKeys(),
+      selectedItems,
+      scope: autoTranslateScope.value,
     })
     if (res.code === 200) {
       const r = res.data || {}
+      autoTranslateResult.value = r
       const fallbackText = r.copiedFallback ? `，待校对 ${r.copiedFallback}` : ''
       const failedText = r.failed ? `，失败 ${r.failed}` : ''
       const providerText = r.provider ? `，服务 ${r.provider}` : ''
       ElMessage.success(`处理完成：来源 ${r.sourceCount ?? 0}，新增 ${r.created ?? 0}，更新 ${r.updated ?? 0}，跳过 ${r.skipped ?? 0}${failedText}${fallbackText}${providerText}`)
-      autoTranslateDialogVisible.value = false
       fetchData()
     } else {
       ElMessage.error(res.message || '一键翻译失败')
@@ -1139,6 +1282,10 @@ onMounted(async () => {
 .search-bar { margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
 .hint { margin-left: 8px; color: #909399; font-size: 12px; }
 .key-cell { font-family: var(--el-font-family, monospace); font-size: 12px; word-break: break-all; margin-bottom: 2px; }
+.language-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.translate-target-row { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; }
+.scope-box { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.result-box { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 :deep(.dirty-cell .el-textarea__inner) { background-color: #fdf6ec; }
 :deep(.missing-cell .el-textarea__inner) { background-color: #fef0f0; }
 </style>

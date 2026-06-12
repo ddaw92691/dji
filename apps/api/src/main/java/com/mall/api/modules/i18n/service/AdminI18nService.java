@@ -686,6 +686,8 @@ public class AdminI18nService {
                 .map(String::trim)
                 .filter(v -> !v.isBlank())
                 .collect(Collectors.toCollection(LinkedHashSet::new));
+        Set<SelectedTranslationKey> selectedItems = toSelectedTranslationItems(body.get("selectedItems"));
+        String keyword = normalizeBlank(stringOf(body.get("keyword")));
 
         LambdaQueryWrapper<I18nTranslation> qw = new LambdaQueryWrapper<I18nTranslation>()
                 .eq(I18nTranslation::getDeleted, false)
@@ -693,13 +695,23 @@ public class AdminI18nService {
                 .eq(I18nTranslation::getLanguageCode, sourceLanguageCode);
         if (namespaceCode != null) qw.eq(I18nTranslation::getNamespaceCode, namespaceCode);
         if (countryCode != null) qw.eq(I18nTranslation::getCountryCode, countryCode);
-        else qw.and(w -> w.isNull(I18nTranslation::getCountryCode).or().eq(I18nTranslation::getCountryCode, ""));
+        else if (selectedItems.isEmpty()) qw.and(w -> w.isNull(I18nTranslation::getCountryCode).or().eq(I18nTranslation::getCountryCode, ""));
+        if (keyword != null) {
+            qw.and(w -> w.like(I18nTranslation::getTranslationKey, keyword)
+                    .or().like(I18nTranslation::getTextValue, keyword));
+        }
         qw.orderByAsc(I18nTranslation::getNamespaceCode, I18nTranslation::getTranslationKey);
 
         List<I18nTranslation> sourceRows = translationMapper.selectList(qw).stream()
-                .filter(t -> selectedKeys.isEmpty()
-                        || selectedKeys.contains(t.getNamespaceCode() + "." + t.getTranslationKey())
-                        || selectedKeys.contains(t.getTranslationKey()))
+                .filter(t -> {
+                    if (!selectedItems.isEmpty()) {
+                        return selectedItems.contains(SelectedTranslationKey.from(t));
+                    }
+                    return selectedKeys.isEmpty()
+                            || selectedKeys.contains(t.getNamespaceCode() + "." + t.getTranslationKey())
+                            || selectedKeys.contains(t.getTranslationKey())
+                            || selectedKeys.contains(translationFullKey(t));
+                })
                 .toList();
 
         int created = 0, updated = 0, skipped = 0, failed = 0, copiedFallback = 0;
@@ -789,6 +801,8 @@ public class AdminI18nService {
                 .map(String::trim)
                 .filter(v -> !v.isBlank())
                 .collect(Collectors.toCollection(LinkedHashSet::new));
+        Set<SelectedTranslationKey> selectedItems = toSelectedTranslationItems(body.get("selectedItems"));
+        String keyword = normalizeBlank(stringOf(body.get("keyword")));
 
         LambdaQueryWrapper<I18nTranslation> qw = new LambdaQueryWrapper<I18nTranslation>()
                 .eq(I18nTranslation::getDeleted, false)
@@ -796,13 +810,23 @@ public class AdminI18nService {
                 .eq(I18nTranslation::getLanguageCode, sourceLanguageCode);
         if (namespaceCode != null) qw.eq(I18nTranslation::getNamespaceCode, namespaceCode);
         if (countryCode != null) qw.eq(I18nTranslation::getCountryCode, countryCode);
-        else qw.and(w -> w.isNull(I18nTranslation::getCountryCode).or().eq(I18nTranslation::getCountryCode, ""));
+        else if (selectedItems.isEmpty()) qw.and(w -> w.isNull(I18nTranslation::getCountryCode).or().eq(I18nTranslation::getCountryCode, ""));
+        if (keyword != null) {
+            qw.and(w -> w.like(I18nTranslation::getTranslationKey, keyword)
+                    .or().like(I18nTranslation::getTextValue, keyword));
+        }
         qw.orderByAsc(I18nTranslation::getNamespaceCode, I18nTranslation::getTranslationKey);
 
         List<I18nTranslation> sourceRows = translationMapper.selectList(qw).stream()
-                .filter(t -> selectedKeys.isEmpty()
-                        || selectedKeys.contains(t.getNamespaceCode() + "." + t.getTranslationKey())
-                        || selectedKeys.contains(t.getTranslationKey()))
+                .filter(t -> {
+                    if (!selectedItems.isEmpty()) {
+                        return selectedItems.contains(SelectedTranslationKey.from(t));
+                    }
+                    return selectedKeys.isEmpty()
+                            || selectedKeys.contains(t.getNamespaceCode() + "." + t.getTranslationKey())
+                            || selectedKeys.contains(t.getTranslationKey())
+                            || selectedKeys.contains(translationFullKey(t));
+                })
                 .toList();
 
         int created = 0, updated = 0, skipped = 0, failed = 0, copiedFallback = 0;
@@ -877,6 +901,8 @@ public class AdminI18nService {
         result.put("failed", failed);
         result.put("copiedFallback", copiedFallback);
         result.put("provider", resolveTranslateProviderName());
+        result.put("scope", stringOf(body.get("scope")));
+        result.put("selectedCount", selectedItems.size());
         i18nService.clearCache();
         return result;
     }
@@ -1043,7 +1069,9 @@ public class AdminI18nService {
     }
 
     private String translationFullKey(I18nTranslation translation) {
-        return translation.getNamespaceCode() + "." + translation.getTranslationKey();
+        String countryCode = translation.getCountryCode();
+        return translation.getNamespaceCode() + "." + translation.getTranslationKey() + "@@"
+                + (countryCode == null ? "" : countryCode.trim());
     }
 
     private TranslationAttempt translateText(String text, String sourceLanguageCode, String targetLanguageCode) {
@@ -1256,6 +1284,43 @@ public class AdminI18nService {
                 .map(String::trim)
                 .filter(v -> !v.isBlank())
                 .collect(Collectors.toList());
+    }
+
+    private Set<SelectedTranslationKey> toSelectedTranslationItems(Object value) {
+        if (!(value instanceof Collection<?> collection) || collection.isEmpty()) {
+            return Collections.emptySet();
+        }
+        LinkedHashSet<SelectedTranslationKey> result = new LinkedHashSet<>();
+        for (Object item : collection) {
+            if (item instanceof Map<?, ?> map) {
+                String namespaceCode = stringOf(map.get("namespaceCode"));
+                String translationKey = stringOf(map.get("translationKey"));
+                String itemCountryCode = normalizeBlank(stringOf(map.get("countryCode")));
+                if (!namespaceCode.isBlank() && !translationKey.isBlank()) {
+                    result.add(new SelectedTranslationKey(namespaceCode, translationKey, itemCountryCode));
+                }
+            } else {
+                String raw = stringOf(item);
+                if (raw.isBlank()) continue;
+                String[] parts = raw.split("@@", 2);
+                String keyPart = parts[0];
+                int dot = keyPart.indexOf('.');
+                if (dot <= 0) continue;
+                String namespaceCode = keyPart.substring(0, dot);
+                String translationKey = keyPart.substring(dot + 1);
+                String itemCountryCode = parts.length > 1 ? normalizeBlank(parts[1]) : null;
+                result.add(new SelectedTranslationKey(namespaceCode, translationKey, itemCountryCode));
+            }
+        }
+        return result;
+    }
+
+    private record SelectedTranslationKey(String namespaceCode, String translationKey, String countryCode) {
+        static SelectedTranslationKey from(I18nTranslation translation) {
+            String country = translation.getCountryCode();
+            if (country != null && country.isBlank()) country = null;
+            return new SelectedTranslationKey(translation.getNamespaceCode(), translation.getTranslationKey(), country);
+        }
     }
 
     private record PendingTranslation(I18nTranslation source, String targetLanguageCode, I18nTranslation existing) {}
