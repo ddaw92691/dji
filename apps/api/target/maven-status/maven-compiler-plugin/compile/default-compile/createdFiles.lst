@@ -12,7 +12,9 @@ com\mall\api\modules\support\dto\SendMessageRequest.class
 com\mall\api\modules\order\OrderService$1.class
 com\mall\api\modules\publicapi\controller\PublicController.class
 com\mall\api\modules\agent\entity\Agent.class
+com\mall\api\security\HumanVerificationService.class
 com\mall\api\modules\auth\dto\MerchantApplicationRequest.class
+com\mall\api\security\JwtTokenBlacklistService.class
 com\mall\api\modules\support\mapper\SupportMessageMapper.class
 com\mall\api\modules\system\entity\SysMenu.class
 com\mall\api\modules\coupon\entity\CouponTranslation.class
@@ -33,8 +35,8 @@ com\mall\api\modules\customer\controller\OrderController.class
 com\mall\api\modules\product\mapper\ProductMapper.class
 com\mall\api\modules\banner\BannerService.class
 com\mall\api\modules\publicapi\controller\PublicV1I18nController.class
-com\mall\api\config\RateLimitInterceptor$RateLimitBucket.class
 com\mall\api\modules\i18n\service\AdminI18nService.class
+com\mall\api\modules\finance\entity\MerchantFundReconciliation.class
 com\mall\api\modules\product\entity\ProductTranslation.class
 com\mall\api\modules\admin\controller\AdminSettingController.class
 com\mall\api\modules\review\mapper\ProductReviewMapper.class
@@ -61,10 +63,12 @@ com\mall\api\modules\log\mapper\AuditLogMapper.class
 com\mall\api\modules\system\controller\AdminManagerController.class
 com\mall\api\config\WebMvcConfig.class
 com\mall\api\modules\admin\controller\AdminCouponController.class
+com\mall\api\modules\i18n\service\AdminI18nService$TranslationAttempt.class
 com\mall\api\modules\support\service\SupportQuickReplyService.class
 com\mall\api\modules\i18n\mapper\I18nNamespaceMapper.class
 com\mall\api\modules\support\dto\CreateInspectionRequest.class
 com\mall\api\modules\user\entity\User.class
+com\mall\api\common\initializer\DataInitializer$1.class
 com\mall\api\modules\review\controller\PublicReviewController.class
 com\mall\api\modules\system\mapper\SystemSettingMapper.class
 com\mall\api\common\entity\BaseEntity.class
@@ -103,6 +107,7 @@ com\mall\api\modules\admin\controller\AdminFinanceController.class
 com\mall\api\modules\system\controller\AdminRoleController.class
 com\mall\api\common\initializer\DataInitializer.class
 com\mall\api\modules\coupon\CouponService.class
+com\mall\api\modules\finance\MerchantFundReconciliationService.class
 com\mall\api\modules\auth\dto\GoogleLoginRequest.class
 com\mall\api\modules\i18n\mapper\I18nTranslationMapper.class
 com\mall\api\modules\customer\controller\CartController.class
@@ -120,6 +125,7 @@ com\mall\api\modules\upload\entity\FileResource.class
 com\mall\api\modules\support\service\SupportService.class
 com\mall\api\modules\publicapi\dto\LocaleCatalog.class
 com\mall\api\modules\auth\dto\MenuItem.class
+com\mall\api\security\HumanVerificationService$VerificationResponse.class
 com\mall\api\modules\catalog\mapper\PlatformProductTranslationMapper.class
 com\mall\api\modules\order\dto\CreateOrderRequest.class
 com\mall\api\MallApiApplication.class
@@ -131,6 +137,7 @@ com\mall\api\modules\admin\controller\AuditLogController.class
 com\mall\api\modules\banner\mapper\BannerTranslationMapper.class
 com\mall\api\modules\support\entity\SupportInspectionLog.class
 com\mall\api\config\MybatisPlusConfig$1.class
+com\mall\api\modules\i18n\service\AdminI18nService$PendingTranslation.class
 com\mall\api\modules\payment\mapper\PaymentMapper.class
 com\mall\api\modules\merchant\entity\MerchantApplication.class
 com\mall\api\config\WebSocketConfig.class
@@ -165,6 +172,7 @@ com\mall\api\modules\merchant\mapper\MerchantMapper.class
 com\mall\api\modules\address\mapper\AddressMapper.class
 com\mall\api\modules\admin\controller\AdminCategoryController.class
 com\mall\api\modules\tax\MerchantTaxService.class
+com\mall\api\modules\finance\MerchantFundReconciliationScheduler.class
 com\mall\api\modules\log\aspect\AuditLogAspect.class
 com\mall\api\modules\notification\entity\Notification.class
 com\mall\api\modules\tax\controller\AdminTaxController.class
@@ -174,6 +182,7 @@ com\mall\api\modules\banner\mapper\BannerMapper.class
 com\mall\api\modules\withdrawal\WithdrawalService.class
 com\mall\api\modules\auth\dto\MerchantApplicationResponse$MerchantApplicationResponseBuilder.class
 com\mall\api\modules\support\mapper\SupportQuickReplyMapper.class
+com\mall\api\modules\finance\mapper\MerchantFundReconciliationMapper.class
 com\mall\api\modules\support\mapper\SupportSessionMapper.class
 com\mall\api\modules\coupon\entity\UserCoupon.class
 com\mall\api\config\CorsConfig.class
@@ -189,6 +198,7 @@ com\mall\api\modules\auth\dto\PermissionsResponse.class
 com\mall\api\modules\catalog\mapper\PlatformProductImageMapper.class
 com\mall\api\modules\support\controller\MerchantSupportController.class
 com\mall\api\modules\i18n\entity\I18nTranslation.class
+com\mall\api\modules\i18n\service\AdminI18nService$SelectedTranslationKey.class
 com\mall\api\modules\cart\CartService.class
 com\mall\api\modules\agent\controller\AgentController.class
 com\mall\api\modules\finance\controller\MerchantFinanceController.class

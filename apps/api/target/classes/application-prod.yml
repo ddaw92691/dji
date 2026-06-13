@@ -2,12 +2,16 @@ server:
   port: ${SERVER_PORT:8080}
 
 spring:
+  data:
+    redis:
+      url: ${REDIS_URL:${SPRING_DATA_REDIS_URL:redis://localhost:6379}}
   sql:
     init:
       mode: always
       schema-locations:
         - classpath:sql/schema.sql
         - classpath:db/V2__catalog_tax_websocket_indexes.sql
+        - classpath:db/V3__merchant_application_review_fields.sql
       continue-on-error: true
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:mall_system}
@@ -25,6 +29,34 @@ mybatis-plus:
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRE_SECONDS:86400000}
+  blacklist:
+    enabled: ${JWT_BLACKLIST_ENABLED:true}
+    fail-open: ${JWT_BLACKLIST_FAIL_OPEN:false}
+
+human-verification:
+  enabled: ${HUMAN_VERIFICATION_ENABLED:true}
+  secret: ${HUMAN_VERIFICATION_SECRET:}
+  verify-url: ${HUMAN_VERIFICATION_VERIFY_URL:https://challenges.cloudflare.com/turnstile/v0/siteverify}
+
+rate-limit:
+  enabled: ${RATE_LIMIT_ENABLED:true}
+  fail-open: ${RATE_LIMIT_FAIL_OPEN:false}
+  trust-forwarded-header: ${RATE_LIMIT_TRUST_FORWARDED_HEADER:true}
+  window-seconds: ${RATE_LIMIT_WINDOW_SECONDS:60}
+  default-limit: ${RATE_LIMIT_DEFAULT_LIMIT:300}
+  login-limit: ${RATE_LIMIT_LOGIN_LIMIT:10}
+  register-limit: ${RATE_LIMIT_REGISTER_LIMIT:5}
+  upload-limit: ${RATE_LIMIT_UPLOAD_LIMIT:30}
+  merchant-application-upload-limit: ${RATE_LIMIT_MERCHANT_APPLICATION_UPLOAD_LIMIT:3}
+  dealer-application-limit: ${RATE_LIMIT_DEALER_APPLICATION_LIMIT:3}
+  public-limit: ${RATE_LIMIT_PUBLIC_LIMIT:120}
+  support-message-limit: ${RATE_LIMIT_SUPPORT_MESSAGE_LIMIT:60}
+
+finance:
+  reconciliation:
+    enabled: ${FINANCE_RECONCILIATION_ENABLED:true}
+    cron: ${FINANCE_RECONCILIATION_CRON:0 15 0 * * *}
+    zone: ${FINANCE_RECONCILIATION_ZONE:UTC}
 
 knife4j:
   enable: ${SWAGGER_ENABLED:false}
@@ -34,7 +66,8 @@ springdoc:
     enabled: ${SWAGGER_ENABLED:false}
 
 cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost}
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:}
+  fail-on-missing-allowed-origins: ${CORS_FAIL_ON_MISSING_ALLOWED_ORIGINS:true}
 
 upload:
   dir: ${UPLOAD_DIR:uploads}

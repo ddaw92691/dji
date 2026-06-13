@@ -45,6 +45,8 @@ import com.mall.api.modules.system.mapper.SystemSettingMapper;
 import com.mall.api.modules.user.entity.User;
 import com.mall.api.modules.user.mapper.UserMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -54,6 +56,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -101,6 +104,7 @@ public class DataInitializer implements CommandLineRunner {
         try { initNamespaces(); } catch (Exception e) { log.warn("initNamespaces failed: {}", e.getMessage()); }
         try { initTranslations(); } catch (Exception e) { log.warn("initTranslations failed: {}", e.getMessage()); }
         try { initErrorZhTranslations(); } catch (Exception e) { log.warn("initErrorZhTranslations failed: {}", e.getMessage()); }
+        try { initStaticTranslationOverrides(); } catch (Exception e) { log.warn("initStaticTranslationOverrides failed: {}", e.getMessage()); }
         try { initUsers(); } catch (Exception e) { log.warn("initUsers failed: {}", e.getMessage()); }
         try { initMerchantAndAgentProfiles(); } catch (Exception e) { log.warn("initMerchantAndAgentProfiles failed: {}", e.getMessage()); }
         try { initSystemSettings(); } catch (Exception e) { log.warn("initSystemSettings failed: {}", e.getMessage()); }
@@ -10543,6 +10547,92 @@ public class DataInitializer implements CommandLineRunner {
         t.setCreatedAt(LocalDateTime.now());
         t.setUpdatedAt(LocalDateTime.now());
         translationMapper.insert(t);
+    }
+
+    /**
+     * 用资源文件里的真实译文覆盖 mall/website 的 static.* 命名空间。
+     * 背景：这两类「按英文文案 slug 生成 key」的静态文案，早期种子把非英语语言全填成了英文占位，
+     * 而 addTranslation 只插不更，改源码文本对已部署库无效。这里改为「占位则覆盖」：
+     *  - 行不存在 → 插入译文；
+     *  - 行存在且当前值等于英文原文(仍是占位)或为空 → 更新为译文；
+     *  - 行存在且已被改成别的值(运营在后台译过) → 保留，不动。
+     * 译文来源：apps/api/src/main/resources/i18n-seed/{mall,website}-static.json，
+     * 由 customer-web / official-web 的本地语言包导出，前后端保持一致。幂等。
+     */
+    private void initStaticTranslationOverrides() {
+        int mall = applyStaticOverrides("mall", "/i18n-seed/mall-static.json");
+        int website = applyStaticOverrides("website", "/i18n-seed/website-static.json");
+        log.info("Static translation overrides applied: mall={}, website={}", mall, website);
+    }
+
+    private int applyStaticOverrides(String namespace, String resourcePath) {
+        Map<String, Map<String, String>> data;
+        try (InputStream in = getClass().getResourceAsStream(resourcePath)) {
+            if (in == null) {
+                log.warn("Static translation resource not found: {}", resourcePath);
+                return 0;
+            }
+            data = new ObjectMapper().readValue(in, new TypeReference<Map<String, Map<String, String>>>() {});
+        } catch (Exception e) {
+            log.warn("Failed to read static translation resource {}: {}", resourcePath, e.getMessage());
+            return 0;
+        }
+
+        int changed = 0;
+        for (Map.Entry<String, Map<String, String>> entry : data.entrySet()) {
+            String translationKey = entry.getKey();
+            Map<String, String> perLang = entry.getValue();
+            String enText = perLang.get("en");
+            for (Map.Entry<String, String> lv : perLang.entrySet()) {
+                String lang = lv.getKey();
+                String text = lv.getValue();
+                if (text == null || text.isBlank()) continue;
+                boolean isEn = "en".equals(lang);
+                if (upsertStaticTranslation(namespace, translationKey, lang, text, enText, isEn)) {
+                    changed++;
+                }
+            }
+        }
+        return changed;
+    }
+
+    private boolean upsertStaticTranslation(String ns, String key, String lang, String text,
+                                            String enText, boolean isEn) {
+        LambdaQueryWrapper<I18nTranslation> qw = new LambdaQueryWrapper<I18nTranslation>()
+                .eq(I18nTranslation::getNamespaceCode, ns)
+                .eq(I18nTranslation::getTranslationKey, key)
+                .eq(I18nTranslation::getLanguageCode, lang)
+                .and(w -> w.isNull(I18nTranslation::getCountryCode).or().eq(I18nTranslation::getCountryCode, ""));
+        I18nTranslation existing = translationMapper.selectOne(qw, false);
+
+        if (existing == null) {
+            I18nTranslation t = new I18nTranslation();
+            t.setNamespaceCode(ns);
+            t.setTranslationKey(key);
+            t.setLanguageCode(lang);
+            t.setCountryCode(null);
+            t.setTextValue(text);
+            t.setDescription("");
+            t.setStatus("ENABLE");
+            t.setDeleted(false);
+            t.setCreatedAt(LocalDateTime.now());
+            t.setUpdatedAt(LocalDateTime.now());
+            translationMapper.insert(t);
+            return true;
+        }
+
+        // en 是原文，不覆盖既有 en；非英语仅当仍是英文占位/空白时才覆盖，保留后台人工译文
+        if (isEn) return false;
+        String current = existing.getTextValue();
+        boolean placeholder = current == null || current.isBlank()
+                || (enText != null && enText.equals(current));
+        if (placeholder && !text.equals(current)) {
+            existing.setTextValue(text);
+            existing.setUpdatedAt(LocalDateTime.now());
+            translationMapper.updateById(existing);
+            return true;
+        }
+        return false;
     }
 
     /**
