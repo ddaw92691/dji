@@ -1,0 +1,812 @@
+{
+  "button.addUser": {
+    "en": "Add new user",
+    "zh-Hans": "新增用户",
+    "zh-Hant": "新增用戶"
+  },
+  "button.batchDelete": {
+    "en": "Batch delete",
+    "zh-Hans": "批量删除",
+    "zh-Hant": "大量刪除"
+  },
+  "button.cancel": {
+    "en": "Cancel",
+    "zh-Hans": "取消",
+    "zh-Hant": "取消"
+  },
+  "button.confirm": {
+    "en": "confirm",
+    "zh-Hans": "确认",
+    "zh-Hant": "確認"
+  },
+  "button.delete": {
+    "en": "delete",
+    "zh-Hans": "删除",
+    "zh-Hant": "刪除"
+  },
+  "button.edit": {
+    "en": "edit",
+    "zh-Hans": "编辑",
+    "zh-Hant": "編輯"
+  },
+  "button.getCode": {
+    "en": "Get verification code",
+    "zh-Hans": "获取验证码",
+    "zh-Hant": "取得驗證碼"
+  },
+  "button.login": {
+    "en": "Log in",
+    "zh-Hans": "登录",
+    "zh-Hant": "登入"
+  },
+  "button.logout": {
+    "en": "Log out",
+    "zh-Hans": "退出登录",
+    "zh-Hant": "登出登入"
+  },
+  "button.phoneLogin": {
+    "en": "Mobile phone number login",
+    "zh-Hans": "手机号登录",
+    "zh-Hant": "手機號登入"
+  },
+  "button.query": {
+    "en": "Query",
+    "zh-Hans": "查询",
+    "zh-Hant": "查詢"
+  },
+  "button.refresh": {
+    "en": "refresh",
+    "zh-Hans": "刷新",
+    "zh-Hant": "重新整理"
+  },
+  "button.registerNow": {
+    "en": "Register now",
+    "zh-Hans": "立即注册",
+    "zh-Hant": "立即註冊"
+  },
+  "button.reset": {
+    "en": "reset",
+    "zh-Hans": "重置",
+    "zh-Hant": "重置"
+  },
+  "button.scanLogin": {
+    "en": "Scan code to log in",
+    "zh-Hans": "扫码登录",
+    "zh-Hant": "掃碼登入"
+  },
+  "button.verifyAndLogin": {
+    "en": "Verify and log in",
+    "zh-Hans": "验证并登录",
+    "zh-Hant": "驗證並登入"
+  },
+  "layout.allRead": {
+    "en": "All read",
+    "zh-Hans": "全部已读",
+    "zh-Hant": "全部已讀"
+  },
+  "layout.changePassword": {
+    "en": "Change password",
+    "zh-Hans": "修改密码",
+    "zh-Hant": "修改密碼"
+  },
+  "layout.closeAllTabs": {
+    "en": "Close all tabs",
+    "zh-Hans": "关闭所有标签页",
+    "zh-Hant": "關閉所有標籤頁"
+  },
+  "layout.closeLeftTabs": {
+    "en": "Close left tab",
+    "zh-Hans": "关闭左侧标签页",
+    "zh-Hant": "關閉左側標籤頁"
+  },
+  "layout.closeOtherTabs": {
+    "en": "Close other tabs",
+    "zh-Hans": "关闭其他标签页",
+    "zh-Hant": "關閉其他標籤頁"
+  },
+  "layout.closeRightTabs": {
+    "en": "Close the tab on the right",
+    "zh-Hans": "关闭右侧标签页",
+    "zh-Hant": "關閉右側標籤頁"
+  },
+  "layout.documentation": {
+    "en": "document",
+    "zh-Hans": "文档",
+    "zh-Hant": "文件"
+  },
+  "layout.help": {
+    "en": "question",
+    "zh-Hans": "问题 & 帮助",
+    "zh-Hant": "問題"
+  },
+  "layout.logout": {
+    "en": "Log out",
+    "zh-Hans": "退出登录",
+    "zh-Hant": "登出登入"
+  },
+  "layout.logoutCancelText": {
+    "en": "wait a little longer",
+    "zh-Hans": "再待会儿",
+    "zh-Hant": "再待會兒"
+  },
+  "layout.logoutConfirmText": {
+    "en": "I want to slip away🌶",
+    "zh-Hans": "我要溜🌶",
+    "zh-Hant": "我要溜🌶"
+  },
+  "layout.logoutContent": {
+    "en": "Want to run away? \nAfter logging out, you have to swipe your card back in again. Do you really want to sneak out now?",
+    "zh-Hans": "要开溜？退出后得重新刷卡进来，真要现在溜走吗？",
+    "zh-Hant": "要開溜？\n退出後得重新刷卡進來，真要現在溜走嗎？"
+  },
+  "layout.noMessage": {
+    "en": "No news yet",
+    "zh-Hans": "暂无消息",
+    "zh-Hant": "暫無訊息"
+  },
+  "layout.notification": {
+    "en": "Message notification",
+    "zh-Hans": "消息通知",
+    "zh-Hant": "訊息通知"
+  },
+  "layout.profile": {
+    "en": "Personal Center",
+    "zh-Hans": "个人中心",
+    "zh-Hant": "個人中心"
+  },
+  "layout.swipeLeft": {
+    "en": "swipe left",
+    "zh-Hans": "向左滑动",
+    "zh-Hant": "向左滑動"
+  },
+  "layout.swipeRight": {
+    "en": "swipe right",
+    "zh-Hans": "向右滑动",
+    "zh-Hant": "向右滑動"
+  },
+  "layout.viewAll": {
+    "en": "View all messages",
+    "zh-Hans": "查看全部消息",
+    "zh-Hant": "查看全部訊息"
+  },
+  "login.admin": {
+    "en": "administrator",
+    "zh-Hans": "管理员",
+    "zh-Hant": "管理員"
+  },
+  "login.backToLogin": {
+    "en": "Return to login",
+    "zh-Hans": "返回登录",
+    "zh-Hant": "返回登入"
+  },
+  "login.codePlaceholder": {
+    "en": "Please enter the verification code",
+    "zh-Hans": "请输入验证码",
+    "zh-Hant": "請輸入驗證碼"
+  },
+  "login.comingSoon": {
+    "en": "Stay tuned👀",
+    "zh-Hans": "敬请期待👀",
+    "zh-Hant": "敬請期待👀"
+  },
+  "login.confirmPasswordPlaceholder": {
+    "en": "Confirm your password",
+    "zh-Hans": "确认您的密码",
+    "zh-Hant": "確認您的密碼"
+  },
+  "login.createAccountJoin": {
+    "en": "join in",
+    "zh-Hans": "加入",
+    "zh-Hant": "加入"
+  },
+  "login.createAccountSlogan": {
+    "en": ", start your management journey",
+    "zh-Hans": "，开始您的管理之旅",
+    "zh-Hant": "，開始您的管理之旅"
+  },
+  "login.createAccountTitle": {
+    "en": "Create account",
+    "zh-Hans": "创建账号",
+    "zh-Hant": "建立帳號"
+  },
+  "login.emailPlaceholder": {
+    "en": "Please enter the email address you used when registering",
+    "zh-Hans": "请输入注册时的邮箱地址",
+    "zh-Hant": "請輸入註冊時的信箱地址"
+  },
+  "login.expired": {
+    "en": "The QR code has expired",
+    "zh-Hans": "二维码已失效",
+    "zh-Hant": "二維碼失效"
+  },
+  "login.forgotPassword": {
+    "en": "forget the password?",
+    "zh-Hans": "忘记密码？",
+    "zh-Hant": "忘記密碼？"
+  },
+  "login.forgotPasswordSubtitle": {
+    "en": "Please enter your email address to reset your password",
+    "zh-Hans": "请输入您的邮箱地址来重置密码",
+    "zh-Hant": "請輸入您的郵件地址以重設密碼"
+  },
+  "login.forgotPasswordTitle": {
+    "en": "Retrieve password",
+    "zh-Hans": "找回密码",
+    "zh-Hant": "找回密碼"
+  },
+  "login.guest": {
+    "en": "User without permission",
+    "zh-Hans": "无权限用户",
+    "zh-Hant": "無權限用戶"
+  },
+  "login.haveAccount": {
+    "en": "Already have an account?",
+    "zh-Hans": "已有账号？",
+    "zh-Hant": "已有帳號？"
+  },
+  "login.loginRolePlaceholder": {
+    "en": "Please select login identity",
+    "zh-Hans": "请选择登录身份",
+    "zh-Hant": "請選擇登入身份"
+  },
+  "login.loginSuccess": {
+    "en": "Login successful",
+    "zh-Hans": "登录成功",
+    "zh-Hant": "登入成功"
+  },
+  "login.loginFailed": {
+    "en": "Login failed, please check your account and password",
+    "zh-Hans": "登录失败，请检查账号和密码",
+    "zh-Hant": "登入失敗，請檢查帳號和密碼"
+  },
+  "login.mobileLoginSubtitle": {
+    "en": "Quickly log into the system using your mobile device",
+    "zh-Hans": "使用您的移动设备快速登录系统",
+    "zh-Hant": "使用您的行動裝置快速登入系統"
+  },
+  "login.noAccount": {
+    "en": "Don’t have an account yet?",
+    "zh-Hans": "还没有账号？",
+    "zh-Hant": "還沒有帳號？"
+  },
+  "login.orUseOtherMethods": {
+    "en": "Or log in using",
+    "zh-Hans": "或使用以下方式登录",
+    "zh-Hant": "或使用以下方式登入"
+  },
+  "login.passwordPlaceholder": {
+    "en": "Please enter password",
+    "zh-Hans": "请输入密码",
+    "zh-Hant": "請輸入密碼"
+  },
+  "login.phonePlaceholder": {
+    "en": "Please enter mobile phone number",
+    "zh-Hans": "请输入手机号码",
+    "zh-Hant": "請輸入手機號碼"
+  },
+  "login.registerEmailPlaceholder": {
+    "en": "Enter email address",
+    "zh-Hans": "输入电子邮箱",
+    "zh-Hant": "輸入電子郵件信箱"
+  },
+  "login.registerNow": {
+    "en": "Register now",
+    "zh-Hans": "立即注册",
+    "zh-Hant": "立即註冊"
+  },
+  "login.registerPasswordPlaceholder": {
+    "en": "Set login password",
+    "zh-Hans": "设置登录密码",
+    "zh-Hant": "設定登入密碼"
+  },
+  "login.registerUsernamePlaceholder": {
+    "en": "Set username",
+    "zh-Hans": "设置用户名",
+    "zh-Hant": "設定使用者名稱"
+  },
+  "login.rememberMe": {
+    "en": "remember me",
+    "zh-Hans": "记住我",
+    "zh-Hant": "記住我"
+  },
+  "login.scanAction": {
+    "en": "App scan QR code",
+    "zh-Hans": "App 扫描二维码",
+    "zh-Hant": "App 掃描二維碼"
+  },
+  "login.scanLoginDescription": {
+    "en": "Open the App and scan to log in quickly and securely",
+    "zh-Hans": "打开 App 扫一扫，快速安全登录",
+    "zh-Hant": "開啟 App 掃一掃，快速且安全登入"
+  },
+  "login.scanTip": {
+    "en": "Please use",
+    "zh-Hans": "请使用",
+    "zh-Hant": "請使用"
+  },
+  "login.sendResetLink": {
+    "en": "Send reset link",
+    "zh-Hans": "发送重置链接",
+    "zh-Hant": "發送重置連結"
+  },
+  "login.subtitle": {
+    "en": "Please enter username and password to log in",
+    "zh-Hans": "请输入用户名和密码登录",
+    "zh-Hant": "請輸入使用者名稱和密碼登入"
+  },
+  "login.superAdmin": {
+    "en": "super administrator",
+    "zh-Hans": "超级管理员",
+    "zh-Hant": "超管理員"
+  },
+  "login.title": {
+    "en": "welcome back",
+    "zh-Hans": "欢迎回来",
+    "zh-Hant": "歡迎回來"
+  },
+  "login.usernamePlaceholder": {
+    "en": "Please enter username/email",
+    "zh-Hans": "请输入用户名/邮箱",
+    "zh-Hant": "請輸入使用者名稱/信箱"
+  },
+  "menu.addMenu": {
+    "en": "New menu",
+    "zh-Hans": "新增菜单",
+    "zh-Hant": "新增選單"
+  },
+  "menu.button": {
+    "en": "button",
+    "zh-Hans": "按钮",
+    "zh-Hant": "按鈕"
+  },
+  "menu.buttonTitle": {
+    "en": "button title",
+    "zh-Hans": "按钮标题",
+    "zh-Hant": "按鈕標題"
+  },
+  "menu.component": {
+    "en": "component path",
+    "zh-Hans": "组件路径",
+    "zh-Hant": "元件路徑"
+  },
+  "menu.componentPlaceholder": {
+    "en": "Please enter the component path (such as views/dashboard/index.vue)",
+    "zh-Hans": "请输入组件路径（如 views/dashboard/index.vue）",
+    "zh-Hant": "請輸入元件路徑（如 views/dashboard/index.vue）"
+  },
+  "menu.deleteMenuCancelText": {
+    "en": "Think again",
+    "zh-Hans": "再想想",
+    "zh-Hant": "再想想"
+  },
+  "menu.deleteMenuConfirmText": {
+    "en": "Confirm deletion",
+    "zh-Hans": "确认删除",
+    "zh-Hant": "確認刪除"
+  },
+  "menu.deleteMenuDialogContent1": {
+    "en": "Are you sure you want to delete the selected",
+    "zh-Hans": "确定要删除选中的",
+    "zh-Hant": "確定要刪除選取的"
+  },
+  "menu.deleteMenuDialogContent2": {
+    "en": "piece of data? \nDeletion cannot be restored, please proceed with caution!",
+    "zh-Hans": "条数据吗？删除后无法恢复，请谨慎操作！",
+    "zh-Hant": "條數據嗎？\n刪除後無法恢復，請謹慎操作！"
+  },
+  "menu.deleteMenuDialogTitle": {
+    "en": "Delete confirmation",
+    "zh-Hans": "删除确认",
+    "zh-Hant": "刪除確認"
+  },
+  "menu.deleteMenuPopconfirm": {
+    "en": "Are you sure you want to delete the selected menu?",
+    "zh-Hans": "确定要删除选中的菜单吗？",
+    "zh-Hant": "確定要刪除選取的選單嗎？"
+  },
+  "menu.directory": {
+    "en": "Table of contents",
+    "zh-Hans": "目录",
+    "zh-Hant": "目錄"
+  },
+  "menu.directoryTitle": {
+    "en": "Table of contents title",
+    "zh-Hans": "目录标题",
+    "zh-Hant": "目錄標題"
+  },
+  "menu.editMenu": {
+    "en": "Edit menu",
+    "zh-Hans": "编辑菜单",
+    "zh-Hant": "編輯選單"
+  },
+  "menu.icon": {
+    "en": "icon",
+    "zh-Hans": "图标",
+    "zh-Hant": "圖示"
+  },
+  "menu.iconPlaceholder": {
+    "en": "Please enter a menu icon (e.g. Element:AddLocation)",
+    "zh-Hans": "请输入菜单图标（如 Element:AddLocation）",
+    "zh-Hant": "請輸入選單圖示（如 Element:AddLocation）"
+  },
+  "menu.menu": {
+    "en": "menu",
+    "zh-Hans": "菜单",
+    "zh-Hant": "選單"
+  },
+  "menu.menuTitle": {
+    "en": "menu title",
+    "zh-Hans": "菜单标题",
+    "zh-Hant": "菜單標題"
+  },
+  "menu.namePlaceholder": {
+    "en": "Please enter a menu name",
+    "zh-Hans": "请输入菜单名称",
+    "zh-Hant": "請輸入菜單名稱"
+  },
+  "menu.parentMenu": {
+    "en": "Parent menu",
+    "zh-Hans": "父级菜单",
+    "zh-Hant": "父級選單"
+  },
+  "menu.parentMenuPlaceholder": {
+    "en": "Please select the parent menu (if not selected, it will be the top-level menu)",
+    "zh-Hans": "请选择父菜单（不选则为顶级菜单）",
+    "zh-Hant": "請選擇父選單（不選則為頂級選單）"
+  },
+  "menu.path": {
+    "en": "menu path",
+    "zh-Hans": "菜单路径",
+    "zh-Hant": "選單路徑"
+  },
+  "menu.pathPlaceholder": {
+    "en": "Please enter the menu path (such as /dashboard)",
+    "zh-Hans": "请输入菜单路径（如 /dashboard）",
+    "zh-Hant": "請輸入選單路徑（如 /dashboard）"
+  },
+  "menu.permission": {
+    "en": "Permission ID",
+    "zh-Hans": "权限标识",
+    "zh-Hant": "權限標識"
+  },
+  "menu.permissionPlaceholder": {
+    "en": "Please enter the permission ID (such as dashboard:view)",
+    "zh-Hans": "请输入权限标识（如 dashboard:view）",
+    "zh-Hant": "請輸入權限標識（如 dashboard:view）"
+  },
+  "menu.sort": {
+    "en": "sort",
+    "zh-Hans": "排序",
+    "zh-Hant": "排序"
+  },
+  "menu.status": {
+    "en": "state",
+    "zh-Hans": "状态",
+    "zh-Hant": "狀態"
+  },
+  "menu.statusPlaceholder": {
+    "en": "Please select menu status",
+    "zh-Hans": "请选择菜单状态",
+    "zh-Hant": "請選擇選單狀態"
+  },
+  "menu.title": {
+    "en": "menu title",
+    "zh-Hans": "菜单标题",
+    "zh-Hant": "菜單標題"
+  },
+  "menu.type": {
+    "en": "Menu type",
+    "zh-Hans": "菜单类型",
+    "zh-Hant": "選單類型"
+  },
+  "menu.typePlaceholder": {
+    "en": "Please select menu type",
+    "zh-Hans": "请选择菜单类型",
+    "zh-Hant": "請選擇選單類型"
+  },
+  "message.addSuccess": {
+    "en": "Added successfully",
+    "zh-Hans": "新增成功",
+    "zh-Hant": "新增成功"
+  },
+  "message.deleteFailed": {
+    "en": "Delete failed",
+    "zh-Hans": "删除失败",
+    "zh-Hant": "刪除失敗"
+  },
+  "message.deleteSuccess": {
+    "en": "Delete successfully",
+    "zh-Hans": "删除成功",
+    "zh-Hant": "刪除成功"
+  },
+  "message.editSuccess": {
+    "en": "Edited successfully",
+    "zh-Hans": "编辑成功",
+    "zh-Hant": "編輯成功"
+  },
+  "placeholder.input": {
+    "en": "Please enter",
+    "zh-Hans": "请输入",
+    "zh-Hant": "請輸入"
+  },
+  "placeholder.select": {
+    "en": "Please select",
+    "zh-Hans": "请选择",
+    "zh-Hant": "請選擇"
+  },
+  "role.addRole": {
+    "en": "Add new role",
+    "zh-Hans": "新增角色",
+    "zh-Hant": "新增角色"
+  },
+  "role.code": {
+    "en": "role coding",
+    "zh-Hans": "角色编码",
+    "zh-Hant": "角色編碼"
+  },
+  "role.codePatternMessage": {
+    "en": "Role codes can only contain letters, numbers, and underscores, and must start with a letter",
+    "zh-Hans": "角色编码只能包含字母、数字和下划线，且以字母开头",
+    "zh-Hant": "角色編碼只能包含字母、數字和底線，且以字母開頭"
+  },
+  "role.codePlaceholder": {
+    "en": "Please enter the role code",
+    "zh-Hans": "请输入角色编码",
+    "zh-Hant": "請輸入角色編碼"
+  },
+  "role.deleteRoleCancelText": {
+    "en": "Think again",
+    "zh-Hans": "再想想",
+    "zh-Hant": "再想想"
+  },
+  "role.deleteRoleConfirmText": {
+    "en": "Confirm deletion",
+    "zh-Hans": "确认删除",
+    "zh-Hant": "確認刪除"
+  },
+  "role.deleteRoleDialogContent1": {
+    "en": "Are you sure you want to delete the selected",
+    "zh-Hans": "确定要删除选中的",
+    "zh-Hant": "確定要刪除選取的"
+  },
+  "role.deleteRoleDialogContent2": {
+    "en": "piece of data? \nDeletion cannot be restored, please proceed with caution!",
+    "zh-Hans": "条数据吗？删除后无法恢复，请谨慎操作！",
+    "zh-Hant": "條數據嗎？\n刪除後無法恢復，請謹慎操作！"
+  },
+  "role.deleteRoleDialogTitle": {
+    "en": "Delete confirmation",
+    "zh-Hans": "删除确认",
+    "zh-Hant": "刪除確認"
+  },
+  "role.deleteRolePopconfirm": {
+    "en": "Are you sure you want to delete the selected role?",
+    "zh-Hans": "确定要删除选中的角色吗？",
+    "zh-Hant": "確定要刪除選取的角色嗎？"
+  },
+  "role.description": {
+    "en": "role description",
+    "zh-Hans": "角色描述",
+    "zh-Hant": "角色描述"
+  },
+  "role.descriptionPlaceholder": {
+    "en": "Please enter a role description",
+    "zh-Hans": "请输入角色描述",
+    "zh-Hant": "請輸入角色描述"
+  },
+  "role.editRole": {
+    "en": "Edit role",
+    "zh-Hans": "编辑角色",
+    "zh-Hant": "編輯角色"
+  },
+  "role.menuPermissions": {
+    "en": "Menu permissions",
+    "zh-Hans": "菜单权限",
+    "zh-Hant": "選單權限"
+  },
+  "role.name": {
+    "en": "Character name",
+    "zh-Hans": "角色名称",
+    "zh-Hant": "角色名稱"
+  },
+  "role.namePlaceholder": {
+    "en": "Please enter a role name",
+    "zh-Hans": "请输入角色名称",
+    "zh-Hant": "請輸入角色名稱"
+  },
+  "role.status": {
+    "en": "state",
+    "zh-Hans": "状态",
+    "zh-Hant": "狀態"
+  },
+  "role.statusPlaceholder": {
+    "en": "Please select role status",
+    "zh-Hans": "请选择角色状态",
+    "zh-Hant": "請選擇角色狀態"
+  },
+  "role.type": {
+    "en": "type",
+    "zh-Hans": "类型",
+    "zh-Hant": "類型"
+  },
+  "tag.builtIn": {
+    "en": "built-in",
+    "zh-Hans": "内置",
+    "zh-Hant": "內建"
+  },
+  "tag.custom": {
+    "en": "Customize",
+    "zh-Hans": "自定义",
+    "zh-Hant": "自訂"
+  },
+  "tag.disabled": {
+    "en": "Disable",
+    "zh-Hans": "禁用",
+    "zh-Hant": "停用"
+  },
+  "tag.enabled": {
+    "en": "enable",
+    "zh-Hans": "启用",
+    "zh-Hant": "啟用"
+  },
+  "tooltip.collapseMenu": {
+    "en": "Close menu",
+    "zh-Hans": "收起菜单",
+    "zh-Hant": "收起選單"
+  },
+  "tooltip.exitFullScreen": {
+    "en": "Exit full screen",
+    "zh-Hans": "退出全屏",
+    "zh-Hant": "退出全螢幕"
+  },
+  "tooltip.expandMenu": {
+    "en": "Expand menu",
+    "zh-Hans": "展开菜单",
+    "zh-Hant": "展開選單"
+  },
+  "tooltip.fullScreen": {
+    "en": "full screen",
+    "zh-Hans": "全屏",
+    "zh-Hant": "全螢幕"
+  },
+  "tooltip.themeConfig": {
+    "en": "Theme configuration",
+    "zh-Hans": "主题配置",
+    "zh-Hant": "主題配置"
+  },
+  "user.actions": {
+    "en": "operate",
+    "zh-Hans": "操作",
+    "zh-Hant": "操作"
+  },
+  "user.addUser": {
+    "en": "Add new user",
+    "zh-Hans": "新增用户",
+    "zh-Hant": "新增用戶"
+  },
+  "user.createdAt": {
+    "en": "creation time",
+    "zh-Hans": "创建时间",
+    "zh-Hant": "創建時間"
+  },
+  "user.deleteUserCancelText": {
+    "en": "Think again",
+    "zh-Hans": "再想想",
+    "zh-Hant": "再想想"
+  },
+  "user.deleteUserConfirmText": {
+    "en": "Confirm deletion",
+    "zh-Hans": "确认删除",
+    "zh-Hant": "確認刪除"
+  },
+  "user.deleteUserDialogContent1": {
+    "en": "Are you sure you want to delete the selected",
+    "zh-Hans": "确定要删除选中的",
+    "zh-Hant": "確定要刪除選取的"
+  },
+  "user.deleteUserDialogContent2": {
+    "en": "piece of data? \nDeletion cannot be restored, please proceed with caution!",
+    "zh-Hans": "条数据吗？删除后无法恢复，请谨慎操作！",
+    "zh-Hant": "條數據嗎？\n刪除後無法恢復，請謹慎操作！"
+  },
+  "user.deleteUserDialogTitle": {
+    "en": "Delete confirmation",
+    "zh-Hans": "删除确认",
+    "zh-Hant": "刪除確認"
+  },
+  "user.deleteUserPopconfirm": {
+    "en": "Are you sure you want to delete the selected user?",
+    "zh-Hans": "确定要删除选中的用户吗？",
+    "zh-Hant": "確定要刪除選取的使用者嗎？"
+  },
+  "user.editUser": {
+    "en": "Edit user",
+    "zh-Hans": "编辑用户",
+    "zh-Hant": "編輯使用者"
+  },
+  "user.email": {
+    "en": "Mail",
+    "zh-Hans": "邮箱",
+    "zh-Hant": "信箱"
+  },
+  "user.emailPlaceholder": {
+    "en": "Please enter your email address",
+    "zh-Hans": "请输入邮箱地址",
+    "zh-Hant": "請輸入郵件地址"
+  },
+  "user.index": {
+    "en": "serial number",
+    "zh-Hans": "序号",
+    "zh-Hant": "序號"
+  },
+  "user.name": {
+    "en": "Name",
+    "zh-Hans": "姓名",
+    "zh-Hant": "姓名"
+  },
+  "user.namePlaceholder": {
+    "en": "Please enter name",
+    "zh-Hans": "请输入姓名",
+    "zh-Hant": "請輸入姓名"
+  },
+  "user.password": {
+    "en": "password",
+    "zh-Hans": "密码",
+    "zh-Hant": "密碼"
+  },
+  "user.passwordPlaceholder": {
+    "en": "Please enter password",
+    "zh-Hans": "请输入密码",
+    "zh-Hant": "請輸入密碼"
+  },
+  "user.phone": {
+    "en": "Phone number",
+    "zh-Hans": "手机号",
+    "zh-Hant": "手機號"
+  },
+  "user.phonePlaceholder": {
+    "en": "Please enter mobile phone number",
+    "zh-Hans": "请输入手机号",
+    "zh-Hant": "請輸入手機號"
+  },
+  "user.role": {
+    "en": "Role",
+    "zh-Hans": "角色",
+    "zh-Hant": "角色"
+  },
+  "user.rolePlaceholder": {
+    "en": "Please select a user role",
+    "zh-Hans": "请选择用户角色",
+    "zh-Hant": "請選擇使用者角色"
+  },
+  "user.status": {
+    "en": "state",
+    "zh-Hans": "状态",
+    "zh-Hant": "狀態"
+  },
+  "user.statusPlaceholder": {
+    "en": "Please select user status",
+    "zh-Hans": "请选择用户状态",
+    "zh-Hant": "請選擇使用者狀態"
+  },
+  "user.type": {
+    "en": "type",
+    "zh-Hans": "类型",
+    "zh-Hant": "類型"
+  },
+  "user.updatedAt": {
+    "en": "Update time",
+    "zh-Hans": "更新时间",
+    "zh-Hant": "更新時間"
+  },
+  "user.username": {
+    "en": "username",
+    "zh-Hans": "用户名",
+    "zh-Hant": "使用者名稱"
+  },
+  "user.usernamePlaceholder": {
+    "en": "Please enter your username (Chinese is not allowed)",
+    "zh-Hans": "请输入用户名（不允许中文）",
+    "zh-Hant": "請輸入使用者名稱（不允許中文）"
+  }
+}

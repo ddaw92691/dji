@@ -1,20 +1,20 @@
 // 国际化的类型
 
-// 本地语言 code
-export type ILangCode = 'zhCN' | 'zhTW' | 'enUS' | 'jaJP' | 'koKR'
-// Element Plus 语言包key
+// 应用内部语言 code。历史值为 zhCN/enUS；接入总后台后也支持 en-US、zh-CN、pt-BR 等运行时 locale。
+export type ILangCode = string
+// Element Plus 语言包 key
 export type IElementLocale = 'EN' | 'zhCN' | 'zhTW' | 'ja' | 'ko'
 
 /**
  * 国际化下拉菜单
- * 如果接口需要的语言参数与应用内部的 locale code 不一致，可以在这里添加一个映射字段
+ * 语言列表优先来自总后台「国家管理 + 语言管理」，本地固定列表只作为接口失败时兜底。
  */
 export interface ILangOption {
-  code: ILangCode // 应用内部唯一标识，用于业务逻辑判断。
-  locale: string // 标准 locale，如 zh-CN / en-US。
-  countryCode: string // 后端 countryCode。
-  languageCode: string // 后端 languageCode。
-  shortCode: string // 页面展示的code 仅用于界面展示，不参与业务判断。
-  label: string // 语言名称，用于界面展示。
-  elementLocale: IElementLocale // 用于映射 Element Plus 自带的国际化包。
+  code: ILangCode
+  locale: string
+  countryCode: string
+  languageCode: string
+  shortCode: string
+  label: string
+  elementLocale: IElementLocale
 }

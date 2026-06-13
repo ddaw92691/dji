@@ -105,6 +105,7 @@ public class DataInitializer implements CommandLineRunner {
         try { initTranslations(); } catch (Exception e) { log.warn("initTranslations failed: {}", e.getMessage()); }
         try { initErrorZhTranslations(); } catch (Exception e) { log.warn("initErrorZhTranslations failed: {}", e.getMessage()); }
         try { initStaticTranslationOverrides(); } catch (Exception e) { log.warn("initStaticTranslationOverrides failed: {}", e.getMessage()); }
+        try { initFrontendJsonTranslations(); } catch (Exception e) { log.warn("initFrontendJsonTranslations failed: {}", e.getMessage()); }
         try { initUsers(); } catch (Exception e) { log.warn("initUsers failed: {}", e.getMessage()); }
         try { initMerchantAndAgentProfiles(); } catch (Exception e) { log.warn("initMerchantAndAgentProfiles failed: {}", e.getMessage()); }
         try { initSystemSettings(); } catch (Exception e) { log.warn("initSystemSettings failed: {}", e.getMessage()); }
@@ -495,13 +496,14 @@ public class DataInitializer implements CommandLineRunner {
     private void initNamespaces() {
         String[] namespaces = {"common", "auth", "customer", "merchant", "admin", "product",
                 "order", "payment", "withdrawal", "error", "finance", "system", "i18n",
-                "catalog", "tax", "websocket", "support", "website", "mall"};
+                "catalog", "tax", "websocket", "support", "website", "mall", "coupon",
+                "review", "notification", "user", "role", "button", "layout", "login", "menu",
+                "message", "placeholder", "tag", "tooltip"};
         for (int i = 0; i < namespaces.length; i++) {
             Long cnt = namespaceMapper.selectCount(new LambdaQueryWrapper<I18nNamespace>()
                     .eq(I18nNamespace::getCode, namespaces[i]));
             if (cnt != null && cnt > 0) continue;
             I18nNamespace ns = new I18nNamespace();
-            ns.setId((long) (100 + i));
             ns.setName(namespaces[i]);
             ns.setCode(namespaces[i]);
             ns.setDescription("");
@@ -10628,6 +10630,94 @@ public class DataInitializer implements CommandLineRunner {
                 || (enText != null && enText.equals(current));
         if (placeholder && !text.equals(current)) {
             existing.setTextValue(text);
+            existing.setUpdatedAt(LocalDateTime.now());
+            translationMapper.updateById(existing);
+            return true;
+        }
+        return false;
+    }
+
+
+    /**
+     * 把官网、商城、商家后台本地 JSON 语言包同步进总后台翻译管理。
+     * 这样前台请求 /api/v1/public/translations 时，优先读取总后台维护的翻译，
+     * 本地 JSON 只作为接口失败时的兜底，不再出现「页面有文案但总后台没有 key」的问题。
+     */
+    private void initFrontendJsonTranslations() {
+        int official = applyFrontendJsonTranslations("/i18n-seed/official-ui.json");
+        int mall = applyFrontendJsonTranslations("/i18n-seed/mall-ui.json");
+        int merchant = applyFrontendJsonTranslations("/i18n-seed/merchant-ui.json");
+        log.info("Frontend JSON translations synced: official={}, mall={}, merchant={}", official, mall, merchant);
+    }
+
+    private int applyFrontendJsonTranslations(String resourcePath) {
+        Map<String, Map<String, String>> data;
+        try (InputStream in = getClass().getResourceAsStream(resourcePath)) {
+            if (in == null) {
+                log.warn("Frontend translation resource not found: {}", resourcePath);
+                return 0;
+            }
+            data = new ObjectMapper().readValue(in, new TypeReference<Map<String, Map<String, String>>>() {});
+        } catch (Exception e) {
+            log.warn("Failed to read frontend translation resource {}: {}", resourcePath, e.getMessage());
+            return 0;
+        }
+
+        int changed = 0;
+        for (Map.Entry<String, Map<String, String>> entry : data.entrySet()) {
+            String fullKey = entry.getKey();
+            int dot = fullKey.indexOf('.');
+            if (dot <= 0 || dot >= fullKey.length() - 1) continue;
+            String namespace = fullKey.substring(0, dot);
+            String translationKey = fullKey.substring(dot + 1);
+            Map<String, String> perLang = entry.getValue();
+            String enText = perLang.get("en");
+            for (Map.Entry<String, String> lv : perLang.entrySet()) {
+                String lang = lv.getKey();
+                String text = lv.getValue();
+                if (lang == null || lang.isBlank() || text == null) continue;
+                if (upsertFrontendJsonTranslation(namespace, translationKey, lang, text, enText, "en".equals(lang))) {
+                    changed++;
+                }
+            }
+        }
+        return changed;
+    }
+
+    private boolean upsertFrontendJsonTranslation(String ns, String key, String lang, String text,
+                                                  String enText, boolean isEn) {
+        LambdaQueryWrapper<I18nTranslation> qw = new LambdaQueryWrapper<I18nTranslation>()
+                .eq(I18nTranslation::getNamespaceCode, ns)
+                .eq(I18nTranslation::getTranslationKey, key)
+                .eq(I18nTranslation::getLanguageCode, lang)
+                .and(w -> w.isNull(I18nTranslation::getCountryCode).or().eq(I18nTranslation::getCountryCode, ""));
+        I18nTranslation existing = translationMapper.selectOne(qw, false);
+
+        if (existing == null) {
+            I18nTranslation t = new I18nTranslation();
+            t.setNamespaceCode(ns);
+            t.setTranslationKey(key);
+            t.setLanguageCode(lang);
+            t.setCountryCode(null);
+            t.setTextValue(text);
+            t.setDescription("前端本地语言包自动同步");
+            t.setStatus("ENABLE");
+            t.setDeleted(false);
+            t.setCreatedAt(LocalDateTime.now());
+            t.setUpdatedAt(LocalDateTime.now());
+            translationMapper.insert(t);
+            return true;
+        }
+
+        // 不覆盖总后台人工维护过的译文；仅修复空值或仍等于英文占位的非英文译文。
+        if (isEn) return false;
+        String current = existing.getTextValue();
+        boolean placeholder = current == null || current.isBlank()
+                || (enText != null && enText.equals(current));
+        if (placeholder && !text.equals(current)) {
+            existing.setTextValue(text);
+            existing.setDescription(existing.getDescription() == null || existing.getDescription().isBlank()
+                    ? "前端本地语言包自动同步" : existing.getDescription());
             existing.setUpdatedAt(LocalDateTime.now());
             translationMapper.updateById(existing);
             return true;

@@ -19,7 +19,7 @@ const service: AxiosInstance = axios.create({
   },
 })
 
-const LANG_HEADERS: Record<string, { locale: string; countryCode: string; languageCode: string }> = {
+const LEGACY_LANG_HEADERS: Record<string, { locale: string; countryCode: string; languageCode: string }> = {
   zhCN: { locale: 'zh-CN', countryCode: 'CN', languageCode: 'zh-Hans' },
   zhTW: { locale: 'zh-TW', countryCode: 'TW', languageCode: 'zh-Hant' },
   enUS: { locale: 'en-US', countryCode: 'US', languageCode: 'en' },
@@ -27,6 +27,15 @@ const LANG_HEADERS: Record<string, { locale: string; countryCode: string; langua
   koKR: { locale: 'ko-KR', countryCode: 'KR', languageCode: 'ko' },
 }
 const DEFAULT_LANG_HEADERS = { locale: 'en-US', countryCode: 'US', languageCode: 'en' }
+
+function resolveLocaleHeaders() {
+  const legacyLang = storage.get<string>(STORAGE_KEYS.LANG) || 'enUS'
+  const legacy = LEGACY_LANG_HEADERS[legacyLang] || DEFAULT_LANG_HEADERS
+  const locale = storage.get<string>(STORAGE_KEYS.LOCALE) || legacy.locale
+  const countryCode = storage.get<string>(STORAGE_KEYS.COUNTRY_CODE) || legacy.countryCode
+  const languageCode = storage.get<string>(STORAGE_KEYS.LANGUAGE_CODE) || legacy.languageCode
+  return { locale, countryCode, languageCode }
+}
 
 // 请求拦截器
 service.interceptors.request.use(
@@ -37,14 +46,11 @@ service.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
 
-    const lang = storage.get<string>(STORAGE_KEYS.LANG) || 'enUS'
-    const defaults = LANG_HEADERS[lang] || DEFAULT_LANG_HEADERS
-    config.headers['Accept-Language'] = defaults.locale
-    config.headers['X-Locale'] = defaults.locale
-    config.headers['X-Country-Code'] =
-      storage.get<string>(STORAGE_KEYS.COUNTRY_CODE) || defaults.countryCode
-    config.headers['X-Language-Code'] =
-      storage.get<string>(STORAGE_KEYS.LANGUAGE_CODE) || defaults.languageCode
+    const localeHeaders = resolveLocaleHeaders()
+    config.headers['Accept-Language'] = localeHeaders.locale
+    config.headers['X-Locale'] = localeHeaders.locale
+    config.headers['X-Country-Code'] = localeHeaders.countryCode
+    config.headers['X-Language-Code'] = localeHeaders.languageCode
 
     return config
   },

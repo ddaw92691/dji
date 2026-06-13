@@ -21,7 +21,8 @@ public interface I18nTranslationMapper extends BaseMapper<I18nTranslation> {
         "<foreach collection='namespaceCodes' item='code' open='(' separator=',' close=')'>#{code}</foreach> " +
         "AND language_code = #{languageCode} " +
         "AND (country_code = #{countryCode} OR country_code IS NULL OR country_code = '') " +
-        "AND status = 'ENABLE' AND deleted = false</script>")
+        "AND status = 'ENABLE' AND deleted = false " +
+        "ORDER BY CASE WHEN country_code = #{countryCode} THEN 1 ELSE 0 END ASC, id ASC</script>")
     List<I18nTranslation> selectByNsListAndLang(@Param("namespaceCodes") List<String> namespaceCodes,
                                                 @Param("languageCode") String languageCode,
                                                 @Param("countryCode") String countryCode);

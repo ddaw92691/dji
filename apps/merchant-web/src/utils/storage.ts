@@ -4,6 +4,7 @@
 export const STORAGE_KEYS = {
   THEME_CONFIG: 'themeConfig', // 主题配置
   LANG: 'lang', // 当前语言
+  LOCALE: 'mall_locale', // 标准 locale，例如 zh-CN / en-US
   TOKEN: 'Authorization', // 用户登录 token
   COUNTRY_CODE: 'countryCode',
   LANGUAGE_CODE: 'languageCode',
