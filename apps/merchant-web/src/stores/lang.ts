@@ -32,10 +32,20 @@ const MERCHANT_NAMESPACES = [
   'tooltip',
 ]
 
+const DEFAULT_LANG_OPTION: ILangOption = {
+  code: 'enUS',
+  locale: 'en-US',
+  countryCode: 'US',
+  languageCode: 'en',
+  shortCode: 'US',
+  label: 'English',
+  elementLocale: 'EN',
+}
+
 const FALLBACK_LANG_OPTIONS: ILangOption[] = [
   { code: 'zhCN', locale: 'zh-CN', countryCode: 'CN', languageCode: 'zh-Hans', shortCode: 'CN', label: '简体中文', elementLocale: 'zhCN' },
   { code: 'zhTW', locale: 'zh-TW', countryCode: 'TW', languageCode: 'zh-Hant', shortCode: 'TW', label: '繁體中文', elementLocale: 'zhTW' },
-  { code: 'enUS', locale: 'en-US', countryCode: 'US', languageCode: 'en', shortCode: 'US', label: 'English', elementLocale: 'EN' },
+  DEFAULT_LANG_OPTION,
   { code: 'jaJP', locale: 'ja-JP', countryCode: 'JP', languageCode: 'ja', shortCode: 'JP', label: '日本語', elementLocale: 'ja' },
   { code: 'koKR', locale: 'ko-KR', countryCode: 'KR', languageCode: 'ko', shortCode: 'KR', label: '한국어', elementLocale: 'ko' },
 ]
@@ -75,10 +85,11 @@ function findOption(options: ILangOption[], value: unknown): ILangOption {
       FALLBACK_LANG_OPTIONS.find((item) => item.code === value || item.locale === value) ||
       options.find((item) => item.languageCode === value) ||
       FALLBACK_LANG_OPTIONS.find((item) => item.languageCode === value) ||
-      FALLBACK_OPTION
+      FALLBACK_OPTION ||
+      DEFAULT_LANG_OPTION
     )
   }
-  return FALLBACK_OPTION
+  return FALLBACK_OPTION || DEFAULT_LANG_OPTION
 }
 
 function extractMessages(payload: any): Record<string, string> {
